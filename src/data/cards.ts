@@ -515,6 +515,11 @@ const likelyBase: Record<Vibe, string[]> = {
     "faire semblant d'être détaché alors que non",
     "avoir le sourire le plus dangereux",
     "faire chavirer quelqu'un sans effort",
+    "être celui/celle qu'on regrette d'avoir laissé partir",
+    "finir la soirée avec le numéro de quelqu'un",
+    "avoir la tension la plus palpable avec quelqu'un ici",
+    "embrasser quelqu'un ce soir si on le/la défie",
+    "recevoir un message coquin d'un(e) inconnu(e)",
   ],
   chaos: [
     "transformer un détail en énorme histoire",
