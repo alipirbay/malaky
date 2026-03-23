@@ -628,6 +628,13 @@ const ratherB: Record<Vibe, string[]> = {
     "savoir exactement quoi répondre à ton crush",
     "recevoir un date parfait sans effort",
     "toujours sentir quand la vibe est réciproque",
+    "savoir embrasser parfaitement à chaque fois",
+    "être inoubliable après une seule rencontre",
+    "pouvoir deviner les zones sensibles de quelqu'un",
+    "avoir le charme d'un personnage de film romantique",
+    "ne jamais avoir de moment gênant en intimité",
+    "rendre jaloux tout le monde avec ton couple",
+    "savoir exactement quoi porter pour être irrésistible",
   ],
   chaos: [
     "annuler n'importe quelle catastrophe sociale une fois par mois",
