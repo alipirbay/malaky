@@ -40,6 +40,27 @@ const GameScreen = () => {
   const card = deck[currentCardIndex];
   const mode = GAME_MODES.find((item) => item.id === selectedMode);
 
+  const triggerAction = useCallback((action: "done" | "refuse" | "skip", dir: "left" | "right" | "up") => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setExitDirection(dir);
+    setTimeout(() => {
+      nextCard(action);
+      setExitDirection(null);
+      setIsAnimating(false);
+      dragX.set(0);
+    }, 250);
+  }, [isAnimating, nextCard, dragX]);
+
+  const handleDragEnd = useCallback((_: any, info: { offset: { x: number }; velocity: { x: number } }) => {
+    const { offset, velocity } = info;
+    if (offset.x > SWIPE_THRESHOLD || velocity.x > 500) {
+      triggerAction("done", "right");
+    } else if (offset.x < -SWIPE_THRESHOLD || velocity.x < -500) {
+      triggerAction("refuse", "left");
+    }
+  }, [triggerAction]);
+
   if (!card || !currentPlayer) {
     return (
       <div className="flex min-h-screen items-center justify-center gradient-surface">
@@ -56,27 +77,6 @@ const GameScreen = () => {
   const cardText = fillPlayerNames(card.text, currentPlayer.name, players.map((p) => p.name));
   const cardMeta = CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" };
   const passes = passesRemaining[currentPlayer.name] || 0;
-
-  const triggerAction = useCallback((action: "done" | "refuse" | "skip", dir: "left" | "right" | "up") => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setExitDirection(dir);
-    setTimeout(() => {
-      nextCard(action);
-      setExitDirection(null);
-      setIsAnimating(false);
-      dragX.set(0);
-    }, 250);
-  }, [isAnimating, nextCard, dragX]);
-
-  const handleDragEnd = (_: any, info: { offset: { x: number }; velocity: { x: number } }) => {
-    const { offset, velocity } = info;
-    if (offset.x > SWIPE_THRESHOLD || velocity.x > 500) {
-      triggerAction("done", "right");
-    } else if (offset.x < -SWIPE_THRESHOLD || velocity.x < -500) {
-      triggerAction("refuse", "left");
-    }
-  };
 
   const exitVariants = {
     left: { x: -400, opacity: 0, rotate: -20, transition: { duration: 0.25 } },
@@ -140,16 +140,16 @@ const GameScreen = () => {
 
               {/* Swipe overlays */}
               <motion.div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-3xl bg-green-500/20"
-                style={{ opacity: doneOpacity }}
+                className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-3xl"
+                style={{ opacity: doneOpacity, backgroundColor: "hsl(142 71% 45% / 0.2)" }}
               >
-                <span className="text-2xl font-black text-green-400">Fait ✅</span>
+                <span className="text-2xl font-black" style={{ color: "hsl(142 71% 45%)" }}>Fait ✅</span>
               </motion.div>
               <motion.div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-3xl bg-red-500/20"
-                style={{ opacity: refuseOpacity }}
+                className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-3xl"
+                style={{ opacity: refuseOpacity, backgroundColor: "hsl(350 96% 72% / 0.2)" }}
               >
-                <span className="text-2xl font-black text-red-400">Refuse ❌</span>
+                <span className="text-2xl font-black" style={{ color: "hsl(350 96% 72%)" }}>Refuse ❌</span>
               </motion.div>
 
               <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
