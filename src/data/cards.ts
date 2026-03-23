@@ -351,6 +351,11 @@ const groupActions: Record<Vibe, string[]> = {
     "tout le monde vote pour le regard le plus dangereux",
     "tout le monde désigne la personne la plus séduisante sans parler",
     "tout le monde choisit la personne qui ferait le premier pas",
+    "tout le monde dit qui embrasse probablement le mieux",
+    "tout le monde pointe la personne qui a le plus de tension avec quelqu'un ici",
+    "tout le monde désigne qui a la voix la plus séduisante",
+    "tout le monde vote pour la personne la plus dangereuse en soirée",
+    "tout le monde avoue avec qui il/elle aimerait être coincé(e) dans un ascenseur",
   ],
   chaos: [
     "tout le monde pointe la personne la plus imprévisible",
