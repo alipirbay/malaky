@@ -670,24 +670,56 @@ const buildTruthDareDeck = (vibe: Vibe) => {
 };
 
 const buildNeverDeck = (vibe: Vibe) =>
-  pairTexts(neverBase[vibe].map((entry) => `Je n'ai jamais ${entry}`), neverSuffix[vibe]).map((text, index) =>
-    createCard("never_have_i_ever", vibe, index + 1, "vote", text)
-  );
+  crossTexts(
+    neverBase[vibe].map((entry) => `Je n'ai jamais ${entry}`),
+    neverSuffix[vibe],
+    (left, right) => `${left} ${right}`
+  )
+    .flatMap((text) => [
+      text,
+      `${text} Et assume si c'est déjà arrivé.`,
+      `${text} Le groupe veut un exemple si tu lèves la main.`,
+      `${text} Sans faire semblant de réfléchir.`,
+    ])
+    .slice(0, 160)
+    .map((text, index) => createCard("never_have_i_ever", vibe, index + 1, "vote", text));
 
 const buildMostLikelyDeck = (vibe: Vibe) =>
-  pairTexts(likelyBase[vibe].map((entry) => `Qui est le plus susceptible de ${entry}`), likelySuffix[vibe]).map((text, index) =>
-    createCard("most_likely", vibe, index + 1, "vote", text)
-  );
+  crossTexts(
+    likelyBase[vibe].map((entry) => `Qui est le plus susceptible de ${entry}`),
+    likelySuffix[vibe],
+    (left, right) => `${left} ${right}`
+  )
+    .flatMap((text) => [
+      text,
+      `${text} Vote immédiat du groupe.`,
+      `${text} Et la personne la plus citée se défend.`,
+      `${text} Sans diplomatie.`,
+    ])
+    .slice(0, 160)
+    .map((text, index) => createCard("most_likely", vibe, index + 1, "vote", text));
 
 const buildWouldYouRatherDeck = (vibe: Vibe) =>
-  crossTexts(ratherA[vibe], ratherB[vibe], (left, right) => `Tu préfères ${left} ou ${right} ?`).map((text, index) =>
-    createCard("would_you_rather", vibe, index + 1, "truth", text)
-  );
+  crossTexts(ratherA[vibe], ratherB[vibe], (left, right) => `Tu préfères ${left} ou ${right} ?`)
+    .flatMap((text) => [
+      text,
+      `${text} Tu dois répondre immédiatement.`,
+      `${text} Et expliquer en une phrase.`,
+      `${text} Sans dire 'aucun des deux'.`,
+    ])
+    .slice(0, 160)
+    .map((text, index) => createCard("would_you_rather", vibe, index + 1, "truth", text));
 
 const buildQuickChallengeDeck = (vibe: Vibe) =>
-  crossTexts(challengeActions[vibe], challengeTwists[vibe], (action, twist) => `{player}, ${action} ${twist}.`).map((text, index) =>
-    createCard("quick_challenge", vibe, index + 1, "timer", text)
-  );
+  crossTexts(challengeActions[vibe], challengeTwists[vibe], (action, twist) => `{player}, ${action} ${twist}.`)
+    .flatMap((text) => [
+      text,
+      `${text} Le groupe juge la performance.`,
+      `${text} Avec zéro préparation.`,
+      `${text} Et pas le droit d'abandonner.`,
+    ])
+    .slice(0, 160)
+    .map((text, index) => createCard("quick_challenge", vibe, index + 1, "timer", text));
 
 export const CARDS: GameCard[] = [
   ...buildTruthDareDeck("soft"),
