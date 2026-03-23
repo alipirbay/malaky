@@ -17,7 +17,7 @@ const EndScreen = () => {
   });
 
   const handleReplay = () => {
-    setScreen("intensity");
+    setScreen("vibe");
   };
 
   const handleNewGame = () => {
