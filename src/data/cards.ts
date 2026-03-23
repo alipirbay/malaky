@@ -656,6 +656,7 @@ const buildTruthDareDeck = (vibe: Vibe) => {
   const groupTexts = crossTexts(groupActions[vibe], groupTwists[vibe], (action, twist) => `${action[0].toUpperCase()}${action.slice(1)}. ${twist}`).slice(0, 10);
   const duelTexts = duelActions[vibe].map((action) => `{player} vs {player2} : ${action}. Le groupe tranche.`).slice(0, 10);
   const voteTexts = voteQuestions[vibe].map((question) => `Le groupe vote : ${question}`).slice(0, 10);
+  const bonusTexts = voteQuestions[vibe].slice(0, 2).map((question) => `Vote éclair : ${question} Réponse immédiate.`);
 
   const cards: GameCard[] = [];
   let index = 1;
@@ -664,6 +665,7 @@ const buildTruthDareDeck = (vibe: Vibe) => {
   groupTexts.forEach((text) => cards.push(createCard("truth_dare", vibe, index++, "group", text)));
   duelTexts.forEach((text) => cards.push(createCard("truth_dare", vibe, index++, "duel", text)));
   voteTexts.forEach((text) => cards.push(createCard("truth_dare", vibe, index++, "vote", text)));
+  bonusTexts.forEach((text) => cards.push(createCard("truth_dare", vibe, index++, "vote", text)));
   return cards;
 };
 
