@@ -36,7 +36,7 @@ const GameScreen = () => {
       <div className="flex min-h-screen items-center justify-center gradient-surface">
         <div className="text-center">
           <p className="text-xl font-bold text-foreground mb-4">Pas assez de cartes pour cette config 😅</p>
-          <button onClick={() => setScreen("intensity")} className="rounded-xl gradient-primary px-6 py-3 font-semibold text-primary-foreground">
+          <button onClick={() => setScreen("vibe")} className="rounded-xl gradient-primary px-6 py-3 font-semibold text-primary-foreground">
             Changer les paramètres
           </button>
         </div>

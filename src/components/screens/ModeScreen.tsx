@@ -1,17 +1,14 @@
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
-import { GAME_MODES, PACKS } from "@/data/cards";
+import { GAME_MODES } from "@/data/cards";
 import { ArrowLeft } from "lucide-react";
 
 const ModeScreen = () => {
-  const { setMode, setPack, setScreen } = useGameStore();
+  const { setMode, setScreen } = useGameStore();
 
   const handleSelectMode = (modeId: typeof GAME_MODES[number]["id"]) => {
     setMode(modeId);
-    // Auto-select first free pack
-    const firstFreePack = PACKS.find((p) => p.free);
-    if (firstFreePack) setPack(firstFreePack.id);
-    setScreen("intensity");
+    setScreen("vibe");
   };
 
   const colorMap = {
