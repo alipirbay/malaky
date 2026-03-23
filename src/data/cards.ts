@@ -578,6 +578,11 @@ const ratherA: Record<Vibe, string[]> = {
     "avoir une confiance absolue en date",
     "pouvoir annuler un baiser raté",
     "faire tomber la bonne personne au bon moment",
+    "savoir ce que ton crush pense vraiment de toi",
+    "revivre ton meilleur baiser",
+    "pouvoir séduire n'importe qui pendant 24h",
+    "connaître le fantasme secret de quelqu'un",
+    "ne jamais être rejeté(e)",
   ],
   chaos: [
     "effacer ton pire scandale potentiel",
