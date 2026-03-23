@@ -37,10 +37,16 @@ const HomeScreen = () => {
         </button>
 
         <div className="flex gap-3">
-          <button className="flex-1 rounded-2xl bg-card px-4 py-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary">
+          <button
+            onClick={() => setScreen("packs")}
+            className="flex-1 rounded-2xl bg-card px-4 py-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+          >
             📦 Packs
           </button>
-          <button className="flex-1 rounded-2xl bg-card px-4 py-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary">
+          <button
+            onClick={() => setScreen("settings")}
+            className="flex-1 rounded-2xl bg-card px-4 py-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+          >
             ⚙️ Paramètres
           </button>
         </div>
