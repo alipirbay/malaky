@@ -684,6 +684,11 @@ const challengeActions: Record<Vibe, string[]> = {
     "donne 3 qualités attirantes chez quelqu'un",
     "improvise un slow sans musique",
     "joue le message de minuit le plus dangereux",
+    "fais la voix la plus sensuelle possible en disant le prénom de {player2}",
+    "décris ta soirée idéale à deux avec tous les détails",
+    "joue le personnage qui veut absolument un baiser",
+    "mime la scène du matin après un premier rendez-vous parfait",
+    "fais la déclaration d'amour la plus passionnée à {player2}",
   ],
   chaos: [
     "fais un mini scandale théâtral",
