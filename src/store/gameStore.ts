@@ -31,8 +31,8 @@ interface GameState {
   setMode: (mode: GameMode) => void;
   setVibe: (vibe: Vibe) => void;
   setScreen: (screen: GameState["currentScreen"]) => void;
-  unlockVibe: (vibe: Extract<Vibe, "hot" | "chaos">) => void;
-  unlockBundle: () => void;
+  unlockVibe: (vibe: Vibe) => void;
+  unlockBundle: (vibes: Vibe[]) => void;
   startGame: () => void;
   nextCard: (action: "done" | "refuse" | "skip") => void;
   resetGame: () => void;
@@ -49,6 +49,12 @@ const defaultUnlockedVibes: Record<Vibe, boolean> = {
   fun: true,
   hot: false,
   chaos: false,
+  couple: false,
+  apero: false,
+  mada: false,
+  confessions: false,
+  vip: false,
+  afterdark: false,
 };
 
 export const useGameStore = create<GameState>()(
@@ -57,7 +63,7 @@ export const useGameStore = create<GameState>()(
       players: [],
       selectedMode: null,
       selectedVibe: null,
-      unlockedVibes: defaultUnlockedVibes,
+      unlockedVibes: { ...defaultUnlockedVibes },
       currentScreen: "home",
       currentPlayerIndex: 0,
       currentCardIndex: 0,
@@ -95,21 +101,16 @@ export const useGameStore = create<GameState>()(
 
       unlockVibe: (vibe) => {
         set((state) => ({
-          unlockedVibes: {
-            ...state.unlockedVibes,
-            [vibe]: true,
-          },
+          unlockedVibes: { ...state.unlockedVibes, [vibe]: true },
         }));
       },
 
-      unlockBundle: () => {
-        set((state) => ({
-          unlockedVibes: {
-            ...state.unlockedVibes,
-            hot: true,
-            chaos: true,
-          },
-        }));
+      unlockBundle: (vibes) => {
+        set((state) => {
+          const updated = { ...state.unlockedVibes };
+          vibes.forEach(v => { updated[v] = true; });
+          return { unlockedVibes: updated };
+        });
       },
 
       startGame: () => {
@@ -160,14 +161,12 @@ export const useGameStore = create<GameState>()(
         if (action === "done") {
           newStats.cardsPlayed += 1;
           newStats.playerStats[currentPlayer] = {
-            ...newStats.playerStats[currentPlayer],
             played: (newStats.playerStats[currentPlayer]?.played || 0) + 1,
             refused: newStats.playerStats[currentPlayer]?.refused || 0,
           };
         } else if (action === "refuse") {
           newStats.refusals += 1;
           newStats.playerStats[currentPlayer] = {
-            ...newStats.playerStats[currentPlayer],
             played: newStats.playerStats[currentPlayer]?.played || 0,
             refused: (newStats.playerStats[currentPlayer]?.refused || 0) + 1,
           };
