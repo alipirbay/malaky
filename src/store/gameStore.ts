@@ -81,6 +81,7 @@ export const useGameStore = create<GameState>()(
       soundEnabled: true,
       soundVolume: 80,
       vibrationEnabled: true,
+      pendingTransactionId: null,
 
       addPlayer: (name) => {
         const { players } = get();
