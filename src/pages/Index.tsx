@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useGameStore } from "@/store/gameStore";
 import HomeScreen from "@/components/screens/HomeScreen";
 import PlayersScreen from "@/components/screens/PlayersScreen";
@@ -25,6 +26,16 @@ const Index = () => {
   const pendingTransactionId = useGameStore((s) => s.pendingTransactionId);
   const setScreen = useGameStore((s) => s.setScreen);
   const setPendingTransaction = useGameStore((s) => s.setPendingTransaction);
+
+  // Handle redirect back from VPI payment
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment_return") === "true" && pendingTransactionId) {
+      setScreen("payment_return");
+      // Clean URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   if (currentScreen === "payment_return" && pendingTransactionId) {
     return (
