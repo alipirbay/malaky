@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { useActiveUsers } from "@/hooks/useActiveUsers";
-import { Sparkles, ShoppingBag, Settings, Users, Zap } from "lucide-react";
+import { Sparkles, ShoppingBag, Settings, Zap } from "lucide-react";
+import DailyDilemme from "@/components/DailyDilemme";
 
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
@@ -47,12 +48,22 @@ const HomeScreen = () => {
         </motion.div>
       </motion.div>
 
+      {/* Daily Dilemme - Prominent section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.4 }}
+        className="mt-8 w-full max-w-sm"
+      >
+        <DailyDilemme />
+      </motion.div>
+
       {/* Action buttons */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
-        className="mt-10 w-full max-w-sm space-y-3"
+        transition={{ delay: 0.5, duration: 0.4 }}
+        className="mt-6 w-full max-w-sm space-y-3"
       >
         {/* Main row: Créer + Packs */}
         <div className="flex gap-3">
@@ -98,11 +109,11 @@ const HomeScreen = () => {
         className="mt-8 flex flex-col items-center gap-3"
       >
         <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
-          <span>6 Modes</span>
+          <span>5 Modes</span>
           <span>•</span>
           <span>10 Packs</span>
           <span>•</span>
-          <span>9000+ Cartes</span>
+          <span>7500+ Cartes</span>
         </div>
         <p className="text-xs font-medium text-muted-foreground/40 tracking-widest uppercase">
           Ose tout. Assume rien.

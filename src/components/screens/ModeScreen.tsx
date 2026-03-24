@@ -25,7 +25,7 @@ const ModeScreen = () => {
         </button>
         <div>
           <h2 className="text-xl font-bold text-foreground">Choisis le mode</h2>
-          <p className="text-sm text-muted-foreground">6 modes de jeu disponibles</p>
+          <p className="text-sm text-muted-foreground">5 modes de jeu disponibles</p>
         </div>
       </div>
 
