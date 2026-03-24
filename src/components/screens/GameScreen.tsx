@@ -266,15 +266,6 @@ const GameScreen = () => {
                     )}
                   </div>
                 </div>
-              )}
-                        >
-                          <RotateCcw size={14} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           </motion.div>
         </AnimatePresence>
