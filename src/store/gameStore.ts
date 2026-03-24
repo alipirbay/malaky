@@ -19,7 +19,8 @@ interface GameState {
   selectedMode: GameMode | null;
   selectedVibe: Vibe | null;
   unlockedVibes: Record<Vibe, boolean>;
-  currentScreen: "home" | "players" | "mode" | "vibe" | "game" | "end" | "packs" | "settings";
+  currentScreen: "home" | "players" | "mode" | "vibe" | "game" | "end" | "packs" | "settings" | "payment_return";
+  pendingTransactionId: string | null;
   currentPlayerIndex: number;
   currentCardIndex: number;
   deck: GameCard[];
