@@ -25,7 +25,7 @@ const ModeScreen = () => {
         </button>
         <div>
           <h2 className="text-xl font-bold text-foreground">Choisis le mode</h2>
-          <p className="text-sm text-muted-foreground">Un mode = une ambiance</p>
+          <p className="text-sm text-muted-foreground">6 modes de jeu disponibles</p>
         </div>
       </div>
 
@@ -35,7 +35,7 @@ const ModeScreen = () => {
             key={mode.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
+            transition={{ delay: i * 0.06 }}
             onClick={() => handleSelectMode(mode.id)}
             className={`w-full rounded-2xl p-5 text-left transition-transform active:scale-[0.98] ${colorMap[mode.color]}`}
           >
