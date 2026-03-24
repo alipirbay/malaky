@@ -122,7 +122,8 @@ const GameScreen = () => {
     setTimeLeft(totalDuration);
     setTimerDone(false);
     setTimerRunning(true);
-  }, [totalDuration]);
+    playClick();
+  }, [totalDuration, playClick]);
 
   const resetTimer = useCallback(() => {
     setTimerRunning(false);
