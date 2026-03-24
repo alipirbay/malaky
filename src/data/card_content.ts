@@ -1035,7 +1035,7 @@ export const challengeActions: Record<Vibe, string[]> = {
     'Fais semblant de flirter avec le mur pendant 20 secondes.',
     'Écris un message sensuel avec ton coude.',
     'Avec un seul doigt, écris ton nom en l\'air.',
-    'Tiens l\'équilibre sur une jambe jusqu\'à la fin du chrono.',
+    'Tiens l\'équilibre sur une jambe pendant 20 secondes.',
     'Fais une expression faciale séductrice pendant 10 secondes.',
     'Danse sur place comme si personne ne te voyait.',
     'Articule une devinette avec une paille.',

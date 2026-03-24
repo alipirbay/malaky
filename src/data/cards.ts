@@ -102,10 +102,9 @@ const buildWouldYouRatherDeck = (vibe: Vibe): GameCard[] =>
     .map((text, i) => createCard("would_you_rather", vibe, i + 1, "truth", text));
 
 const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] =>
-  crossTexts(challengeActions[vibe] || [], challengeTwists, (a, t) => `{player}, ${a} ${t}`)
-    .flatMap(text => [text, `${text} Le groupe juge.`, `${text} Sans préparation.`])
+  crossTexts(challengeActions[vibe] || [], challengeTwists, (a, t) => `${a}${t}`.trim())
     .slice(0, Math.max(160, MINIMUM_CARDS_PER_COMBO))
-    .map((text, i) => createCard("quick_challenge", vibe, i + 1, "timer", text));
+    .map((text, i) => createCard("quick_challenge", vibe, i + 1, "timer", `{player}, ${text}`));
 
 // Build all cards
 export const CARDS: GameCard[] = [];
