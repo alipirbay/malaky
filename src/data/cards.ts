@@ -1,6 +1,5 @@
 export type { GameCard, GameMode, Vibe } from "./types";
 export { GAME_MODES, VIBES, STORE_PACKS } from "./config";
-export { deduplicateShuffle } from "./cards";
 
 import type { GameCard, GameMode, Vibe } from "./types";
 import { GAME_MODES, VIBES } from "./config";
