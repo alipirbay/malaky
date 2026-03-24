@@ -7,6 +7,7 @@ import GameScreen from "@/components/screens/GameScreen";
 import EndScreen from "@/components/screens/EndScreen";
 import PacksScreen from "@/components/screens/PacksScreen";
 import SettingsScreen from "@/components/screens/SettingsScreen";
+import PaymentReturnScreen from "@/components/screens/PaymentReturnScreen";
 
 const SCREENS = {
   home: HomeScreen,
@@ -21,7 +22,25 @@ const SCREENS = {
 
 const Index = () => {
   const currentScreen = useGameStore((s) => s.currentScreen);
-  const Screen = SCREENS[currentScreen];
+  const pendingTransactionId = useGameStore((s) => s.pendingTransactionId);
+  const setScreen = useGameStore((s) => s.setScreen);
+  const setPendingTransaction = useGameStore((s) => s.setPendingTransaction);
+
+  if (currentScreen === "payment_return" && pendingTransactionId) {
+    return (
+      <div className="max-w-md mx-auto min-h-screen">
+        <PaymentReturnScreen
+          transactionId={pendingTransactionId}
+          onBack={() => {
+            setPendingTransaction(null);
+            setScreen("home");
+          }}
+        />
+      </div>
+    );
+  }
+
+  const Screen = SCREENS[currentScreen as keyof typeof SCREENS] || HomeScreen;
 
   return (
     <div className="max-w-md mx-auto min-h-screen">
