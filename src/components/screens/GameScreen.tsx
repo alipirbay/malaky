@@ -211,7 +211,7 @@ const GameScreen = () => {
 
               <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
 
-              {isTimerCard && (
+              {showTimer && (
                 <div className="mt-6 flex flex-col items-center gap-3">
                   <div className="relative flex h-24 w-24 items-center justify-center">
                     <svg className="absolute inset-0 -rotate-90" viewBox="0 0 96 96">
@@ -235,7 +235,8 @@ const GameScreen = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {!timerRunning && !timerDone && (
+                    {/* Manual GO button only for timer (action) cards */}
+                    {isTimerCard && !timerRunning && !timerDone && (
                       <button
                         onClick={startTimer}
                         className="gradient-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95"
@@ -244,7 +245,7 @@ const GameScreen = () => {
                       </button>
                     )}
 
-                    {timerRunning && <span className="text-sm font-bold text-primary">Chrono en cours...</span>}
+                    {timerRunning && <span className="animate-pulse text-sm font-bold text-primary">⏱️ {isAutoTimer ? "Réponds vite !" : "Chrono en cours..."}</span>}
 
                     {timerDone && (
                       <div className="flex items-center gap-2">
@@ -258,6 +259,14 @@ const GameScreen = () => {
                         <button
                           onClick={resetTimer}
                           className="rounded-lg bg-secondary p-2 text-muted-foreground transition-transform active:scale-95"
+                        >
+                          <RotateCcw size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
                         >
                           <RotateCcw size={14} />
                         </button>
