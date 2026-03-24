@@ -132,7 +132,7 @@ const DailyDilemme = () => {
               </div>
 
               <button
-                onClick={() => vote("b")}
+                onClick={() => handleVote("b")}
                 disabled={voting}
                 className="w-full rounded-2xl px-4 py-4 text-left text-sm font-bold transition-all active:scale-[0.97] disabled:opacity-50"
                 style={{
