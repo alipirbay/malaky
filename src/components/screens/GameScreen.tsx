@@ -84,13 +84,20 @@ const GameScreen = () => {
   }, [currentCardIndex, totalDuration, isAutoTimer]);
 
   useEffect(() => {
-    if (!timerRunning) return;
+    if (!timerRunning) {
+      stopTickLoop();
+      return;
+    }
+
+    startTickLoop(1000);
 
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           setTimerRunning(false);
           setTimerDone(true);
+          stopTickLoop();
+          playBuzzer();
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
@@ -103,12 +110,13 @@ const GameScreen = () => {
     }, 1000);
 
     return () => {
+      stopTickLoop();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [timerRunning]);
+  }, [timerRunning, startTickLoop, stopTickLoop, playBuzzer]);
 
   const startTimer = useCallback(() => {
     setTimeLeft(totalDuration);
