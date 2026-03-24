@@ -19,7 +19,8 @@ interface GameState {
   selectedMode: GameMode | null;
   selectedVibe: Vibe | null;
   unlockedVibes: Record<Vibe, boolean>;
-  currentScreen: "home" | "players" | "mode" | "vibe" | "game" | "end" | "packs" | "settings";
+  currentScreen: "home" | "players" | "mode" | "vibe" | "game" | "end" | "packs" | "settings" | "payment_return";
+  pendingTransactionId: string | null;
   currentPlayerIndex: number;
   currentCardIndex: number;
   deck: GameCard[];
@@ -42,6 +43,7 @@ interface GameState {
   toggleSound: () => void;
   setSoundVolume: (vol: number) => void;
   toggleVibration: () => void;
+  setPendingTransaction: (id: string | null) => void;
 }
 
 const PLAYER_COLORS = [
@@ -79,6 +81,7 @@ export const useGameStore = create<GameState>()(
       soundEnabled: true,
       soundVolume: 80,
       vibrationEnabled: true,
+      pendingTransactionId: null,
 
       addPlayer: (name) => {
         const { players } = get();
@@ -213,6 +216,7 @@ export const useGameStore = create<GameState>()(
       toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
       setSoundVolume: (vol) => set({ soundVolume: vol }),
       toggleVibration: () => set((s) => ({ vibrationEnabled: !s.vibrationEnabled })),
+      setPendingTransaction: (id) => set({ pendingTransactionId: id }),
     }),
     {
       name: "malaky-store",
@@ -221,6 +225,7 @@ export const useGameStore = create<GameState>()(
         soundEnabled: state.soundEnabled,
         soundVolume: state.soundVolume,
         vibrationEnabled: state.vibrationEnabled,
+        pendingTransactionId: state.pendingTransactionId,
       }),
     }
   )

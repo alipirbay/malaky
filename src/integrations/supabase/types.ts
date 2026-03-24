@@ -97,6 +97,63 @@ export type Database = {
           },
         ]
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          initiator: string | null
+          order_id: string
+          panier: string | null
+          payment_mode: string
+          payment_url: string | null
+          reference: string
+          reference_mm: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          vpi_reference: string | null
+          vpi_transaction_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          initiator?: string | null
+          order_id: string
+          panier?: string | null
+          payment_mode: string
+          payment_url?: string | null
+          reference: string
+          reference_mm?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          vpi_reference?: string | null
+          vpi_transaction_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          initiator?: string | null
+          order_id?: string
+          panier?: string | null
+          payment_mode?: string
+          payment_url?: string | null
+          reference?: string
+          reference_mm?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          vpi_reference?: string | null
+          vpi_transaction_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
