@@ -41,7 +41,7 @@ const likelySuffix: string[] = [
 ];
 
 const challengeTwists: string[] = [
-  "en 10 secondes.", "sans s'arrêter.", "avec un sérieux total.", "et le groupe juge.",
+  "en 10 secondes.", "en 15 secondes.", "en 20 secondes.", "en 30 secondes.",
 ];
 
 const crossTexts = (left: string[], right: string[], mapper: (a: string, b: string) => string) =>

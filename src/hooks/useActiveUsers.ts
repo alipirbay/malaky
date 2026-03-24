@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const SESSION_KEY = "tsy-menatra-session-id";
+const SESSION_KEY = "malaky-session-id";
 
 function getSessionId() {
   let id = sessionStorage.getItem(SESSION_KEY);

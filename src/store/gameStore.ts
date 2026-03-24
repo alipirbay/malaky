@@ -206,7 +206,7 @@ export const useGameStore = create<GameState>()(
       },
     }),
     {
-      name: "tsy-menatra-store",
+      name: "malaky-store",
       partialize: (state) => ({ unlockedVibes: state.unlockedVibes }),
     }
   )

@@ -41,7 +41,7 @@ const SettingsScreen = () => {
       </div>
 
       <div className="mt-auto pt-8 text-center">
-        <p className="text-xs text-muted-foreground/40">Tsy Menatra v1.0</p>
+        <p className="text-xs text-muted-foreground/40">Malaky v1.0</p>
         <p className="text-xs text-muted-foreground/30 mt-1">Made with ❤️ in Madagascar</p>
       </div>
     </div>
