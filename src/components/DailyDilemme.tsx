@@ -25,6 +25,13 @@ const TOPIC_LABELS: Record<string, { emoji: string; label: string }> = {
 const DailyDilemme = () => {
   const { dilemme, loading, voteResult, hasVoted, voting, vote, getTimeUntilNext } = useDailyDilemme();
   const [countdown, setCountdown] = useState("");
+  const { playConfirm, vibrate } = useSounds();
+
+  const handleVote = (choice: "a" | "b") => {
+    vote(choice);
+    playConfirm();
+    vibrate(50);
+  };
 
   useEffect(() => {
     const tick = () => setCountdown(formatCountdown(getTimeUntilNext()));
