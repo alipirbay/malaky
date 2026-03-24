@@ -5,7 +5,7 @@ import type { GameCard, GameMode, Vibe } from "./types";
 import { GAME_MODES, VIBES } from "./config";
 import {
   truthPrompts, dareActions, neverBase, likelyBase,
-  ratherA, ratherB, challengeActions, dilemmeA, dilemmeB,
+  ratherA, ratherB, challengeActions,
 } from "./card_content";
 
 const MINIMUM_CARDS_PER_COMBO = 150;
