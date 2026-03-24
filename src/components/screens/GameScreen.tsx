@@ -34,7 +34,11 @@ const GameScreen = () => {
     selectedMode,
     nextCard,
     setScreen,
+    soundEnabled,
+    toggleSound,
   } = useGameStore();
+
+  const { playClick, playTick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
 
   const [showPauseMenu, setShowPauseMenu] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
