@@ -14,8 +14,13 @@ const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 function extractDuration(text: string): number {
-  const match = text.match(/(\d+)\s*(?:s|sec|secondes?)/i);
-  if (match) return parseInt(match[1], 10);
+  const minuteMatch = text.match(/(\d+)\s*(?:minute|minutes)/i);
+  if (minuteMatch) return parseInt(minuteMatch[1], 10) * 60;
+  if (/une?\s+minute/i.test(text)) return 60;
+
+  const secondMatch = text.match(/(\d+)\s*(?:s|sec|secondes?)/i);
+  if (secondMatch) return parseInt(secondMatch[1], 10);
+
   return 15;
 }
 
