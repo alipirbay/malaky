@@ -73,6 +73,5 @@ export const STORE_PACKS = [
   { id: "confessions", vibe: "confessions" as Vibe, name: "Pack Confessions 🎭", emoji: "🎭", description: "Secrets profonds et vérités cachées", price: "7 900 Ar", priceValue: 7900, cardCount: 900, free: false },
   { id: "vip", vibe: "vip" as Vibe, name: "Pack VIP 👑", emoji: "👑", description: "Questions premium, ego et pouvoir", price: "9 900 Ar", priceValue: 9900, cardCount: 900, free: false },
   { id: "afterdark", vibe: "afterdark" as Vibe, name: "Pack After Dark 🔞", emoji: "🔞", description: "18+, le plus osé, sans aucun filtre", price: "12 900 Ar", priceValue: 12900, cardCount: 900, free: false },
-  { id: "bundle_hot_chaos", vibe: null, name: "Bundle Hot + Chaos 🎁", emoji: "🎁", description: "Les deux classiques payants", price: "15 000 Ar", priceValue: 15000, cardCount: 1800, free: false },
   { id: "bundle_all", vibe: null, name: "Mega Bundle 💎", emoji: "💎", description: "TOUS les packs au meilleur prix", price: "49 900 Ar", priceValue: 49900, cardCount: 7200, free: false },
 ] as const;

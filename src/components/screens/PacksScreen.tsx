@@ -8,10 +8,6 @@ const PacksScreen = () => {
   const { setScreen, unlockVibe, unlockBundle, unlockedVibes } = useGameStore();
 
   const handleBuy = (packId: (typeof STORE_PACKS)[number]["id"]) => {
-    if (packId === "bundle_hot_chaos") {
-      unlockBundle(["hot", "chaos"]);
-      return;
-    }
     if (packId === "bundle_all") {
       unlockBundle(["hot", "chaos", "couple", "apero", "mada", "confessions", "vip", "afterdark"]);
       return;
@@ -43,13 +39,11 @@ const PacksScreen = () => {
       <div className="space-y-3 pb-6 overflow-y-auto flex-1">
         {STORE_PACKS.map((pack, i) => {
           const purchased =
-            pack.id === "bundle_hot_chaos"
-              ? unlockedVibes.hot && unlockedVibes.chaos
-              : pack.id === "bundle_all"
-                ? Object.values(unlockedVibes).every(Boolean)
-                : pack.vibe
-                  ? unlockedVibes[pack.vibe as Vibe]
-                  : false;
+            pack.id === "bundle_all"
+              ? Object.values(unlockedVibes).every(Boolean)
+              : pack.vibe
+                ? unlockedVibes[pack.vibe as Vibe]
+                : false;
 
           const isBundle = pack.id.startsWith("bundle");
 
