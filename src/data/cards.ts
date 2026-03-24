@@ -107,37 +107,11 @@ const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] =>
     .slice(0, Math.max(160, MINIMUM_CARDS_PER_COMBO))
     .map((text, i) => createCard("quick_challenge", vibe, i + 1, "timer", text));
 
-const buildDilemmeDeck = (vibe: Vibe): GameCard[] => {
-  const aList = dilemmeA[vibe] || [];
-  const bList = dilemmeB[vibe] || [];
-  const cards: GameCard[] = [];
-  let idx = 1;
-
-  // Direct pairs
-  for (let i = 0; i < Math.min(aList.length, bList.length); i++) {
-    cards.push(createCard("dilemme", vibe, idx++, "dilemme", `{player}, tu préfères : ${aList[i]} OU ${bList[i]} ?`));
-  }
-
-  // Cross-combine for more cards
-  crossTexts(aList, bList, (a, b) => `{player}, dilemme : ${a} OU ${b} ?`)
-    .slice(0, 150)
-    .forEach(text => { if (!cards.some(c => c.text === text)) cards.push(createCard("dilemme", vibe, idx++, "dilemme", text)); });
-
-  // Fill to minimum
-  while (cards.length < MINIMUM_CARDS_PER_COMBO) {
-    const i = cards.length % aList.length;
-    const j = (cards.length + 3) % bList.length;
-    cards.push(createCard("dilemme", vibe, idx++, "dilemme", `{player}, choisis : ${aList[i]} OU ${bList[j]} ? Pas d'esquive.`));
-  }
-
-  return cards;
-};
-
 // Build all cards
 export const CARDS: GameCard[] = [];
 
 const ALL_VIBES: Vibe[] = ["soft", "fun", "hot", "chaos", "couple", "apero", "mada", "confessions", "vip", "afterdark"];
-const builders = [buildTruthDareDeck, buildNeverDeck, buildMostLikelyDeck, buildWouldYouRatherDeck, buildQuickChallengeDeck, buildDilemmeDeck];
+const builders = [buildTruthDareDeck, buildNeverDeck, buildMostLikelyDeck, buildWouldYouRatherDeck, buildQuickChallengeDeck];
 
 for (const vibe of ALL_VIBES) {
   for (const builder of builders) {
