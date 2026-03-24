@@ -35,26 +35,67 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_dilemmes: {
+        Row: {
+          active_date: string
+          created_at: string
+          id: string
+          option_a: string
+          option_b: string
+          question: string
+          topic: string
+        }
+        Insert: {
+          active_date?: string
+          created_at?: string
+          id?: string
+          option_a: string
+          option_b: string
+          question: string
+          topic?: string
+        }
+        Update: {
+          active_date?: string
+          created_at?: string
+          id?: string
+          option_a?: string
+          option_b?: string
+          question?: string
+          topic?: string
+        }
+        Relationships: []
+      }
       dilemme_votes: {
         Row: {
           card_text: string
           choice: string
           created_at: string
+          dilemme_id: string | null
           id: string
         }
         Insert: {
           card_text: string
           choice: string
           created_at?: string
+          dilemme_id?: string | null
           id?: string
         }
         Update: {
           card_text?: string
           choice?: string
           created_at?: string
+          dilemme_id?: string | null
           id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "dilemme_votes_dilemme_id_fkey"
+            columns: ["dilemme_id"]
+            isOneToOne: false
+            referencedRelation: "daily_dilemmes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -62,6 +103,14 @@ export type Database = {
     }
     Functions: {
       get_active_users_count: { Args: never; Returns: number }
+      get_daily_dilemme_votes: {
+        Args: { p_dilemme_id: string }
+        Returns: {
+          choice_a_pct: number
+          choice_b_pct: number
+          total_votes: number
+        }[]
+      }
       get_dilemme_votes: {
         Args: { p_card_text: string }
         Returns: {
