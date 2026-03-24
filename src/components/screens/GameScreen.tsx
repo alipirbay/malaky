@@ -105,7 +105,7 @@ const GameScreen = () => {
   }
 
   const cardText = fillPlayerNames(card.text, currentPlayer.name, players.map((p) => p.name));
-  const cardMeta = CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" };
+  const totalDuration = extractDuration(cardText);
   const timerProgress = totalDuration > 0 ? timeLeft / totalDuration : 0;
 
   return (
