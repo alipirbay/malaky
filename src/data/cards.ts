@@ -40,9 +40,14 @@ const likelySuffix: string[] = [
   "ce soir ?", "sans aucune honte ?", "dans les 24h ?", "si personne ne regardait ?",
 ];
 
-const challengeTwists: string[] = [
-  "", " Le groupe juge.", " Sans préparation.", " Fais-le maintenant.",
+const challengeVariants: string[] = [
+  "",
+  " Le groupe juge.",
+  " Sans préparation.",
+  " Fais-le maintenant.",
 ];
+
+const hasExplicitDuration = (text: string) => /(\d+)\s*(?:s|sec|secondes?|minute|minutes)/i.test(text) || /une?\s+minute/i.test(text);
 
 const crossTexts = (left: string[], right: string[], mapper: (a: string, b: string) => string) =>
   left.flatMap((a) => right.map((b) => mapper(a, b)));
