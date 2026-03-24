@@ -25,6 +25,9 @@ interface GameState {
   deck: GameCard[];
   stats: GameStats;
   passesRemaining: Record<string, number>;
+  soundEnabled: boolean;
+  soundVolume: number;
+  vibrationEnabled: boolean;
   addPlayer: (name: string) => void;
   removePlayer: (index: number) => void;
   shufflePlayers: () => void;
@@ -36,6 +39,9 @@ interface GameState {
   startGame: () => void;
   nextCard: (action: "done" | "refuse" | "skip") => void;
   resetGame: () => void;
+  toggleSound: () => void;
+  setSoundVolume: (vol: number) => void;
+  toggleVibration: () => void;
 }
 
 const PLAYER_COLORS = [
