@@ -266,6 +266,7 @@ const GameScreen = () => {
                     )}
                   </div>
                 </div>
+              )}
             </div>
           </motion.div>
         </AnimatePresence>
