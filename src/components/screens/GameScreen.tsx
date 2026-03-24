@@ -11,6 +11,7 @@ const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   duel: { label: "Duel", color: "280 65% 60%" },
   vote: { label: "Vote", color: "142 71% 45%" },
   timer: { label: "Chrono", color: "25 95% 53%" },
+  dilemme: { label: "Dilemme", color: "280 65% 60%" },
 };
 
 const SWIPE_THRESHOLD = 100;

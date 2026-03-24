@@ -5,9 +5,9 @@ const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
 
   const stats = [
-    { label: "Modes", value: "5", emoji: "🎯" },
-    { label: "Ambiances", value: "4", emoji: "🎭" },
-    { label: "Cartes", value: "3200+", emoji: "🃏" },
+    { label: "Modes", value: "6", emoji: "🎯" },
+    { label: "Packs", value: "10", emoji: "🎭" },
+    { label: "Cartes", value: "9000+", emoji: "🃏" },
   ];
 
   return (
