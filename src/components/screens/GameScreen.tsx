@@ -50,8 +50,13 @@ const GameScreen = () => {
   const cardText = card
     ? fillPlayerNames(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
     : "";
-  const isTimerCard = card?.card_type === "timer";
-  const totalDuration = extractDuration(cardText);
+  const isTimerCard = card?.card_type === "timer"; // manual GO button
+  const isQuickChallengeMode = selectedMode === "quick_challenge";
+  // Auto-timer: non-action cards in défis express get a 15s auto countdown
+  const isAutoTimer = isQuickChallengeMode && !isTimerCard && card != null;
+  const AUTO_DURATION = 15;
+  const totalDuration = isTimerCard ? extractDuration(cardText) : AUTO_DURATION;
+  const showTimer = isTimerCard || isAutoTimer;
   const cardMeta = card
     ? CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" }
     : { label: "", color: "210 40% 98%" };
@@ -66,7 +71,12 @@ const GameScreen = () => {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }, [currentCardIndex, totalDuration]);
+
+    // Auto-start for non-action cards in quick_challenge
+    if (isAutoTimer) {
+      setTimerRunning(true);
+    }
+  }, [currentCardIndex, totalDuration, isAutoTimer]);
 
   useEffect(() => {
     if (!timerRunning) return;
@@ -201,7 +211,7 @@ const GameScreen = () => {
 
               <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
 
-              {isTimerCard && (
+              {showTimer && (
                 <div className="mt-6 flex flex-col items-center gap-3">
                   <div className="relative flex h-24 w-24 items-center justify-center">
                     <svg className="absolute inset-0 -rotate-90" viewBox="0 0 96 96">
@@ -225,7 +235,8 @@ const GameScreen = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {!timerRunning && !timerDone && (
+                    {/* Manual GO button only for timer (action) cards */}
+                    {isTimerCard && !timerRunning && !timerDone && (
                       <button
                         onClick={startTimer}
                         className="gradient-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95"
@@ -234,7 +245,7 @@ const GameScreen = () => {
                       </button>
                     )}
 
-                    {timerRunning && <span className="text-sm font-bold text-primary">Chrono en cours...</span>}
+                    {timerRunning && <span className="animate-pulse text-sm font-bold text-primary">⏱️ {isAutoTimer ? "Réponds vite !" : "Chrono en cours..."}</span>}
 
                     {timerDone && (
                       <div className="flex items-center gap-2">
