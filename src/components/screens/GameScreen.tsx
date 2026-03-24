@@ -50,8 +50,13 @@ const GameScreen = () => {
   const cardText = card
     ? fillPlayerNames(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
     : "";
-  const isTimerCard = card?.card_type === "timer";
-  const totalDuration = extractDuration(cardText);
+  const isTimerCard = card?.card_type === "timer"; // manual GO button
+  const isQuickChallengeMode = selectedMode === "quick_challenge";
+  // Auto-timer: non-action cards in défis express get a 15s auto countdown
+  const isAutoTimer = isQuickChallengeMode && !isTimerCard && card != null;
+  const AUTO_DURATION = 15;
+  const totalDuration = isTimerCard ? extractDuration(cardText) : AUTO_DURATION;
+  const showTimer = isTimerCard || isAutoTimer;
   const cardMeta = card
     ? CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" }
     : { label: "", color: "210 40% 98%" };
@@ -66,7 +71,12 @@ const GameScreen = () => {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }, [currentCardIndex, totalDuration]);
+
+    // Auto-start for non-action cards in quick_challenge
+    if (isAutoTimer) {
+      setTimerRunning(true);
+    }
+  }, [currentCardIndex, totalDuration, isAutoTimer]);
 
   useEffect(() => {
     if (!timerRunning) return;
