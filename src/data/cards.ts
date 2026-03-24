@@ -157,34 +157,48 @@ const buildWouldYouRatherDeck = (vibe: Vibe): GameCard[] =>
     .map((text, i) => createCard("would_you_rather", vibe, i + 1, "truth", text));
 
 const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] => {
-  const actions = challengeActions[vibe] || [];
   const cards: GameCard[] = [];
   let idx = 1;
 
-  for (const action of actions) {
-    const hasDuration = hasExplicitDuration(action);
+  // Pull from ALL card content for this vibe to make a real mix
+  const truths = (truthPrompts[vibe] || []).slice(0, 8);
+  const dares = (challengeActions[vibe] || []);
+  const nevers = (neverBase[vibe] || []).slice(0, 8);
+  const likelys = (likelyBase[vibe] || []).slice(0, 8);
+  const rathersA = (ratherA[vibe] || []).slice(0, 8);
+  const rathersB = (ratherB[vibe] || []).slice(0, 8);
 
+  // Truth cards → auto timer (15s)
+  for (const t of truths) {
+    cards.push(createCard("quick_challenge", vibe, idx++, "truth", `{player}, ${t}`));
+  }
+
+  // Never have I ever → auto timer (15s)  
+  for (const n of nevers) {
+    cards.push(createCard("quick_challenge", vibe, idx++, "vote", `Je n'ai jamais ${n}`));
+  }
+
+  // Most likely → auto timer (15s)
+  for (const l of likelys) {
+    cards.push(createCard("quick_challenge", vibe, idx++, "vote", `Qui est le plus susceptible de ${l}`));
+  }
+
+  // Would you rather → auto timer (15s)
+  const rLen = Math.min(rathersA.length, rathersB.length);
+  for (let i = 0; i < rLen; i++) {
+    cards.push(createCard("quick_challenge", vibe, idx++, "truth", `Tu préfères ${rathersA[i]} ou ${rathersB[i]} ?`));
+  }
+
+  // Action/dare cards → manual timer with explicit duration
+  for (const action of dares) {
+    const hasDuration = hasExplicitDuration(action);
     if (hasDuration) {
-      // Card already has a duration → timer card, keep as-is with variants
-      for (const suffix of challengeVariants) {
-        cards.push(createCard("quick_challenge", vibe, idx++, "timer", `{player}, ${action}${suffix}`.trim()));
-      }
+      cards.push(createCard("quick_challenge", vibe, idx++, "timer", `{player}, ${action}`));
     } else {
-      // No duration → mix of dare (no chrono) and timer (with chrono)
-      // 1) Simple dare versions
-      cards.push(createCard("quick_challenge", vibe, idx++, "dare", `{player}, ${action}`));
-      cards.push(createCard("quick_challenge", vibe, idx++, "dare", `{player}, ${action} Le groupe juge.`));
-      // 2) Timed versions with random durations
       const durations = [10, 15, 20];
       const dur = durations[idx % durations.length];
       cards.push(createCard("quick_challenge", vibe, idx++, "timer", `{player}, ${action.replace(/\.$/, "")} pendant ${dur} secondes.`));
     }
-  }
-
-  // Fill to minimum
-  while (cards.length < MINIMUM_CARDS_PER_COMBO) {
-    const base = actions[cards.length % actions.length];
-    cards.push(createCard("quick_challenge", vibe, idx++, "dare", `{player}, ${base} Fais-le maintenant.`));
   }
 
   return cards;
