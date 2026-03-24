@@ -15,9 +15,9 @@ const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
 
 // Extract duration in seconds from card text
 function extractDuration(text: string): number {
-  const match = text.match(/(\d+)\s*secondes?/i);
+  const match = text.match(/(\d+)\s*(?:s|sec|secondes?)/i);
   if (match) return parseInt(match[1], 10);
-  return 15; // default
+  return 15;
 }
 
 const GameScreen = () => {
