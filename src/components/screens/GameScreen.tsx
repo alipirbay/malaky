@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { fillPlayerNames, GAME_MODES } from "@/data/cards";
-import { ArrowLeft, Pause, Volume2, ChevronRight } from "lucide-react";
+import { ArrowLeft, Pause, Volume2, ChevronRight, Play, RotateCcw } from "lucide-react";
 
 const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   truth: { label: "Vérité", color: "217 91% 60%" },
@@ -12,6 +12,13 @@ const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   vote: { label: "Vote", color: "142 71% 45%" },
   timer: { label: "Chrono", color: "25 95% 53%" },
 };
+
+// Extract duration in seconds from card text
+function extractDuration(text: string): number {
+  const match = text.match(/(\d+)\s*secondes?/i);
+  if (match) return parseInt(match[1], 10);
+  return 15; // default
+}
 
 const GameScreen = () => {
   const {
@@ -23,9 +30,56 @@ const GameScreen = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [direction, setDirection] = useState(1);
 
+  // Timer state
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerDone, setTimerDone] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const currentPlayer = players[currentPlayerIndex];
   const card = deck[currentCardIndex];
   const mode = GAME_MODES.find((item) => item.id === selectedMode);
+
+  const isTimerCard = card?.card_type === "timer";
+  const totalDuration = card ? extractDuration(card.text) : 15;
+
+  // Reset timer state when card changes
+  useEffect(() => {
+    setTimerRunning(false);
+    setTimerDone(false);
+    setTimeLeft(totalDuration);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  }, [currentCardIndex, totalDuration]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (!timerRunning) return;
+    intervalRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setTimerRunning(false);
+          setTimerDone(true);
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [timerRunning]);
+
+  const startTimer = () => {
+    setTimeLeft(totalDuration);
+    setTimerDone(false);
+    setTimerRunning(true);
+  };
+
+  const resetTimer = () => {
+    setTimerRunning(false);
+    setTimerDone(false);
+    setTimeLeft(totalDuration);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
 
   const handleNext = useCallback(() => {
     if (isAnimating) return;
@@ -52,6 +106,7 @@ const GameScreen = () => {
 
   const cardText = fillPlayerNames(card.text, currentPlayer.name, players.map((p) => p.name));
   const cardMeta = CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" };
+  const timerProgress = totalDuration > 0 ? timeLeft / totalDuration : 0;
 
   return (
     <div className="flex min-h-screen flex-col gradient-surface">
@@ -104,6 +159,64 @@ const GameScreen = () => {
               </span>
 
               <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
+
+              {/* Timer UI for chrono cards */}
+              {isTimerCard && (
+                <div className="mt-6 flex flex-col items-center gap-3">
+                  {/* Circular timer */}
+                  <div className="relative flex h-24 w-24 items-center justify-center">
+                    <svg className="absolute inset-0 -rotate-90" viewBox="0 0 96 96">
+                      <circle cx="48" cy="48" r="42" fill="none" stroke="hsl(var(--muted) / 0.3)" strokeWidth="6" />
+                      <circle
+                        cx="48" cy="48" r="42" fill="none"
+                        stroke={timerDone ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 42}
+                        strokeDashoffset={2 * Math.PI * 42 * (1 - timerProgress)}
+                        className="transition-all duration-1000 ease-linear"
+                      />
+                    </svg>
+                    <span className={`text-2xl font-black ${timerDone ? "text-destructive" : "text-foreground"}`}>
+                      {timeLeft}s
+                    </span>
+                  </div>
+
+                  {/* Timer controls */}
+                  <div className="flex items-center gap-2">
+                    {!timerRunning && !timerDone && (
+                      <button
+                        onClick={startTimer}
+                        className="flex items-center gap-2 rounded-xl gradient-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95"
+                      >
+                        <Play size={16} /> GO
+                      </button>
+                    )}
+                    {timerRunning && (
+                      <span className="animate-pulse text-sm font-bold text-primary">
+                        ⏱️ En cours...
+                      </span>
+                    )}
+                    {timerDone && (
+                      <div className="flex items-center gap-2">
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="text-sm font-bold text-destructive"
+                        >
+                          ⏰ Temps écoulé !
+                        </motion.span>
+                        <button
+                          onClick={resetTimer}
+                          className="rounded-lg bg-secondary p-2 text-muted-foreground transition-transform active:scale-95"
+                        >
+                          <RotateCcw size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         </AnimatePresence>
