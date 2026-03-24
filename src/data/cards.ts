@@ -159,16 +159,19 @@ const buildWouldYouRatherDeck = (vibe: Vibe): GameCard[] =>
 const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] =>
   (challengeActions[vibe] || [])
     .flatMap((action) => {
-      const variants = hasExplicitDuration(action)
-        ? [action]
-        : [10, 15, 20, 30].map((seconds) => `${action.replace(/\.$/, "")} pendant ${seconds} secondes.`);
+      const hasDuration = hasExplicitDuration(action);
+      // Cards WITH explicit duration → timer type
+      // Cards WITHOUT duration → dare type (no chrono needed)
+      const cardType: CardType = hasDuration ? "timer" : "dare";
 
-      return variants.flatMap((variant) =>
-        challengeVariants.map((suffix) => `${variant}${suffix}`.trim())
-      );
+      return challengeVariants.map((suffix) => `${action}${suffix}`.trim());
     })
+    .filter((text, i, arr) => arr.indexOf(text) === i) // dedupe inline
     .slice(0, Math.max(160, MINIMUM_CARDS_PER_COMBO))
-    .map((text, i) => createCard("quick_challenge", vibe, i + 1, "timer", `{player}, ${text}`));
+    .map((text, i) => {
+      const hasDuration = hasExplicitDuration(text);
+      return createCard("quick_challenge", vibe, i + 1, hasDuration ? "timer" : "dare", `{player}, ${text}`);
+    });
 
 // Build all cards
 export const CARDS: GameCard[] = [];
