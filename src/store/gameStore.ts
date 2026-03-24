@@ -209,10 +209,19 @@ export const useGameStore = create<GameState>()(
           unlockedVibes: get().unlockedVibes,
         });
       },
+
+      toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
+      setSoundVolume: (vol) => set({ soundVolume: vol }),
+      toggleVibration: () => set((s) => ({ vibrationEnabled: !s.vibrationEnabled })),
     }),
     {
       name: "malaky-store",
-      partialize: (state) => ({ unlockedVibes: state.unlockedVibes }),
+      partialize: (state) => ({
+        unlockedVibes: state.unlockedVibes,
+        soundEnabled: state.soundEnabled,
+        soundVolume: state.soundVolume,
+        vibrationEnabled: state.vibrationEnabled,
+      }),
     }
   )
 );
