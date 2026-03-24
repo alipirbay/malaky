@@ -121,11 +121,7 @@ export const useGameStore = create<GameState>()(
           return;
         }
 
-        const cards = [...getFilteredCards(selectedMode, selectedVibe, players.length)];
-        for (let i = cards.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [cards[i], cards[j]] = [cards[j], cards[i]];
-        }
+        const cards = deduplicateShuffle([...getFilteredCards(selectedMode, selectedVibe, players.length)]);
 
         const passes: Record<string, number> = {};
         const playerStats: Record<string, { played: number; refused: number }> = {};

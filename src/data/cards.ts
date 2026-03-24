@@ -56,7 +56,7 @@ const pairTexts = (base: string[], suffixes: string[]) =>
   base.flatMap((entry) => suffixes.map((suffix) => `${entry} ${suffix}`));
 
 // Deduplicate and space out cards so no similar text appears within a window
-function deduplicateShuffle(cards: GameCard[]): GameCard[] {
+export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
   // First: remove exact text duplicates
   const seen = new Set<string>();
   const unique = cards.filter(c => {
