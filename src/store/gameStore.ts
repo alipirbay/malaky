@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { GameMode, Vibe, GameCard } from "@/data/cards";
-import { getFilteredCards } from "@/data/cards";
+import { getFilteredCards, deduplicateShuffle } from "@/data/cards";
 
 interface Player {
   name: string;
