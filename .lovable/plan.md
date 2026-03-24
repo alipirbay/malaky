@@ -1,35 +1,43 @@
 
 
-## Swipe + Buttons for Game Cards
+## Plan: Sons fonctionnels + Paramètres revus
 
-### What changes (single file: `GameScreen.tsx`)
+### Modifications demandees
 
-**Swipe gestures (left/right only):**
-- Add `drag="x"` to the card `motion.div` with elastic constraints
-- Swipe right (offset > 100px) = "Fait" (done)
-- Swipe left (offset < -100px) = "Refuse"
-- No swipe up — Pass is button-only
+1. **SettingsScreen** - Refonte complete
+   - Supprimer l'option "Langue"
+   - Son: switch on/off fonctionnel + slider de volume (0-100%)
+   - Vibrations: switch on/off fonctionnel
+   - Confidentialite: garde tel quel
+   - Footer: "Made with ❤️ by APli"
+   - Persister les settings dans le store (zustand persist)
 
-**Visual feedback during drag:**
-- Card rotates slightly based on drag X position (`rotate: dragX / 20`)
-- Green overlay + "Fait ✅" text fades in when dragging right
-- Red overlay + "Refuse ❌" text fades in when dragging left
-- Card flies off-screen on release (exit animation matches swipe direction)
+2. **Sound system** - Nouveau hook `useSounds.ts`
+   - Creer un hook centralise qui gere tous les sons via Web Audio API (pas besoin d'ElevenLabs, sons generes programmatiquement)
+   - Sons a implementer:
+     - **Clic bouton**: court "pop" synthetique
+     - **Chrono tick**: bip a chaque seconde pendant le countdown
+     - **Chrono fin**: alarme/buzzer quand temps ecoule
+     - **Transition carte**: whoosh leger au changement de carte
+     - **Vote dilemme**: son de confirmation
+   - Le hook lit `soundEnabled` et `soundVolume` depuis le store
+   - Sons generes via `OscillatorNode` + `GainNode` (zero fichier audio a charger)
 
-**Button animations:**
-- Keep all 3 buttons (Fait, Refuse, Pass)
-- When a button is clicked, animate the card out with the same fly-off effect as swipe:
-  - "Fait" → card flies right with green tint
-  - "Refuse" → card flies left with red tint
-  - "Pass" → card fades up slightly
-- Track `exitX` state to control exit animation direction
+3. **GameStore** - Ajout settings
+   - Ajouter `soundEnabled: boolean`, `soundVolume: number`, `vibrationEnabled: boolean`
+   - Actions: `toggleSound`, `setSoundVolume`, `toggleVibration`
+   - Persister ces valeurs dans le localStorage via `partialize`
 
-**Swipe hint:**
-- Show "← Swipe pour jouer →" text under the card on the first card only, fading out after 2 seconds
+4. **Integration des sons dans les composants**
+   - `GameScreen`: son tick chrono, buzzer fin, whoosh carte next
+   - `HomeScreen` / boutons: son clic
+   - `DailyDilemme`: son confirmation vote
+   - Bouton Volume2 dans GameScreen: toggle mute rapide
 
-### Implementation approach
-- Use `useMotionValue` and `useTransform` from framer-motion for real-time drag tracking
-- Store `exitDirection` state (`"left" | "right" | "up"`) to drive exit animation
-- Use `onDragEnd` with velocity/offset threshold detection
-- Delay `nextCard()` call by ~200ms to let exit animation play
+### Details techniques
+
+- Sons synthetiques via Web Audio API (`AudioContext`, `OscillatorNode`) - pas de fichiers audio, chargement instantane
+- Le slider volume utilise le composant `Slider` deja present dans le projet
+- Le switch utilise le composant `Switch` deja present
+- Vibration via `navigator.vibrate()` (mobile uniquement, silencieux sur desktop)
 
