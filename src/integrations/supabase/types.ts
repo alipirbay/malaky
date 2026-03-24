@@ -14,13 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      active_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
+      dilemme_votes: {
+        Row: {
+          card_text: string
+          choice: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          card_text: string
+          choice: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          card_text?: string
+          choice?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_active_users_count: { Args: never; Returns: number }
+      get_dilemme_votes: {
+        Args: { p_card_text: string }
+        Returns: {
+          choice_a_pct: number
+          choice_b_pct: number
+          total_votes: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
