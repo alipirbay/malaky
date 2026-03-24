@@ -156,22 +156,39 @@ const buildWouldYouRatherDeck = (vibe: Vibe): GameCard[] =>
     .slice(0, Math.max(160, MINIMUM_CARDS_PER_COMBO))
     .map((text, i) => createCard("would_you_rather", vibe, i + 1, "truth", text));
 
-const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] =>
-  (challengeActions[vibe] || [])
-    .flatMap((action) => {
-      const hasDuration = hasExplicitDuration(action);
-      // Cards WITH explicit duration → timer type
-      // Cards WITHOUT duration → dare type (no chrono needed)
-      const cardType: CardType = hasDuration ? "timer" : "dare";
+const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] => {
+  const actions = challengeActions[vibe] || [];
+  const cards: GameCard[] = [];
+  let idx = 1;
 
-      return challengeVariants.map((suffix) => `${action}${suffix}`.trim());
-    })
-    .filter((text, i, arr) => arr.indexOf(text) === i) // dedupe inline
-    .slice(0, Math.max(160, MINIMUM_CARDS_PER_COMBO))
-    .map((text, i) => {
-      const hasDuration = hasExplicitDuration(text);
-      return createCard("quick_challenge", vibe, i + 1, hasDuration ? "timer" : "dare", `{player}, ${text}`);
-    });
+  for (const action of actions) {
+    const hasDuration = hasExplicitDuration(action);
+
+    if (hasDuration) {
+      // Card already has a duration → timer card, keep as-is with variants
+      for (const suffix of challengeVariants) {
+        cards.push(createCard("quick_challenge", vibe, idx++, "timer", `{player}, ${action}${suffix}`.trim()));
+      }
+    } else {
+      // No duration → mix of dare (no chrono) and timer (with chrono)
+      // 1) Simple dare versions
+      cards.push(createCard("quick_challenge", vibe, idx++, "dare", `{player}, ${action}`));
+      cards.push(createCard("quick_challenge", vibe, idx++, "dare", `{player}, ${action} Le groupe juge.`));
+      // 2) Timed versions with random durations
+      const durations = [10, 15, 20];
+      const dur = durations[idx % durations.length];
+      cards.push(createCard("quick_challenge", vibe, idx++, "timer", `{player}, ${action.replace(/\.$/, "")} pendant ${dur} secondes.`));
+    }
+  }
+
+  // Fill to minimum
+  while (cards.length < MINIMUM_CARDS_PER_COMBO) {
+    const base = actions[cards.length % actions.length];
+    cards.push(createCard("quick_challenge", vibe, idx++, "dare", `{player}, ${base} Fais-le maintenant.`));
+  }
+
+  return cards;
+};
 
 // Build all cards
 export const CARDS: GameCard[] = [];
