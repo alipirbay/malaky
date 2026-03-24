@@ -13,7 +13,6 @@ const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   timer: { label: "Chrono", color: "25 95% 53%" },
 };
 
-// Extract duration in seconds from card text
 function extractDuration(text: string): number {
   const match = text.match(/(\d+)\s*(?:s|sec|secondes?)/i);
   if (match) return parseInt(match[1], 10);
@@ -22,15 +21,18 @@ function extractDuration(text: string): number {
 
 const GameScreen = () => {
   const {
-    players, currentPlayerIndex, currentCardIndex, deck,
-    selectedMode, nextCard, setScreen,
+    players,
+    currentPlayerIndex,
+    currentCardIndex,
+    deck,
+    selectedMode,
+    nextCard,
+    setScreen,
   } = useGameStore();
 
   const [showPauseMenu, setShowPauseMenu] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [direction, setDirection] = useState(1);
-
-  // Timer state
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerDone, setTimerDone] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -40,51 +42,80 @@ const GameScreen = () => {
   const card = deck[currentCardIndex];
   const mode = GAME_MODES.find((item) => item.id === selectedMode);
 
+  const cardText = card
+    ? fillPlayerNames(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
+    : "";
   const isTimerCard = card?.card_type === "timer";
-  const totalDuration = card ? extractDuration(card.text) : 15;
+  const totalDuration = extractDuration(cardText);
+  const cardMeta = card
+    ? CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" }
+    : { label: "", color: "210 40% 98%" };
+  const timerProgress = totalDuration > 0 ? timeLeft / totalDuration : 0;
 
-  // Reset timer state when card changes
   useEffect(() => {
     setTimerRunning(false);
     setTimerDone(false);
     setTimeLeft(totalDuration);
-    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }, [currentCardIndex, totalDuration]);
 
-  // Timer countdown
   useEffect(() => {
     if (!timerRunning) return;
+
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           setTimerRunning(false);
           setTimerDone(true);
-          if (intervalRef.current) clearInterval(intervalRef.current);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
           return 0;
         }
+
         return prev - 1;
       });
     }, 1000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [timerRunning]);
 
-  const startTimer = () => {
+  const startTimer = useCallback(() => {
     setTimeLeft(totalDuration);
     setTimerDone(false);
     setTimerRunning(true);
-  };
+  }, [totalDuration]);
 
-  const resetTimer = () => {
+  const resetTimer = useCallback(() => {
     setTimerRunning(false);
     setTimerDone(false);
     setTimeLeft(totalDuration);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [totalDuration]);
 
   const handleNext = useCallback(() => {
     if (isAnimating) return;
     setIsAnimating(true);
     setDirection(1);
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
     setTimeout(() => {
       nextCard("done");
       setIsAnimating(false);
@@ -93,10 +124,13 @@ const GameScreen = () => {
 
   if (!card || !currentPlayer) {
     return (
-      <div className="flex min-h-screen items-center justify-center gradient-surface">
+      <div className="gradient-surface flex min-h-screen items-center justify-center">
         <div className="text-center">
           <p className="mb-4 text-xl font-bold text-foreground">Pas assez de cartes pour cette config 😅</p>
-          <button onClick={() => setScreen("vibe")} className="rounded-xl gradient-primary px-6 py-3 font-semibold text-primary-foreground">
+          <button
+            onClick={() => setScreen("vibe")}
+            className="gradient-primary rounded-xl px-6 py-3 font-semibold text-primary-foreground"
+          >
             Changer les paramètres
           </button>
         </div>
@@ -104,12 +138,8 @@ const GameScreen = () => {
     );
   }
 
-  const cardText = fillPlayerNames(card.text, currentPlayer.name, players.map((p) => p.name));
-  const totalDuration = extractDuration(cardText);
-  const cardMeta = CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" };
-  const timerProgress = totalDuration > 0 ? timeLeft / totalDuration : 0;
-    <div className="flex min-h-screen flex-col gradient-surface">
-      {/* Header */}
+  return (
+    <div className="gradient-surface flex min-h-screen flex-col">
       <div className="flex items-center justify-between px-6 pb-2 pt-6">
         <div className="flex items-center gap-3">
           <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground">
@@ -125,18 +155,26 @@ const GameScreen = () => {
             <span className="font-bold text-foreground">{currentPlayer.name}</span>
           </div>
         </div>
+
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">{currentCardIndex + 1}/{deck.length}</span>
-          <button className="rounded-lg bg-card p-2 text-muted-foreground"><Volume2 size={16} /></button>
-          <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground"><Pause size={16} /></button>
+          <span className="text-xs text-muted-foreground">
+            {currentCardIndex + 1}/{deck.length}
+          </span>
+          <button className="rounded-lg bg-card p-2 text-muted-foreground">
+            <Volume2 size={16} />
+          </button>
+          <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground">
+            <Pause size={16} />
+          </button>
         </div>
       </div>
 
       <div className="flex items-center gap-2 px-6 pb-4">
-        <span className="text-sm text-muted-foreground">{mode?.emoji} {mode?.name}</span>
+        <span className="text-sm text-muted-foreground">
+          {mode?.emoji} {mode?.name}
+        </span>
       </div>
 
-      {/* Card area */}
       <div className="flex flex-1 flex-col items-center justify-center px-6">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
@@ -149,7 +187,6 @@ const GameScreen = () => {
             className="w-full max-w-sm"
           >
             <div className="card-game relative flex min-h-[340px] flex-col items-center justify-center overflow-hidden text-center">
-              {/* Type badge */}
               <span
                 className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold"
                 style={{ backgroundColor: `hsl(${cardMeta.color} / 0.15)`, color: `hsl(${cardMeta.color})` }}
@@ -159,15 +196,16 @@ const GameScreen = () => {
 
               <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
 
-              {/* Timer UI for chrono cards */}
               {isTimerCard && (
                 <div className="mt-6 flex flex-col items-center gap-3">
-                  {/* Circular timer */}
                   <div className="relative flex h-24 w-24 items-center justify-center">
                     <svg className="absolute inset-0 -rotate-90" viewBox="0 0 96 96">
                       <circle cx="48" cy="48" r="42" fill="none" stroke="hsl(var(--muted) / 0.3)" strokeWidth="6" />
                       <circle
-                        cx="48" cy="48" r="42" fill="none"
+                        cx="48"
+                        cy="48"
+                        r="42"
+                        fill="none"
                         stroke={timerDone ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
                         strokeWidth="6"
                         strokeLinecap="round"
@@ -181,29 +219,26 @@ const GameScreen = () => {
                     </span>
                   </div>
 
-                  {/* Timer controls */}
                   <div className="flex items-center gap-2">
                     {!timerRunning && !timerDone && (
                       <button
                         onClick={startTimer}
-                        className="flex items-center gap-2 rounded-xl gradient-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95"
+                        className="gradient-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95"
                       >
                         <Play size={16} /> GO
                       </button>
                     )}
-                    {timerRunning && (
-                      <span className="animate-pulse text-sm font-bold text-primary">
-                        ⏱️ En cours...
-                      </span>
-                    )}
+
+                    {timerRunning && <span className="text-sm font-bold text-primary">Chrono en cours...</span>}
+
                     {timerDone && (
                       <div className="flex items-center gap-2">
                         <motion.span
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
                           className="text-sm font-bold text-destructive"
                         >
-                          ⏰ Temps écoulé !
+                          Temps écoulé
                         </motion.span>
                         <button
                           onClick={resetTimer}
@@ -221,18 +256,16 @@ const GameScreen = () => {
         </AnimatePresence>
       </div>
 
-      {/* Next button */}
       <div className="px-6 pb-8 pt-4">
         <button
           onClick={handleNext}
           disabled={isAnimating}
-          className="w-full rounded-2xl gradient-primary py-5 text-base font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+          className="gradient-primary flex w-full items-center justify-center gap-2 rounded-2xl py-5 text-base font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50"
         >
           NEXT <ChevronRight size={20} />
         </button>
       </div>
 
-      {/* Pause menu */}
       <AnimatePresence>
         {showPauseMenu && (
           <motion.div
@@ -248,11 +281,28 @@ const GameScreen = () => {
               className="w-full max-w-sm rounded-3xl bg-card p-5 shadow-2xl"
             >
               <h3 className="text-lg font-bold text-foreground">Partie en pause</h3>
-              <p className="mt-1 text-sm text-muted-foreground">Tu peux reprendre, changer d'ambiance ou revenir à l'accueil.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Tu peux reprendre, changer d'ambiance ou revenir à l'accueil.
+              </p>
               <div className="mt-5 space-y-3">
-                <button onClick={() => setShowPauseMenu(false)} className="w-full rounded-2xl gradient-primary px-4 py-3 font-semibold text-primary-foreground transition-transform active:scale-95">Reprendre</button>
-                <button onClick={() => setScreen("vibe")} className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95">Changer d'ambiance</button>
-                <button onClick={() => setScreen("home")} className="w-full rounded-2xl bg-card px-4 py-3 font-semibold text-muted-foreground transition-transform active:scale-95">Quitter vers l'accueil</button>
+                <button
+                  onClick={() => setShowPauseMenu(false)}
+                  className="gradient-primary w-full rounded-2xl px-4 py-3 font-semibold text-primary-foreground transition-transform active:scale-95"
+                >
+                  Reprendre
+                </button>
+                <button
+                  onClick={() => setScreen("vibe")}
+                  className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
+                >
+                  Changer d'ambiance
+                </button>
+                <button
+                  onClick={() => setScreen("home")}
+                  className="w-full rounded-2xl bg-card px-4 py-3 font-semibold text-muted-foreground transition-transform active:scale-95"
+                >
+                  Quitter vers l'accueil
+                </button>
               </div>
             </motion.div>
           </motion.div>
