@@ -40,9 +40,14 @@ const likelySuffix: string[] = [
   "ce soir ?", "sans aucune honte ?", "dans les 24h ?", "si personne ne regardait ?",
 ];
 
-const challengeTwists: string[] = [
-  "en 10 secondes.", "en 15 secondes.", "en 20 secondes.", "en 30 secondes.",
+const challengeVariants: string[] = [
+  "",
+  " Le groupe juge.",
+  " Sans préparation.",
+  " Fais-le maintenant.",
 ];
+
+const hasExplicitDuration = (text: string) => /(\d+)\s*(?:s|sec|secondes?|minute|minutes)/i.test(text) || /une?\s+minute/i.test(text);
 
 const crossTexts = (left: string[], right: string[], mapper: (a: string, b: string) => string) =>
   left.flatMap((a) => right.map((b) => mapper(a, b)));
@@ -102,10 +107,18 @@ const buildWouldYouRatherDeck = (vibe: Vibe): GameCard[] =>
     .map((text, i) => createCard("would_you_rather", vibe, i + 1, "truth", text));
 
 const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] =>
-  crossTexts(challengeActions[vibe] || [], challengeTwists, (a, t) => `{player}, ${a} ${t}`)
-    .flatMap(text => [text, `${text} Le groupe juge.`, `${text} Sans préparation.`])
+  (challengeActions[vibe] || [])
+    .flatMap((action) => {
+      const variants = hasExplicitDuration(action)
+        ? [action]
+        : [10, 15, 20, 30].map((seconds) => `${action.replace(/\.$/, "")} pendant ${seconds} secondes.`);
+
+      return variants.flatMap((variant) =>
+        challengeVariants.map((suffix) => `${variant}${suffix}`.trim())
+      );
+    })
     .slice(0, Math.max(160, MINIMUM_CARDS_PER_COMBO))
-    .map((text, i) => createCard("quick_challenge", vibe, i + 1, "timer", text));
+    .map((text, i) => createCard("quick_challenge", vibe, i + 1, "timer", `{player}, ${text}`));
 
 // Build all cards
 export const CARDS: GameCard[] = [];
