@@ -192,8 +192,8 @@ const GameScreen = () => {
           <span className="text-xs text-muted-foreground">
             {currentCardIndex + 1}/{deck.length}
           </span>
-          <button className="rounded-lg bg-card p-2 text-muted-foreground">
-            <Volume2 size={16} />
+          <button onClick={toggleSound} className="rounded-lg bg-card p-2 text-muted-foreground">
+            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
           <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground">
             <Pause size={16} />

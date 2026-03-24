@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDailyDilemme } from "@/hooks/useDailyDilemme";
 import { Scale, Clock, TrendingUp, Sparkles } from "lucide-react";
+import { useSounds } from "@/hooks/useSounds";
 
 const formatCountdown = (ms: number) => {
   const hours = Math.floor(ms / (1000 * 60 * 60));
