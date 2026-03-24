@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDailyDilemme } from "@/hooks/useDailyDilemme";
 import { Scale, Clock, TrendingUp, Sparkles } from "lucide-react";
+import { useSounds } from "@/hooks/useSounds";
 
 const formatCountdown = (ms: number) => {
   const hours = Math.floor(ms / (1000 * 60 * 60));
@@ -24,6 +25,13 @@ const TOPIC_LABELS: Record<string, { emoji: string; label: string }> = {
 const DailyDilemme = () => {
   const { dilemme, loading, voteResult, hasVoted, voting, vote, getTimeUntilNext } = useDailyDilemme();
   const [countdown, setCountdown] = useState("");
+  const { playConfirm, vibrate } = useSounds();
+
+  const handleVote = (choice: "a" | "b") => {
+    vote(choice);
+    playConfirm();
+    vibrate(50);
+  };
 
   useEffect(() => {
     const tick = () => setCountdown(formatCountdown(getTimeUntilNext()));
@@ -101,7 +109,7 @@ const DailyDilemme = () => {
               className="flex flex-col gap-2.5"
             >
               <button
-                onClick={() => vote("a")}
+                onClick={() => handleVote("a")}
                 disabled={voting}
                 className="w-full rounded-2xl px-4 py-4 text-left text-sm font-bold transition-all active:scale-[0.97] disabled:opacity-50"
                 style={{
@@ -124,7 +132,7 @@ const DailyDilemme = () => {
               </div>
 
               <button
-                onClick={() => vote("b")}
+                onClick={() => handleVote("b")}
                 disabled={voting}
                 className="w-full rounded-2xl px-4 py-4 text-left text-sm font-bold transition-all active:scale-[0.97] disabled:opacity-50"
                 style={{

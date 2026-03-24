@@ -25,6 +25,9 @@ interface GameState {
   deck: GameCard[];
   stats: GameStats;
   passesRemaining: Record<string, number>;
+  soundEnabled: boolean;
+  soundVolume: number;
+  vibrationEnabled: boolean;
   addPlayer: (name: string) => void;
   removePlayer: (index: number) => void;
   shufflePlayers: () => void;
@@ -36,6 +39,9 @@ interface GameState {
   startGame: () => void;
   nextCard: (action: "done" | "refuse" | "skip") => void;
   resetGame: () => void;
+  toggleSound: () => void;
+  setSoundVolume: (vol: number) => void;
+  toggleVibration: () => void;
 }
 
 const PLAYER_COLORS = [
@@ -70,6 +76,9 @@ export const useGameStore = create<GameState>()(
       deck: [],
       stats: { cardsPlayed: 0, refusals: 0, playerStats: {} },
       passesRemaining: {},
+      soundEnabled: true,
+      soundVolume: 80,
+      vibrationEnabled: true,
 
       addPlayer: (name) => {
         const { players } = get();
@@ -200,10 +209,19 @@ export const useGameStore = create<GameState>()(
           unlockedVibes: get().unlockedVibes,
         });
       },
+
+      toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
+      setSoundVolume: (vol) => set({ soundVolume: vol }),
+      toggleVibration: () => set((s) => ({ vibrationEnabled: !s.vibrationEnabled })),
     }),
     {
       name: "malaky-store",
-      partialize: (state) => ({ unlockedVibes: state.unlockedVibes }),
+      partialize: (state) => ({
+        unlockedVibes: state.unlockedVibes,
+        soundEnabled: state.soundEnabled,
+        soundVolume: state.soundVolume,
+        vibrationEnabled: state.vibrationEnabled,
+      }),
     }
   )
 );

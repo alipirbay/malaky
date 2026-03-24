@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { fillPlayerNames, GAME_MODES } from "@/data/cards";
-import { ArrowLeft, Pause, Volume2, ChevronRight, Play, RotateCcw } from "lucide-react";
+import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw } from "lucide-react";
+import { useSounds } from "@/hooks/useSounds";
 
 const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   truth: { label: "Vérité", color: "217 91% 60%" },
@@ -33,7 +34,11 @@ const GameScreen = () => {
     selectedMode,
     nextCard,
     setScreen,
+    soundEnabled,
+    toggleSound,
   } = useGameStore();
+
+  const { playClick, playTick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
 
   const [showPauseMenu, setShowPauseMenu] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -79,13 +84,20 @@ const GameScreen = () => {
   }, [currentCardIndex, totalDuration, isAutoTimer]);
 
   useEffect(() => {
-    if (!timerRunning) return;
+    if (!timerRunning) {
+      stopTickLoop();
+      return;
+    }
+
+    startTickLoop(1000);
 
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           setTimerRunning(false);
           setTimerDone(true);
+          stopTickLoop();
+          playBuzzer();
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
@@ -98,18 +110,20 @@ const GameScreen = () => {
     }, 1000);
 
     return () => {
+      stopTickLoop();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [timerRunning]);
+  }, [timerRunning, startTickLoop, stopTickLoop, playBuzzer]);
 
   const startTimer = useCallback(() => {
     setTimeLeft(totalDuration);
     setTimerDone(false);
     setTimerRunning(true);
-  }, [totalDuration]);
+    playClick();
+  }, [totalDuration, playClick]);
 
   const resetTimer = useCallback(() => {
     setTimerRunning(false);
@@ -125,17 +139,20 @@ const GameScreen = () => {
     if (isAnimating) return;
     setIsAnimating(true);
     setDirection(1);
+    playWhoosh();
+    vibrate(30);
 
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    stopTickLoop();
 
     setTimeout(() => {
       nextCard("done");
       setIsAnimating(false);
     }, 350);
-  }, [isAnimating, nextCard]);
+  }, [isAnimating, nextCard, playWhoosh, vibrate, stopTickLoop]);
 
   if (!card || !currentPlayer) {
     return (
@@ -175,8 +192,8 @@ const GameScreen = () => {
           <span className="text-xs text-muted-foreground">
             {currentCardIndex + 1}/{deck.length}
           </span>
-          <button className="rounded-lg bg-card p-2 text-muted-foreground">
-            <Volume2 size={16} />
+          <button onClick={toggleSound} className="rounded-lg bg-card p-2 text-muted-foreground">
+            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
           <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground">
             <Pause size={16} />
