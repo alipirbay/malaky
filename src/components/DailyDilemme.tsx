@@ -109,7 +109,7 @@ const DailyDilemme = () => {
               className="flex flex-col gap-2.5"
             >
               <button
-                onClick={() => vote("a")}
+                onClick={() => handleVote("a")}
                 disabled={voting}
                 className="w-full rounded-2xl px-4 py-4 text-left text-sm font-bold transition-all active:scale-[0.97] disabled:opacity-50"
                 style={{
