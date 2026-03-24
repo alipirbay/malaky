@@ -76,6 +76,9 @@ export const useGameStore = create<GameState>()(
       deck: [],
       stats: { cardsPlayed: 0, refusals: 0, playerStats: {} },
       passesRemaining: {},
+      soundEnabled: true,
+      soundVolume: 80,
+      vibrationEnabled: true,
 
       addPlayer: (name) => {
         const { players } = get();
