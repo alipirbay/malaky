@@ -19,17 +19,9 @@ const HomeScreen = () => {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="text-center"
       >
-        <div className="mb-2 text-6xl">🔥</div>
         <h1 className="text-5xl font-black tracking-tight text-gradient mb-2">
           TSY MENATRA
         </h1>
-        <p className="text-muted-foreground text-lg font-medium flex items-center justify-center gap-2">
-          Party game malgache
-          <span className="text-2xl leading-none">🇲🇬</span>
-        </p>
-        <p className="text-muted-foreground/50 text-sm mt-3 max-w-[280px] mx-auto leading-relaxed">
-          L'app qui transforme n'importe quel moment entre amis en souvenir légendaire.
-        </p>
 
         {/* Live users badge */}
         <motion.div
