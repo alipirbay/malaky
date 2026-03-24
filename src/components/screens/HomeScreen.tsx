@@ -1,18 +1,14 @@
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { useActiveUsers } from "@/hooks/useActiveUsers";
+import { Sparkles, ShoppingBag, Settings, Users, Zap } from "lucide-react";
 
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
-
-  const stats = [
-    { label: "Modes", value: "6", emoji: "🎯" },
-    { label: "Packs", value: "10", emoji: "🎭" },
-    { label: "Cartes", value: "9000+", emoji: "🃏" },
-  ];
+  const activeUsers = useActiveUsers();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-between px-6 py-10 gradient-surface">
-      {/* Top section */}
       <div className="flex-1" />
 
       {/* Center content */}
@@ -22,7 +18,6 @@ const HomeScreen = () => {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="text-center"
       >
-        {/* Logo / Title */}
         <div className="mb-2 text-6xl">🔥</div>
         <h1 className="text-5xl font-black tracking-tight text-gradient mb-2">
           TSY MENATRA
@@ -35,63 +30,80 @@ const HomeScreen = () => {
           L'app qui transforme n'importe quel moment entre amis en souvenir légendaire.
         </p>
 
-        {/* Quick stats */}
+        {/* Live users badge */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.4 }}
-          className="mt-6 flex items-center justify-center gap-4"
+          transition={{ delay: 0.3 }}
+          className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary/15 px-4 py-2"
         >
-          {stats.map((stat) => (
-            <div key={stat.label} className="flex flex-col items-center gap-1 rounded-2xl bg-card/60 px-4 py-3 backdrop-blur-sm">
-              <span className="text-lg">{stat.emoji}</span>
-              <span className="text-sm font-bold text-foreground">{stat.value}</span>
-              <span className="text-[10px] text-muted-foreground">{stat.label}</span>
-            </div>
-          ))}
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+          </span>
+          <span className="text-xs font-bold text-primary">
+            {activeUsers > 0 ? activeUsers.toLocaleString() : "..."} en ligne maintenant
+          </span>
         </motion.div>
       </motion.div>
 
-      {/* Buttons */}
+      {/* Action buttons */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.4 }}
         className="mt-10 w-full max-w-sm space-y-3"
       >
-        <button
-          onClick={() => setScreen("players")}
-          className="group relative w-full overflow-hidden rounded-2xl gradient-primary px-6 py-5 text-lg font-bold text-primary-foreground glow-primary transition-transform active:scale-95"
-        >
-          <span className="relative z-10 flex items-center justify-center gap-2">
-            🎮 Créer une partie
-          </span>
-          <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
-        </button>
-
+        {/* Main row: Créer + Packs */}
         <div className="flex gap-3">
           <button
-            onClick={() => setScreen("packs")}
-            className="flex-1 rounded-2xl bg-card px-4 py-4 text-sm font-semibold text-foreground transition-all hover:bg-secondary active:scale-95"
+            onClick={() => setScreen("players")}
+            className="group relative flex-[2] overflow-hidden rounded-2xl gradient-primary px-5 py-5 text-lg font-bold text-primary-foreground glow-primary transition-transform active:scale-95"
           >
-            📦 Packs
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              <Zap size={20} /> Jouer
+            </span>
+            <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
           </button>
+
           <button
-            onClick={() => setScreen("settings")}
-            className="flex-1 rounded-2xl bg-card px-4 py-4 text-sm font-semibold text-foreground transition-all hover:bg-secondary active:scale-95"
+            onClick={() => setScreen("packs")}
+            className="group relative flex-1 overflow-hidden rounded-2xl gradient-mango px-4 py-5 transition-transform active:scale-95"
           >
-            ⚙️ Paramètres
+            <div className="relative z-10 flex flex-col items-center gap-1">
+              <ShoppingBag size={20} className="text-mango-foreground" />
+              <span className="text-xs font-bold text-mango-foreground">Packs</span>
+              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold text-mango-foreground">
+                NEW
+              </span>
+            </div>
+            <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
           </button>
         </div>
+
+        {/* Settings */}
+        <button
+          onClick={() => setScreen("settings")}
+          className="w-full rounded-2xl bg-card px-4 py-4 text-sm font-semibold text-foreground transition-all hover:bg-secondary active:scale-95 flex items-center justify-center gap-2"
+        >
+          <Settings size={16} className="text-muted-foreground" /> Paramètres
+        </button>
       </motion.div>
 
-      {/* Bottom tagline */}
+      {/* Bottom stats + tagline */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="mt-8 flex flex-col items-center gap-1"
+        className="mt-8 flex flex-col items-center gap-3"
       >
+        <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
+          <span>6 Modes</span>
+          <span>•</span>
+          <span>10 Packs</span>
+          <span>•</span>
+          <span>9000+ Cartes</span>
+        </div>
         <p className="text-xs font-medium text-muted-foreground/40 tracking-widest uppercase">
           Ose tout. Assume rien.
         </p>
