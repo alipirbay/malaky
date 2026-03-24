@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { fillPlayerNames, GAME_MODES } from "@/data/cards";
-import { ArrowLeft, Pause, Volume2 } from "lucide-react";
+import { ArrowLeft, Pause, Volume2, ChevronRight } from "lucide-react";
 
 const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   truth: { label: "Vérité", color: "217 91% 60%" },
@@ -13,47 +13,29 @@ const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   timer: { label: "Chrono", color: "25 95% 53%" },
 };
 
-const SWIPE_THRESHOLD = 100;
-
 const GameScreen = () => {
   const {
     players, currentPlayerIndex, currentCardIndex, deck,
-    selectedMode, passesRemaining, nextCard, setScreen,
+    selectedMode, nextCard, setScreen,
   } = useGameStore();
 
   const [showPauseMenu, setShowPauseMenu] = useState(false);
-  const [exitDirection, setExitDirection] = useState<"left" | "right" | "up" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-
-  const dragX = useMotionValue(0);
-  const rotate = useTransform(dragX, [-200, 0, 200], [-12, 0, 12]);
-  const doneOpacity = useTransform(dragX, [0, SWIPE_THRESHOLD], [0, 1]);
-  const refuseOpacity = useTransform(dragX, [-SWIPE_THRESHOLD, 0], [1, 0]);
+  const [direction, setDirection] = useState(1);
 
   const currentPlayer = players[currentPlayerIndex];
   const card = deck[currentCardIndex];
   const mode = GAME_MODES.find((item) => item.id === selectedMode);
 
-  const triggerAction = useCallback((action: "done" | "refuse" | "skip", dir: "left" | "right" | "up") => {
+  const handleNext = useCallback(() => {
     if (isAnimating) return;
     setIsAnimating(true);
-    setExitDirection(dir);
+    setDirection(1);
     setTimeout(() => {
-      nextCard(action);
-      setExitDirection(null);
+      nextCard("done");
       setIsAnimating(false);
-      dragX.set(0);
-    }, 250);
-  }, [isAnimating, nextCard, dragX]);
-
-  const handleDragEnd = useCallback((_: any, info: { offset: { x: number }; velocity: { x: number } }) => {
-    const { offset, velocity } = info;
-    if (offset.x > SWIPE_THRESHOLD || velocity.x > 500) {
-      triggerAction("done", "right");
-    } else if (offset.x < -SWIPE_THRESHOLD || velocity.x < -500) {
-      triggerAction("refuse", "left");
-    }
-  }, [triggerAction]);
+    }, 350);
+  }, [isAnimating, nextCard]);
 
   if (!card || !currentPlayer) {
     return (
@@ -70,13 +52,6 @@ const GameScreen = () => {
 
   const cardText = fillPlayerNames(card.text, currentPlayer.name, players.map((p) => p.name));
   const cardMeta = CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" };
-  const passes = passesRemaining[currentPlayer.name] || 0;
-
-  const exitVariants = {
-    left: { x: -400, opacity: 0, rotate: -20, transition: { duration: 0.25 } },
-    right: { x: 400, opacity: 0, rotate: 20, transition: { duration: 0.25 } },
-    up: { y: -200, opacity: 0, scale: 0.9, transition: { duration: 0.2 } },
-  };
 
   return (
     <div className="flex min-h-screen flex-col gradient-surface">
@@ -109,18 +84,14 @@ const GameScreen = () => {
 
       {/* Card area */}
       <div className="flex flex-1 flex-col items-center justify-center px-6">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentCardIndex}
-            drag={isAnimating ? false : "x"}
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.9}
-            onDragEnd={handleDragEnd}
-            style={{ x: dragX, rotate }}
-            initial={{ opacity: 0, scale: 0.9, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
-            exit={exitDirection ? exitVariants[exitDirection] : { opacity: 0, scale: 0.9, y: -30 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            custom={direction}
+            initial={{ opacity: 0, y: 60, scale: 0.92, rotateX: 8 }}
+            animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+            exit={{ opacity: 0, y: -40, scale: 0.95, filter: "blur(4px)" }}
+            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
             className="w-full max-w-sm"
           >
             <div className="card-game relative flex min-h-[340px] flex-col items-center justify-center overflow-hidden text-center">
@@ -132,63 +103,21 @@ const GameScreen = () => {
                 {cardMeta.label}
               </span>
 
-              {/* Swipe overlays */}
-              <motion.div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-3xl"
-                style={{ opacity: doneOpacity, backgroundColor: "hsl(142 71% 45% / 0.2)" }}
-              >
-                <span className="text-2xl font-black" style={{ color: "hsl(142 71% 45%)" }}>Fait ✅</span>
-              </motion.div>
-              <motion.div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-3xl"
-                style={{ opacity: refuseOpacity, backgroundColor: "hsl(350 96% 72% / 0.2)" }}
-              >
-                <span className="text-2xl font-black" style={{ color: "hsl(350 96% 72%)" }}>Refuse ❌</span>
-              </motion.div>
-
               <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
             </div>
           </motion.div>
         </AnimatePresence>
-
-        {/* Swipe hint on first card */}
-        {currentCardIndex === 0 && (
-          <motion.p
-            initial={{ opacity: 0.7 }}
-            animate={{ opacity: 0 }}
-            transition={{ delay: 2, duration: 1 }}
-            className="mt-4 text-xs text-muted-foreground"
-          >
-            ← Swipe pour jouer →
-          </motion.p>
-        )}
       </div>
 
-      {/* Buttons */}
-      <div className="space-y-3 px-6 pb-8 pt-4">
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            onClick={() => triggerAction("done", "right")}
-            disabled={isAnimating}
-            className="rounded-xl gradient-primary py-4 text-sm font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50"
-          >
-            ✅ Fait
-          </button>
-          <button
-            onClick={() => triggerAction("refuse", "left")}
-            disabled={isAnimating}
-            className="rounded-xl gradient-coral py-4 text-sm font-bold text-foreground transition-transform active:scale-95 disabled:opacity-50"
-          >
-            ❌ Refuse
-          </button>
-          <button
-            onClick={() => triggerAction("skip", "up")}
-            disabled={isAnimating || passes <= 0}
-            className="rounded-xl bg-card py-4 text-sm font-bold text-muted-foreground transition-transform active:scale-95 disabled:opacity-30"
-          >
-            ⏭ Pass ({passes})
-          </button>
-        </div>
+      {/* Next button */}
+      <div className="px-6 pb-8 pt-4">
+        <button
+          onClick={handleNext}
+          disabled={isAnimating}
+          className="w-full rounded-2xl gradient-primary py-5 text-base font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          NEXT <ChevronRight size={20} />
+        </button>
       </div>
 
       {/* Pause menu */}
