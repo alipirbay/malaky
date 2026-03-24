@@ -139,17 +139,20 @@ const GameScreen = () => {
     if (isAnimating) return;
     setIsAnimating(true);
     setDirection(1);
+    playWhoosh();
+    vibrate(30);
 
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    stopTickLoop();
 
     setTimeout(() => {
       nextCard("done");
       setIsAnimating(false);
     }, 350);
-  }, [isAnimating, nextCard]);
+  }, [isAnimating, nextCard, playWhoosh, vibrate, stopTickLoop]);
 
   if (!card || !currentPlayer) {
     return (
