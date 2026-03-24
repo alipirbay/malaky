@@ -20,7 +20,7 @@ const HomeScreen = () => {
         className="text-center"
       >
         <h1 className="text-5xl font-black tracking-tight text-gradient mb-2">
-          TSY MENATRA
+          MALAKY
         </h1>
 
         {/* Live users badge */}
