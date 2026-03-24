@@ -39,13 +39,11 @@ const PacksScreen = () => {
       <div className="space-y-3 pb-6 overflow-y-auto flex-1">
         {STORE_PACKS.map((pack, i) => {
           const purchased =
-            pack.id === "bundle_hot_chaos"
-              ? unlockedVibes.hot && unlockedVibes.chaos
-              : pack.id === "bundle_all"
-                ? Object.values(unlockedVibes).every(Boolean)
-                : pack.vibe
-                  ? unlockedVibes[pack.vibe as Vibe]
-                  : false;
+            pack.id === "bundle_all"
+              ? Object.values(unlockedVibes).every(Boolean)
+              : pack.vibe
+                ? unlockedVibes[pack.vibe as Vibe]
+                : false;
 
           const isBundle = pack.id.startsWith("bundle");
 
