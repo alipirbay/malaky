@@ -225,6 +225,7 @@ export const useGameStore = create<GameState>()(
         soundEnabled: state.soundEnabled,
         soundVolume: state.soundVolume,
         vibrationEnabled: state.vibrationEnabled,
+        pendingTransactionId: state.pendingTransactionId,
       }),
     }
   )
