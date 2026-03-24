@@ -41,14 +41,6 @@ export const GAME_MODES = [
     badge: "Rapide",
     color: "mango" as const,
   },
-  {
-    id: "dilemme" as GameMode,
-    name: "Dilemme",
-    subtitle: "Deux choix, zéro échappatoire",
-    emoji: "⚖️",
-    badge: "Impossible",
-    color: "coral" as const,
-  },
 ];
 
 export const VIBES = [
