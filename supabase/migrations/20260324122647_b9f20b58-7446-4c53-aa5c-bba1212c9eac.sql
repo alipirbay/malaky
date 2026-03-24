@@ -1,0 +1,1 @@
+DELETE FROM public.daily_dilemmes WHERE active_date = CURRENT_DATE;

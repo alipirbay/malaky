@@ -55,6 +55,56 @@ const crossTexts = (left: string[], right: string[], mapper: (a: string, b: stri
 const pairTexts = (base: string[], suffixes: string[]) =>
   base.flatMap((entry) => suffixes.map((suffix) => `${entry} ${suffix}`));
 
+// Deduplicate and space out cards so no similar text appears within a window
+export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
+  // First: remove exact text duplicates
+  const seen = new Set<string>();
+  const unique = cards.filter(c => {
+    if (seen.has(c.text)) return false;
+    seen.add(c.text);
+    return true;
+  });
+
+  // Shuffle
+  for (let i = unique.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [unique[i], unique[j]] = [unique[j], unique[i]];
+  }
+
+  // Space out cards with similar base text (strip suffixes for comparison)
+  const getBase = (text: string) => text.replace(/ (Le groupe juge\.|Sans préparation\.|Fais-le maintenant\.|Vote immédiat\.|La personne citée se défend\.|Réponds immédiatement\.|Et explique ton choix\.|Le groupe veut un exemple\.|Assume si c'est vrai\.)$/g, "").trim();
+  
+  const MIN_GAP = 8;
+  const result: GameCard[] = [];
+  const recentBases: string[] = [];
+
+  const remaining = [...unique];
+  let stuckCount = 0;
+
+  while (remaining.length > 0 && stuckCount < remaining.length * 2) {
+    const idx = remaining.findIndex(c => {
+      const base = getBase(c.text);
+      return !recentBases.includes(base);
+    });
+
+    if (idx === -1) {
+      // All remaining would repeat — just take first
+      result.push(remaining.shift()!);
+      stuckCount++;
+    } else {
+      const card = remaining.splice(idx, 1)[0];
+      result.push(card);
+      recentBases.push(getBase(card.text));
+      if (recentBases.length > MIN_GAP) recentBases.shift();
+      stuckCount = 0;
+    }
+  }
+
+  // Add any leftover
+  result.push(...remaining);
+  return result;
+}
+
 const buildTruthDareDeck = (vibe: Vibe): GameCard[] => {
   const prompts = truthPrompts[vibe] || [];
   const dares = dareActions[vibe] || [];
@@ -109,16 +159,19 @@ const buildWouldYouRatherDeck = (vibe: Vibe): GameCard[] =>
 const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] =>
   (challengeActions[vibe] || [])
     .flatMap((action) => {
-      const variants = hasExplicitDuration(action)
-        ? [action]
-        : [10, 15, 20, 30].map((seconds) => `${action.replace(/\.$/, "")} pendant ${seconds} secondes.`);
+      const hasDuration = hasExplicitDuration(action);
+      // Cards WITH explicit duration → timer type
+      // Cards WITHOUT duration → dare type (no chrono needed)
+      const cardType: CardType = hasDuration ? "timer" : "dare";
 
-      return variants.flatMap((variant) =>
-        challengeVariants.map((suffix) => `${variant}${suffix}`.trim())
-      );
+      return challengeVariants.map((suffix) => `${action}${suffix}`.trim());
     })
+    .filter((text, i, arr) => arr.indexOf(text) === i) // dedupe inline
     .slice(0, Math.max(160, MINIMUM_CARDS_PER_COMBO))
-    .map((text, i) => createCard("quick_challenge", vibe, i + 1, "timer", `{player}, ${text}`));
+    .map((text, i) => {
+      const hasDuration = hasExplicitDuration(text);
+      return createCard("quick_challenge", vibe, i + 1, hasDuration ? "timer" : "dare", `{player}, ${text}`);
+    });
 
 // Build all cards
 export const CARDS: GameCard[] = [];

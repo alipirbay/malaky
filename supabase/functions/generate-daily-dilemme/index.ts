@@ -43,17 +43,24 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Tu es un générateur de dilemmes quotidiens pour une app malgache. 
+            content: `Tu es un générateur de dilemmes quotidiens pour une app malgache.
 Génère UN dilemme pertinent basé sur l'actualité récente à Madagascar ou dans le monde.
 Sujets possibles : politique malgache, économie (ariary, inflation), société, culture, sport, technologie, environnement.
 Le dilemme doit être engageant, faire réfléchir, et donner envie de voter.
 Garde un ton accessible et fun, pas trop sérieux.
+
+RÈGLES IMPORTANTES :
+- Les options doivent être COURTES (5-10 mots max chacune)
+- PAS de parenthèses, PAS de précisions entre parenthèses
+- PAS d'explications dans les options, juste le choix direct
+- La question peut être un peu plus longue mais reste simple
+
 Réponds UNIQUEMENT avec un JSON valide, sans markdown ni backticks.`,
           },
           {
             role: "user",
-            content: `Génère le dilemme du jour (${today}). Réponds avec ce format JSON exact :
-{"question": "La question du dilemme", "option_a": "Premier choix", "option_b": "Deuxième choix", "topic": "catégorie"}`,
+            content: `Génère le dilemme du jour (${today}). Options courtes sans parenthèses. Format JSON :
+{"question": "La question du dilemme", "option_a": "Choix A court", "option_b": "Choix B court", "topic": "catégorie"}`,
           },
         ],
         tools: [
