@@ -1015,8 +1015,8 @@ export const challengeActions: Record<Vibe, string[]> = {
     'Fais une vague avec tes doigts.',
   ],
   fun: [
-    'Fais un \'twerk\' de 5 secondes.',
-    'Dis une phrase en yaourt pendant 10s.',
+    'Fais un twerk pendant 5 secondes.',
+    'Parle en yaourt comme si tu inventais une langue.',
     'Imite un bruit d\'alarme de téléphone.',
     'Fais un compliment très exagéré.',
     'Pose devant l\'appareil photo.',
