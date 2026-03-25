@@ -371,10 +371,7 @@ const GameScreen = () => {
   if (!card || !currentPlayer) {
     return (
       <div className="gradient-surface flex min-h-screen items-center justify-center safe-top safe-bottom">
-        <div className="text-center space-y-4">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-lg font-medium text-muted-foreground">Chargement des cartes...</p>
-        </div>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
