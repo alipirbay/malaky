@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
-import { STORE_PACKS } from "@/data/cards";
+import { STORE_PACKS } from "@/data/config";
 import { ArrowLeft, Check, Lock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import type { Vibe } from "@/data/cards";
+import type { Vibe } from "@/data/types";
 import PrivacyModal from "@/components/PrivacyModal";
 
 const PacksScreen = () => {

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
-import { GAME_MODES } from "@/data/cards";
+import { GAME_MODES } from "@/data/config";
 import { ArrowLeft } from "lucide-react";
 
 const ModeScreen = () => {
