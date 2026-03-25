@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
-import { fillPlayerNames, GAME_MODES } from "@/data/cards";
+import { GAME_MODES } from "@/data/cards";
+import { fillCardTemplate } from "@/lib/cardUtils";
 import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward, Flag } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 import { reportCard } from "@/hooks/useCardReport";
