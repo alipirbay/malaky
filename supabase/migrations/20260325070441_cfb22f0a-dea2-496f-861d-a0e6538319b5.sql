@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Anyone can read their own transactions" ON public.payment_transactions;
+CREATE POLICY "Service can read transactions" ON public.payment_transactions FOR SELECT TO service_role USING (true);

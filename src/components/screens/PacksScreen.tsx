@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { STORE_PACKS } from "@/data/cards";
 import { ArrowLeft, Check, Lock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import type { Vibe } from "@/data/cards";
+import PrivacyModal from "@/components/PrivacyModal";
 
 const PacksScreen = () => {
   const { setScreen, unlockVibe, unlockBundle, unlockedVibes } = useGameStore();
+  const [cguOpen, setCguOpen] = useState(false);
 
   const handleBuy = (pack: (typeof STORE_PACKS)[number]) => {
     if (pack.id === "bundle_all") {
@@ -87,6 +90,18 @@ const PacksScreen = () => {
       >
         Retour aux ambiances
       </button>
+
+      <p className="text-center text-[10px] text-muted-foreground/40 mt-3">
+        En achetant, vous acceptez nos{" "}
+        <button
+          onClick={() => setCguOpen(true)}
+          className="underline text-muted-foreground/60"
+        >
+          Conditions d'utilisation
+        </button>
+      </p>
+
+      <PrivacyModal open={cguOpen} onClose={() => setCguOpen(false)} type="cgu" />
     </div>
   );
 };
