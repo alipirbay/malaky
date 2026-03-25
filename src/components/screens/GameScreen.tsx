@@ -2,8 +2,10 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { fillPlayerNames, GAME_MODES } from "@/data/cards";
-import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward } from "lucide-react";
+import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward, Flag } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
+import { reportCard } from "@/hooks/useCardReport";
+import { toast } from "sonner";
 
 const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   truth: { label: "Vérité", color: "217 91% 60%" },
