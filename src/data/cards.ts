@@ -24,7 +24,13 @@ const createCard = (
 
 const hasExplicitDuration = (text: string) => /(\d+)\s*(?:s|sec|secondes?|minute|minutes)/i.test(text) || /une?\s+minute/i.test(text);
 
-// Deduplicate and space out cards so no similar text appears within a window
+const NEVER_PREFIXES = [
+  "Je n'ai jamais ",
+  "Franchement, je n'ai jamais ",
+  "Honnêtement, je n'ai jamais ",
+  "J'avoue, je n'ai jamais ",
+  "Pour être honnête, je n'ai jamais ",
+];
 export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
   const seen = new Set<string>();
   const unique = cards.filter(c => {
