@@ -52,7 +52,7 @@ export const GAME_MODES = [
   {
     id: "tsimoa" as GameMode,
     name: "Mode Tsimoa",
-    subtitle: "Fin d'année, zéro retenue",
+    subtitle: "Bilan d'année entre amis",
     emoji: "🎊",
     badge: "Saisonnier",
     color: "mango" as const,
