@@ -244,6 +244,17 @@ const SettingsScreen = () => {
                 </button>
               )}
             </button>
+
+            <button
+              onClick={() => { clearStats(); toast.success("Palmarès effacé"); }}
+              className={`${rowClass} text-left`}
+            >
+              <Trophy size={20} className="text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground text-sm">Effacer le palmarès</p>
+                <p className="text-xs text-muted-foreground">Remet les stats historiques à zéro</p>
+              </div>
+            </button>
           </div>
 
         </div>

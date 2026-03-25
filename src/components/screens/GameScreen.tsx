@@ -305,6 +305,27 @@ const GameScreen = () => {
 
               <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
 
+              {/* Report button */}
+              {!reported ? (
+                <button
+                  onClick={async () => {
+                    const ok = await reportCard(card.text, selectedMode, selectedVibe ?? null);
+                    if (ok) {
+                      setReported(true);
+                      toast("Signalement envoyé. Merci ! 🙏", { duration: 2000 });
+                    }
+                  }}
+                  className="absolute bottom-3 right-3 rounded-lg p-1.5 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+                  aria-label="Signaler cette carte"
+                >
+                  <Flag size={12} />
+                </button>
+              ) : (
+                <span className="absolute bottom-3 right-3 text-[10px] text-muted-foreground/40">
+                  ✓ signalé
+                </span>
+              )}
+
               {isQuizCard && (
                 <div className="mt-4 w-full px-4">
                   {showAnswer ? (
