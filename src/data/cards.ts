@@ -22,42 +22,10 @@ const createCard = (
   requires_prop: requiresProp, player_min: 2, player_max: MAX_PLAYERS,
 });
 
-const truthTopics: string[] = [
-  "et pourquoi ?", "sans mentir.", "avec tous les détails.", "en une phrase.",
-  "et ce que ça dit de toi.", "honnêtement.", "sans hésiter.", "et assume.",
-];
-
-const dareTwists: string[] = [
-  "Tu as 15 secondes.", "Le groupe note sur 10.", "Sans rire.", "Avec conviction.",
-  "Comme si ta vie en dépendait.", "Et tout le monde regarde.",
-];
-
-const neverSuffix: string[] = [
-  "et assumé.", "sans le dire à personne.", "en le regrettant après.", "comme si c'était normal.",
-];
-
-const likelySuffix: string[] = [
-  "ce soir ?", "sans aucune honte ?", "dans les 24h ?", "si personne ne regardait ?",
-];
-
-const challengeVariants: string[] = [
-  "",
-  " Le groupe juge.",
-  " Sans préparation.",
-  " Fais-le maintenant.",
-];
-
 const hasExplicitDuration = (text: string) => /(\d+)\s*(?:s|sec|secondes?|minute|minutes)/i.test(text) || /une?\s+minute/i.test(text);
-
-const crossTexts = (left: string[], right: string[], mapper: (a: string, b: string) => string) =>
-  left.flatMap((a) => right.map((b) => mapper(a, b)));
-
-const pairTexts = (base: string[], suffixes: string[]) =>
-  base.flatMap((entry) => suffixes.map((suffix) => `${entry} ${suffix}`));
 
 // Deduplicate and space out cards so no similar text appears within a window
 export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
-  // First: remove exact text duplicates
   const seen = new Set<string>();
   const unique = cards.filter(c => {
     if (seen.has(c.text)) return false;
@@ -65,19 +33,16 @@ export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
     return true;
   });
 
-  // Shuffle
   for (let i = unique.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [unique[i], unique[j]] = [unique[j], unique[i]];
   }
 
-  // Space out cards with similar base text (strip suffixes for comparison)
-  const getBase = (text: string) => text.replace(/ (Le groupe juge\.|Sans préparation\.|Fais-le maintenant\.|Vote immédiat\.|La personne citée se défend\.|Réponds immédiatement\.|Et explique ton choix\.|Le groupe veut un exemple\.|Assume si c'est vrai\.)$/g, "").trim();
-  
+  const getBase = (text: string) => text.split('.')[0].trim();
+
   const MIN_GAP = 8;
   const result: GameCard[] = [];
   const recentBases: string[] = [];
-
   const remaining = [...unique];
   let stuckCount = 0;
 
@@ -88,7 +53,6 @@ export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
     });
 
     if (idx === -1) {
-      // All remaining would repeat — just take first
       result.push(remaining.shift()!);
       stuckCount++;
     } else {
@@ -100,10 +64,12 @@ export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
     }
   }
 
-  // Add any leftover
   result.push(...remaining);
   return result;
 }
+
+// === DECK BUILDERS ===
+// No more awkward cross-product suffixes. Cards use prompts directly.
 
 const buildTruthDareDeck = (vibe: Vibe): GameCard[] => {
   const prompts = truthPrompts[vibe] || [];
@@ -111,69 +77,114 @@ const buildTruthDareDeck = (vibe: Vibe): GameCard[] => {
   const cards: GameCard[] = [];
   let idx = 1;
 
-  // Truth cards
-  crossTexts(prompts, truthTopics, (p, t) => `{player}, ${p} ${t}`)
-    .slice(0, 80)
-    .forEach(text => cards.push(createCard("truth_dare", vibe, idx++, "truth", text)));
+  // Truth cards — each prompt used directly with {player}
+  for (const p of prompts) {
+    cards.push(createCard("truth_dare", vibe, idx++, "truth", `{player}, ${p}`));
+  }
 
-  // Dare cards  
-  crossTexts(dares, dareTwists, (a, t) => `{player}, ${a} ${t}`)
-    .slice(0, 70)
-    .forEach((text, i) => cards.push(createCard("truth_dare", vibe, idx++, "dare", text, i % 5 === 0 ? "phone" : "none")));
+  // Dare cards — each action used directly with {player}
+  for (let i = 0; i < dares.length; i++) {
+    cards.push(createCard("truth_dare", vibe, idx++, "dare", `{player}, ${dares[i]}`, i % 5 === 0 ? "phone" : "none"));
+  }
 
-  // Fill to minimum if needed
+  // Fill to minimum by cycling through prompts with player2 variant
+  const allBase = [...prompts, ...dares];
+  let fillIdx = 0;
   while (cards.length < MINIMUM_CARDS_PER_COMBO) {
-    const extraTruth = prompts[cards.length % prompts.length];
-    cards.push(createCard("truth_dare", vibe, idx++, "truth", `{player}, ${extraTruth} Et explique.`));
+    const base = allBase[fillIdx % allBase.length];
+    const isAction = fillIdx % allBase.length >= prompts.length;
+    if (isAction) {
+      cards.push(createCard("truth_dare", vibe, idx++, "dare", `{player2}, ${base}`));
+    } else {
+      cards.push(createCard("truth_dare", vibe, idx++, "truth", `{player2}, ${base}`));
+    }
+    fillIdx++;
   }
 
   return cards;
 };
 
-const buildNeverDeck = (vibe: Vibe): GameCard[] =>
-  crossTexts(
-    (neverBase[vibe] || []).map(e => `Je n'ai jamais ${e}`),
-    neverSuffix,
-    (l, r) => `${l} ${r}`
-  )
-    .flatMap(text => [text, `${text} Le groupe veut un exemple.`, `${text} Assume si c'est vrai.`])
-    .slice(0, Math.max(160, MINIMUM_CARDS_PER_COMBO))
-    .map((text, i) => createCard("never_have_i_ever", vibe, i + 1, "vote", text));
+const buildNeverDeck = (vibe: Vibe): GameCard[] => {
+  const base = neverBase[vibe] || [];
+  const cards: GameCard[] = [];
+  let idx = 1;
 
-const buildMostLikelyDeck = (vibe: Vibe): GameCard[] =>
-  crossTexts(
-    (likelyBase[vibe] || []).map(e => `Qui est le plus susceptible de ${e}`),
-    likelySuffix,
-    (l, r) => `${l} ${r}`
-  )
-    .flatMap(text => [text, `${text} Vote immédiat.`, `${text} La personne citée se défend.`])
-    .slice(0, Math.max(160, MINIMUM_CARDS_PER_COMBO))
-    .map((text, i) => createCard("most_likely", vibe, i + 1, "vote", text));
+  // Each "never" statement used directly
+  for (const entry of base) {
+    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `Je n'ai jamais ${entry}`));
+  }
 
-const buildWouldYouRatherDeck = (vibe: Vibe): GameCard[] =>
-  crossTexts(ratherA[vibe] || [], ratherB[vibe] || [], (a, b) => `Tu préfères ${a} ou ${b} ?`)
-    .flatMap(text => [text, `${text} Réponds immédiatement.`, `${text} Et explique ton choix.`])
-    .slice(0, Math.max(160, MINIMUM_CARDS_PER_COMBO))
-    .map((text, i) => createCard("would_you_rather", vibe, i + 1, "truth", text));
+  // Fill to minimum by adding player-targeted variants
+  let fillIdx = 0;
+  while (cards.length < MINIMUM_CARDS_PER_COMBO) {
+    const entry = base[fillIdx % base.length];
+    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `{player}, as-tu déjà ${entry}`));
+    fillIdx++;
+  }
+
+  return cards;
+};
+
+const buildMostLikelyDeck = (vibe: Vibe): GameCard[] => {
+  const base = likelyBase[vibe] || [];
+  const cards: GameCard[] = [];
+  let idx = 1;
+
+  for (const entry of base) {
+    cards.push(createCard("most_likely", vibe, idx++, "vote", `Qui est le plus susceptible de ${entry}`));
+  }
+
+  // Fill to minimum
+  let fillIdx = 0;
+  while (cards.length < MINIMUM_CARDS_PER_COMBO) {
+    const entry = base[fillIdx % base.length];
+    cards.push(createCard("most_likely", vibe, idx++, "vote", `Entre {player} et {player2}, qui est le plus susceptible de ${entry}`));
+    fillIdx++;
+  }
+
+  return cards;
+};
+
+const buildWouldYouRatherDeck = (vibe: Vibe): GameCard[] => {
+  const aList = ratherA[vibe] || [];
+  const bList = ratherB[vibe] || [];
+  const cards: GameCard[] = [];
+  let idx = 1;
+  const len = Math.min(aList.length, bList.length);
+
+  // Direct pairs first
+  for (let i = 0; i < len; i++) {
+    cards.push(createCard("would_you_rather", vibe, idx++, "truth", `{player}, tu préfères ${aList[i]} ou ${bList[i]} ?`));
+  }
+
+  // Cross-pair to fill (offset pairing to create new combos)
+  for (let offset = 1; cards.length < MINIMUM_CARDS_PER_COMBO && offset < len; offset++) {
+    for (let i = 0; i < len && cards.length < MINIMUM_CARDS_PER_COMBO; i++) {
+      const j = (i + offset) % len;
+      cards.push(createCard("would_you_rather", vibe, idx++, "truth", `{player}, tu préfères ${aList[i]} ou ${bList[j]} ?`));
+    }
+  }
+
+  return cards;
+};
 
 const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] => {
   const cards: GameCard[] = [];
   let idx = 1;
 
-  // Pull from ALL card content for this vibe to make a real mix
-  const truths = (truthPrompts[vibe] || []).slice(0, 8);
-  const dares = (challengeActions[vibe] || []);
-  const nevers = (neverBase[vibe] || []).slice(0, 8);
-  const likelys = (likelyBase[vibe] || []).slice(0, 8);
-  const rathersA = (ratherA[vibe] || []).slice(0, 8);
-  const rathersB = (ratherB[vibe] || []).slice(0, 8);
+  const truths = (truthPrompts[vibe] || []).slice(0, 10);
+  const dares = challengeActions[vibe] || [];
+  const nevers = (neverBase[vibe] || []).slice(0, 10);
+  const likelys = (likelyBase[vibe] || []).slice(0, 10);
+  const rathersA = (ratherA[vibe] || []).slice(0, 10);
+  const rathersB = (ratherB[vibe] || []).slice(0, 10);
 
   // Truth cards → auto timer (15s)
   for (const t of truths) {
     cards.push(createCard("quick_challenge", vibe, idx++, "truth", `{player}, ${t}`));
   }
 
-  // Never have I ever → auto timer (15s)  
+  // Never have I ever → auto timer (15s)
   for (const n of nevers) {
     cards.push(createCard("quick_challenge", vibe, idx++, "vote", `Je n'ai jamais ${n}`));
   }

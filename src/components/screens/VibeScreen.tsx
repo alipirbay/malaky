@@ -5,7 +5,7 @@ import { ArrowLeft, Lock } from "lucide-react";
 import type { Vibe } from "@/data/cards";
 
 const vibeStyles: Record<Vibe, string> = {
-  soft: "bg-primary/20 border-primary/40",
+  soft: "gradient-primary glow-primary",
   fun: "gradient-primary glow-primary",
   hot: "gradient-coral glow-coral",
   chaos: "gradient-mango glow-mango",
