@@ -256,6 +256,21 @@ const SettingsScreen = () => {
                 <p className="text-xs text-muted-foreground">Remet les stats historiques à zéro</p>
               </div>
             </button>
+
+            <button
+              onClick={() => { 
+                const { clearSeenCards } = require("@/hooks/useSeenCards");
+                clearSeenCards();
+                toast.success("Cartes vues réinitialisées"); 
+              }}
+              className={`${rowClass} text-left`}
+            >
+              <RefreshCw size={20} className="text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground text-sm">Réinitialiser les cartes vues</p>
+                <p className="text-xs text-muted-foreground">Reverras toutes les cartes depuis le début</p>
+              </div>
+            </button>
           </div>
 
         </div>
