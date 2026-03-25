@@ -9,9 +9,8 @@ const ModeScreen = () => {
   const handleSelectMode = (modeId: typeof GAME_MODES[number]["id"]) => {
     setMode(modeId);
     if (modeId === "tsimoa") {
-      // Tsimoa skips vibe selection, starts directly
-      useGameStore.getState().setVibe("fun" as any);
-      useGameStore.getState().startGame("fun" as any);
+      useGameStore.getState().setVibe("fun");
+      useGameStore.getState().startGame();
     } else {
       setScreen("vibe");
     }
