@@ -895,7 +895,7 @@ export const ratherB: VibeContent = {
     'Être pauvre mais entouré',
     'Manger que des aliments sains',
     'Ne plus jamais regarder de films',
-    'Vivre sans internet',
+    'Ne plus jamais recevoir de notifications',
     'Savoir tout sur le futur',
   ],
   hot: [
