@@ -191,7 +191,7 @@ export const useGameStore = create<GameState>()(
             player_max: 12,
           }));
 
-          markCardsSeen(data.cards.map((c: any) => c.id).filter(Boolean));
+          markCardsSeen(data.cards.map((c: { id?: string }) => c.id).filter((id): id is string => Boolean(id)));
 
           set({
             deck: deduplicateShuffle(cards),
