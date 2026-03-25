@@ -750,7 +750,7 @@ export const ratherA: VibeContent = {
     'Être super riche mais solitaire',
     'Manger que des fast-foods',
     'Ne plus jamais écouter de musique',
-    'Vivre sans téléphone',
+    'Ne plus jamais envoyer de messages vocaux',
     'Savoir tout sur le passé',
   ],
   hot: [
