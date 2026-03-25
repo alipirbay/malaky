@@ -226,7 +226,7 @@ export const truthPrompts: VibeContent = {
   ],
 };
 
-export const dareActions: Record<Vibe, string[]> = {
+export const dareActions: VibeContent = {
   soft: [
     'Fais une grimace la plus moche possible.',
     'Chante l\'alphabet à l\'envers.',
