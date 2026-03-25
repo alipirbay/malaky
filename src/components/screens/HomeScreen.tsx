@@ -1,17 +1,23 @@
+import { lazy, Suspense, useMemo } from "react";
 import { motion } from "framer-motion";
-import malakyLogo from "@/assets/malaky-logo.png";
+import malakyLogo from "@/assets/malaky-logo.webp";
 import { useGameStore } from "@/store/gameStore";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
-import DailyDilemme from "@/components/DailyDilemme";
-
 import { useActiveUsers } from "@/hooks/useActiveUsers";
 
-const LAUNCH_DATE = new Date('2026-03-24');
-const isNew = (new Date().getTime() - LAUNCH_DATE.getTime()) < 30 * 24 * 60 * 60 * 1000;
+// Lazy-load DailyDilemme — not critical for first paint
+const DailyDilemme = lazy(() => import("@/components/DailyDilemme"));
+
+const LAUNCH_DATE_MS = new Date('2026-03-24').getTime();
 
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
   const activeUsers = useActiveUsers();
+
+  const isNew = useMemo(
+    () => (Date.now() - LAUNCH_DATE_MS) < 30 * 24 * 60 * 60 * 1000,
+    []
+  );
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-between px-6 py-10 gradient-surface safe-top safe-bottom">
@@ -43,16 +49,24 @@ const HomeScreen = () => {
         )}
       </motion.div>
 
-      {/* Daily Dilemme */}
+      {/* Daily Dilemme — lazy loaded */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.4 }}
         className="mt-8 w-full max-w-sm"
       >
-        <DailyDilemme />
+        <Suspense fallback={
+          <div className="w-full rounded-3xl bg-card p-5 animate-pulse">
+            <div className="h-5 w-32 bg-muted rounded mb-3" />
+            <div className="h-4 w-full bg-muted rounded mb-2" />
+            <div className="h-12 w-full bg-muted rounded mb-2" />
+            <div className="h-12 w-full bg-muted rounded" />
+          </div>
+        }>
+          <DailyDilemme />
+        </Suspense>
       </motion.div>
-
 
       {/* Action buttons */}
       <motion.div

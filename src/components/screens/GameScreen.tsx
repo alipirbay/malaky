@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
-import { GAME_MODES } from "@/data/cards";
+import { GAME_MODES } from "@/data/config";
 import { fillCardTemplate } from "@/lib/cardUtils";
 import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward, Flag } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
@@ -29,23 +29,160 @@ function extractDuration(text: string): number {
   return 15;
 }
 
-const GameScreen = () => {
-  const {
-    players,
-    currentPlayerIndex,
-    currentCardIndex,
-    deck,
-    selectedMode,
-    nextCard,
-    setScreen,
-    soundEnabled,
-    toggleSound,
-    passesRemaining,
-    stats,
-    selectedVibe,
-  } = useGameStore();
+// --- Memoized sub-components to reduce rerenders ---
 
-  const { playClick, playTick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
+interface CardTextDisplayProps {
+  cardText: string;
+  cardMeta: { label: string; color: string };
+  card: { text: string; card_type: string; answer?: string };
+  reported: boolean;
+  onReport: () => void;
+  showAnswer: boolean;
+  onRevealAnswer: () => void;
+  selectedMode: string | null;
+}
+
+const CardTextDisplay = memo(function CardTextDisplay({
+  cardText, cardMeta, card, reported, onReport, showAnswer, onRevealAnswer, selectedMode,
+}: CardTextDisplayProps) {
+  const isQuizCard = card.card_type === "quiz";
+  return (
+    <div className="card-game relative flex min-h-[340px] flex-col items-center justify-center overflow-hidden text-center">
+      <span
+        className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold"
+        style={{ backgroundColor: `hsl(${cardMeta.color} / 0.15)`, color: `hsl(${cardMeta.color})` }}
+      >
+        {cardMeta.label}
+      </span>
+
+      <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
+
+      {!reported ? (
+        <button
+          onClick={onReport}
+          className="absolute bottom-3 right-3 rounded-lg p-1.5 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+          aria-label="Signaler cette carte"
+        >
+          <Flag size={12} />
+        </button>
+      ) : (
+        <span className="absolute bottom-3 right-3 text-[10px] text-muted-foreground/40">✓ signalé</span>
+      )}
+
+      {isQuizCard && (
+        <div className="mt-4 w-full px-4">
+          {showAnswer ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl bg-primary/10 p-4 text-center"
+            >
+              <p className="text-sm font-medium text-muted-foreground mb-1">Réponse</p>
+              <p className="text-lg font-bold text-primary">{card.answer}</p>
+            </motion.div>
+          ) : (
+            <button
+              onClick={onRevealAnswer}
+              className="w-full rounded-xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary transition-transform active:scale-95"
+            >
+              👁️ Révéler la réponse
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+});
+
+interface TimerDisplayProps {
+  timeLeft: number;
+  totalDuration: number;
+  timerDone: boolean;
+  timerRunning: boolean;
+  isTimerCard: boolean;
+  isAutoTimer: boolean;
+  onStart: () => void;
+  onReset: () => void;
+}
+
+const TimerDisplay = memo(function TimerDisplay({
+  timeLeft, totalDuration, timerDone, timerRunning, isTimerCard, isAutoTimer, onStart, onReset,
+}: TimerDisplayProps) {
+  const timerProgress = totalDuration > 0 ? timeLeft / totalDuration : 0;
+  return (
+    <div className="mt-6 flex flex-col items-center gap-3">
+      <div className="relative flex h-24 w-24 items-center justify-center">
+        <svg className="absolute inset-0 -rotate-90" viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="42" fill="none" stroke="hsl(var(--muted) / 0.3)" strokeWidth="6" />
+          <circle
+            cx="48" cy="48" r="42" fill="none"
+            stroke={timerDone ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+            strokeWidth="6" strokeLinecap="round"
+            strokeDasharray={2 * Math.PI * 42}
+            strokeDashoffset={2 * Math.PI * 42 * (1 - timerProgress)}
+            className="transition-all duration-1000 ease-linear"
+          />
+        </svg>
+        <span className={`text-2xl font-black ${timerDone ? "text-destructive" : "text-foreground"}`}>
+          {timeLeft}s
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {isTimerCard && !timerRunning && !timerDone && (
+          <button
+            onClick={onStart}
+            className="gradient-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95"
+          >
+            <Play size={16} /> GO
+          </button>
+        )}
+        {timerRunning && (
+          <span className="animate-pulse text-sm font-bold text-primary">
+            ⏱️ {isAutoTimer ? "Réponds vite !" : "Chrono en cours..."}
+          </span>
+        )}
+        {timerDone && (
+          <div className="flex items-center gap-2">
+            <motion.span
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-sm font-bold text-destructive"
+            >
+              Temps écoulé
+            </motion.span>
+            <button
+              onClick={onReset}
+              className="rounded-lg bg-secondary p-2 text-muted-foreground transition-transform active:scale-95"
+            >
+              <RotateCcw size={14} />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
+// --- Main component ---
+
+const GameScreen = () => {
+  // Targeted selectors to avoid unnecessary rerenders
+  const players = useGameStore((s) => s.players);
+  const currentPlayerIndex = useGameStore((s) => s.currentPlayerIndex);
+  const currentCardIndex = useGameStore((s) => s.currentCardIndex);
+  const deck = useGameStore((s) => s.deck);
+  const selectedMode = useGameStore((s) => s.selectedMode);
+  const selectedVibe = useGameStore((s) => s.selectedVibe);
+  const nextCard = useGameStore((s) => s.nextCard);
+  const setScreen = useGameStore((s) => s.setScreen);
+  const soundEnabled = useGameStore((s) => s.soundEnabled);
+  const toggleSound = useGameStore((s) => s.toggleSound);
+  const passesRemaining = useGameStore((s) => s.passesRemaining);
+  const stats = useGameStore((s) => s.stats);
+  const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
+
+  const { playClick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
 
   const [showPauseMenu, setShowPauseMenu] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -60,23 +197,28 @@ const GameScreen = () => {
 
   const currentPlayer = players[currentPlayerIndex];
   const card = deck[currentCardIndex];
-  const mode = GAME_MODES.find((item) => item.id === selectedMode);
 
-  const cardText = card
-    ? fillCardTemplate(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
-    : "";
+  const mode = useMemo(
+    () => GAME_MODES.find((item) => item.id === selectedMode),
+    [selectedMode]
+  );
+
+  // Stable card text: deterministic player2 via cardIndex
+  const cardText = useMemo(() => {
+    if (!card || !currentPlayer) return "";
+    return fillCardTemplate(card.text, currentPlayer.name, players.map((p) => p.name), currentCardIndex);
+  }, [card, currentPlayer, players, currentCardIndex]);
+
   const isQuizCard = card?.card_type === "quiz";
   const isTimerCard = card?.card_type === "timer";
   const isQuickChallengeMode = selectedMode === "quick_challenge";
   const isAutoTimer = isQuickChallengeMode && !isTimerCard && card != null;
-  const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
   const AUTO_DURATION = isAutoTimer ? quickChallengeDuration : 15;
   const totalDuration = isTimerCard ? extractDuration(cardText) : AUTO_DURATION;
   const showTimer = isTimerCard || isAutoTimer;
   const cardMeta = card
     ? CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" }
     : { label: "", color: "210 40% 98%" };
-  const timerProgress = totalDuration > 0 ? timeLeft / totalDuration : 0;
   const isCultureG = selectedMode === "culture_generale";
   const progressPct = deck.length > 0 ? ((currentCardIndex + 1) / deck.length) * 100 : 0;
 
@@ -215,6 +357,15 @@ const GameScreen = () => {
     setTouchStart(null);
   };
 
+  const handleReport = useCallback(async () => {
+    if (!card) return;
+    const ok = await reportCard(card.text, selectedMode, selectedVibe ?? null);
+    if (ok) {
+      setReported(true);
+      toast("Signalement envoyé. Merci ! 🙏", { duration: 2000 });
+    }
+  }, [card, selectedMode, selectedVibe]);
+
   const currentPasses = passesRemaining[currentPlayer?.name] ?? 0;
 
   if (!card || !currentPlayer) {
@@ -291,115 +442,29 @@ const GameScreen = () => {
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <div className="card-game relative flex min-h-[340px] flex-col items-center justify-center overflow-hidden text-center">
-              <span
-                className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold"
-                style={{ backgroundColor: `hsl(${cardMeta.color} / 0.15)`, color: `hsl(${cardMeta.color})` }}
-              >
-                {cardMeta.label}
-              </span>
+            <CardTextDisplay
+              cardText={cardText}
+              cardMeta={cardMeta}
+              card={card}
+              reported={reported}
+              onReport={handleReport}
+              showAnswer={showAnswer}
+              onRevealAnswer={() => setShowAnswer(true)}
+              selectedMode={selectedMode}
+            />
 
-              <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
-
-              {/* Report button */}
-              {!reported ? (
-                <button
-                  onClick={async () => {
-                    const ok = await reportCard(card.text, selectedMode, selectedVibe ?? null);
-                    if (ok) {
-                      setReported(true);
-                      toast("Signalement envoyé. Merci ! 🙏", { duration: 2000 });
-                    }
-                  }}
-                  className="absolute bottom-3 right-3 rounded-lg p-1.5 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
-                  aria-label="Signaler cette carte"
-                >
-                  <Flag size={12} />
-                </button>
-              ) : (
-                <span className="absolute bottom-3 right-3 text-[10px] text-muted-foreground/40">
-                  ✓ signalé
-                </span>
-              )}
-
-              {isQuizCard && (
-                <div className="mt-4 w-full px-4">
-                  {showAnswer ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="rounded-xl bg-primary/10 p-4 text-center"
-                    >
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Réponse</p>
-                      <p className="text-lg font-bold text-primary">{card?.answer}</p>
-                    </motion.div>
-                  ) : (
-                    <button
-                      onClick={() => setShowAnswer(true)}
-                      className="w-full rounded-xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary transition-transform active:scale-95"
-                    >
-                      👁️ Révéler la réponse
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {showTimer && (
-                <div className="mt-6 flex flex-col items-center gap-3">
-                  <div className="relative flex h-24 w-24 items-center justify-center">
-                    <svg className="absolute inset-0 -rotate-90" viewBox="0 0 96 96">
-                      <circle cx="48" cy="48" r="42" fill="none" stroke="hsl(var(--muted) / 0.3)" strokeWidth="6" />
-                      <circle
-                        cx="48"
-                        cy="48"
-                        r="42"
-                        fill="none"
-                        stroke={timerDone ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
-                        strokeWidth="6"
-                        strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 42}
-                        strokeDashoffset={2 * Math.PI * 42 * (1 - timerProgress)}
-                        className="transition-all duration-1000 ease-linear"
-                      />
-                    </svg>
-                    <span className={`text-2xl font-black ${timerDone ? "text-destructive" : "text-foreground"}`}>
-                      {timeLeft}s
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {isTimerCard && !timerRunning && !timerDone && (
-                      <button
-                        onClick={startTimer}
-                        className="gradient-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform active:scale-95"
-                      >
-                        <Play size={16} /> GO
-                      </button>
-                    )}
-
-                    {timerRunning && <span className="animate-pulse text-sm font-bold text-primary">⏱️ {isAutoTimer ? "Réponds vite !" : "Chrono en cours..."}</span>}
-
-                    {timerDone && (
-                      <div className="flex items-center gap-2">
-                        <motion.span
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-sm font-bold text-destructive"
-                        >
-                          Temps écoulé
-                        </motion.span>
-                        <button
-                          onClick={resetTimer}
-                          className="rounded-lg bg-secondary p-2 text-muted-foreground transition-transform active:scale-95"
-                        >
-                          <RotateCcw size={14} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            {showTimer && (
+              <TimerDisplay
+                timeLeft={timeLeft}
+                totalDuration={totalDuration}
+                timerDone={timerDone}
+                timerRunning={timerRunning}
+                isTimerCard={isTimerCard}
+                isAutoTimer={isAutoTimer}
+                onStart={startTimer}
+                onReset={resetTimer}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

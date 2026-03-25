@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { GameMode, Vibe, GameCard } from "@/data/cards";
-import { getFilteredCards, deduplicateShuffle } from "@/data/cards";
+import type { GameMode, Vibe, GameCard } from "@/data/types";
 
 interface Player {
   name: string;
@@ -193,6 +192,9 @@ export const useGameStore = create<GameState>()(
 
           markCardsSeen(data.cards.map((c: { id?: string }) => c.id).filter((id): id is string => Boolean(id)));
 
+          // Dynamic import to avoid pulling card data into initial bundle
+          const { deduplicateShuffle } = await import("@/data/cards");
+
           set({
             deck: deduplicateShuffle(cards),
             currentPlayerIndex: 0,
@@ -203,9 +205,17 @@ export const useGameStore = create<GameState>()(
           });
 
         } catch (err) {
-          console.error("get-cards failed, falling back to local:", err);
+          console.warn("get-cards failed, falling back to local:", err);
 
+          // Dynamic import — local card data only loaded when actually needed
+          const { getFilteredCards, deduplicateShuffle } = await import("@/data/cards");
           const localCards = deduplicateShuffle([...getFilteredCards(selectedMode, selectedVibe, players.length)]);
+
+          if (localCards.length === 0) {
+            console.error("No local cards available for", selectedMode, selectedVibe);
+            set({ currentScreen: "vibe" });
+            return;
+          }
 
           set({
             deck: localCards,
@@ -240,7 +250,6 @@ export const useGameStore = create<GameState>()(
             played: (newStats.playerStats[currentPlayer]?.played || 0) + 1,
             refused: newStats.playerStats[currentPlayer]?.refused || 0,
           };
-          // Increment quiz score for quiz cards
           if (currentCard?.card_type === "quiz" && wasCorrect === true) {
             newStats.quizScore += 1;
           }

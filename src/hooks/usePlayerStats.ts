@@ -8,7 +8,8 @@ function loadSessions(): GameSession[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (e) {
+    console.warn("Failed to load sessions:", e);
     return [];
   }
 }
@@ -16,7 +17,9 @@ function loadSessions(): GameSession[] {
 function saveSessions(sessions: GameSession[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-  } catch {}
+  } catch (e) {
+    console.warn("Failed to save sessions:", e);
+  }
 }
 
 export function usePlayerStats() {
