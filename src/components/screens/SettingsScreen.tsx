@@ -14,11 +14,13 @@ import {
   AlertTriangle,
   Smartphone,
   HelpCircle,
+  Trophy,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import PrivacyModal from "@/components/PrivacyModal";
+import { usePlayerStats } from "@/hooks/usePlayerStats";
 
 const SettingsScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
