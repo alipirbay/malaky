@@ -348,7 +348,7 @@ export function validateCardCoverage() {
       for (const vibe of VIBES) {
         const total = allCards.filter(c => c.mode === mode.id && c.vibe === vibe.id).length;
         if (total < MINIMUM_CARDS_PER_COMBO) {
-          console.warn(`Low card count for ${mode.id}/${vibe.id}: ${total}`);
+          // Low card count detected
         }
       }
     }

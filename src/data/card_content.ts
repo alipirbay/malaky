@@ -153,7 +153,7 @@ export const truthPrompts: VibeContent = {
     'raconte une fois où tu as utilisé le "fihavanana" pour t\'en sortir.',
     'dis quelle nourriture de rue malgache est ta préférée et pourquoi.',
     'avoue ce que tu penses vraiment du famadihana.',
-    'dis ta playlist typique d\'une soirée malgache.',
+    'décris ta playlist typique d\'une soirée malgache.',
     'raconte une rivalité régionale que tu trouves ridicule.',
     'dis quelle expression malgache résume ta philosophie de vie.',
     'avoue ce que tu changerais en priorité à Madagascar.',
