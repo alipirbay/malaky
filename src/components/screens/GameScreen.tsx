@@ -212,7 +212,7 @@ const GameScreen = () => {
     <div className="gradient-surface flex min-h-screen flex-col safe-top">
       <div className="flex items-center justify-between px-6 pb-2 pt-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground">
+          <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground" aria-label="Mettre en pause">
             <ArrowLeft size={16} />
           </button>
           <div className="flex items-center gap-2">
