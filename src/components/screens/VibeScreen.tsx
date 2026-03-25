@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
-import { VIBES } from "@/data/cards";
+import { VIBES, DIFFICULTIES } from "@/data/cards";
 import { ArrowLeft, Lock } from "lucide-react";
 import type { Vibe } from "@/data/cards";
 
@@ -22,7 +22,12 @@ const vibeStyles: Partial<Record<Vibe, string>> = {
 };
 
 const VibeScreen = () => {
-  const { setVibe, setScreen, unlockedVibes } = useGameStore();
+  const { setVibe, setScreen, unlockedVibes, selectedMode } = useGameStore();
+
+  const isCultureMode = selectedMode === "culture_generale";
+  const items = isCultureMode
+    ? DIFFICULTIES.map(d => ({ id: d.id as Vibe, name: d.name, emoji: d.emoji, description: d.description, free: d.free, priceLabel: d.priceLabel }))
+    : VIBES;
 
   const handleSelect = (vibe: Vibe, free: boolean) => {
     if (!free && !unlockedVibes[vibe]) {
@@ -42,38 +47,43 @@ const VibeScreen = () => {
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h2 className="text-xl font-bold text-foreground">Choisis l'ambiance</h2>
-          <p className="text-sm text-muted-foreground">Soft et Fun inclus. Les autres dans Packs.</p>
+          <h2 className="text-xl font-bold text-foreground">
+            {isCultureMode ? "Choisis la difficulté" : "Choisis l'ambiance"}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {isCultureMode
+              ? "Facile et Intermédiaire inclus. Difficile et Expert dans Packs."
+              : "Soft et Fun inclus. Les autres dans Packs."}
+          </p>
         </div>
       </div>
 
       <div className="flex-1 space-y-3 pb-4 overflow-y-auto">
-        {VIBES.map((vibe, i) => {
-          const isUnlocked = vibe.free || unlockedVibes[vibe.id];
+        {items.map((item, i) => {
+          const isUnlocked = item.free || unlockedVibes[item.id];
 
           return (
             <motion.button
-              key={vibe.id}
+              key={item.id}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              onClick={() => handleSelect(vibe.id, vibe.free)}
-              className={`relative w-full rounded-2xl border-0 p-4 text-left overflow-hidden transition-transform active:scale-[0.97] ${vibeStyles[vibe.id]} ${
+              onClick={() => handleSelect(item.id, item.free)}
+              className={`relative w-full rounded-2xl border-0 p-4 text-left overflow-hidden transition-transform active:scale-[0.97] ${vibeStyles[item.id] || "vibe-soft"} ${
                 isUnlocked ? "" : "opacity-80"
               }`}
             >
-
               <div className="relative flex items-center gap-3">
-                <span className="text-3xl">{vibe.emoji}</span>
+                <span className="text-3xl">{item.emoji}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-black text-foreground">{vibe.name}</h3>
+                    <h3 className="text-lg font-black text-foreground">{item.name}</h3>
                     {!isUnlocked && <Lock size={14} className="text-foreground/70" />}
                   </div>
-                  <p className="text-xs text-foreground/70 truncate">{vibe.description}</p>
+                  <p className="text-xs text-foreground/70 truncate">{item.description}</p>
                 </div>
                 <span className="shrink-0 rounded-full bg-card/70 px-3 py-1 text-xs font-bold text-foreground">
-                  {isUnlocked ? (vibe.free ? "Gratuit" : "✓") : vibe.priceLabel}
+                  {isUnlocked ? (item.free ? "Gratuit" : "✓") : item.priceLabel}
                 </span>
               </div>
             </motion.button>
