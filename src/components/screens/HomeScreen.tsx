@@ -3,6 +3,7 @@ import malakyLogo from "@/assets/malaky-logo.png";
 import { useGameStore } from "@/store/gameStore";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
 import DailyDilemme from "@/components/DailyDilemme";
+import DailyChallenge from "@/components/DailyChallenge";
 import { useActiveUsers } from "@/hooks/useActiveUsers";
 
 const LAUNCH_DATE = new Date('2026-03-24');
