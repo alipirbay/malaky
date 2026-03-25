@@ -37,7 +37,7 @@ const PlayersScreen = () => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Prénom…"
+          placeholder="Prénom… (ex: Rivo, Haja, Fara)"
           maxLength={20}
           className="flex-1 rounded-xl bg-card px-4 py-3.5 text-foreground placeholder:text-muted-foreground/50 border border-border focus:border-primary focus:outline-none transition-colors"
         />
@@ -76,9 +76,14 @@ const PlayersScreen = () => {
         </AnimatePresence>
 
         {players.length === 0 && (
-          <p className="text-center text-muted-foreground/50 py-12 text-sm">
-            Au moins 2 joueurs pour commencer
-          </p>
+          <div className="text-center py-12">
+            <p className="text-muted-foreground/50 text-sm mb-2">
+              Mettez vos prénoms et c'est parti !
+            </p>
+            <p className="text-muted-foreground/30 text-xs italic">
+              Ny fialam-boly tsara dia mialoha ny namana.
+            </p>
+          </div>
         )}
       </div>
 

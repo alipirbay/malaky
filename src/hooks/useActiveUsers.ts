@@ -24,10 +24,15 @@ export function useActiveUsers() {
       );
       const { data } = await supabase.rpc("get_active_users_count");
       if (typeof data === "number") setCount(data);
+
+      // Probabilistic cleanup of old sessions (~1% chance per heartbeat)
+      if (Math.random() < 0.01) {
+        supabase.rpc("cleanup_old_sessions");
+      }
     };
 
     heartbeat();
-    const interval = setInterval(heartbeat, 30_000); // every 30s
+    const interval = setInterval(heartbeat, 30_000);
 
     return () => clearInterval(interval);
   }, []);
