@@ -137,6 +137,27 @@ export const useGameStore = create<GameState>()(
         const { selectedMode, players, unlockedVibes } = state;
         if (vibeOverride) set({ selectedVibe: vibeOverride });
         if (!selectedMode || !selectedVibe || players.length < 2) return;
+
+        // Tsimoa is always free, skip vibe unlock check
+        if (selectedMode === "tsimoa") {
+          const cards = deduplicateShuffle([...getFilteredCards(selectedMode, selectedVibe ?? "fun", players.length)]);
+          const passes: Record<string, number> = {};
+          const playerStats: Record<string, { played: number; refused: number }> = {};
+          players.forEach((player) => {
+            passes[player.name] = 2;
+            playerStats[player.name] = { played: 0, refused: 0 };
+          });
+          set({
+            deck: cards,
+            currentPlayerIndex: 0,
+            currentCardIndex: 0,
+            stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats },
+            passesRemaining: passes,
+            currentScreen: "game",
+          });
+          return;
+        }
+
         const merged = { ...defaultUnlockedVibes, ...unlockedVibes };
         if (!merged[selectedVibe]) {
           set({ currentScreen: "packs" });
