@@ -5,16 +5,16 @@ import { ArrowLeft, Lock } from "lucide-react";
 import type { Vibe } from "@/data/cards";
 
 const vibeStyles: Record<Vibe, string> = {
-  soft: "gradient-primary glow-primary",
-  fun: "gradient-primary glow-primary",
-  hot: "gradient-coral glow-coral",
-  chaos: "gradient-mango glow-mango",
-  couple: "bg-pink-500/20 border-pink-500/40",
-  apero: "bg-amber-500/20 border-amber-500/40",
-  mada: "bg-emerald-500/20 border-emerald-500/40",
-  confessions: "bg-purple-500/20 border-purple-500/40",
-  vip: "bg-yellow-500/20 border-yellow-500/40",
-  afterdark: "bg-red-900/30 border-red-800/40",
+  soft: "vibe-soft",
+  fun: "vibe-fun",
+  hot: "vibe-hot",
+  chaos: "vibe-chaos",
+  couple: "vibe-couple",
+  apero: "vibe-apero",
+  mada: "vibe-mada",
+  confessions: "vibe-confessions",
+  vip: "vibe-vip",
+  afterdark: "vibe-afterdark",
 };
 
 const VibeScreen = () => {
