@@ -46,6 +46,7 @@ interface GameState {
   setSoundVolume: (vol: number) => void;
   toggleVibration: () => void;
   setPendingTransaction: (id: string | null) => void;
+  setQuickChallengeDuration: (d: 10 | 15 | 20) => void;
 }
 
 const PLAYER_COLORS = [
