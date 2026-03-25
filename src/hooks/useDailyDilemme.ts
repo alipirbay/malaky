@@ -82,10 +82,20 @@ export function useDailyDilemme() {
     if (!dilemme || voting || hasVoted) return;
     setVoting(true);
 
+    // Generate a stable fingerprint from session ID for basic spam prevention
+    let fingerprint: string | null = null;
+    try {
+      const sessionId = sessionStorage.getItem("malaky-session-id") ?? crypto.randomUUID();
+      fingerprint = sessionId;
+    } catch {
+      // Ignore fingerprint errors
+    }
+
     await supabase.from("dilemme_votes").insert({
       card_text: dilemme.question,
       choice,
       dilemme_id: dilemme.id,
+      voter_fingerprint: fingerprint,
     });
 
     localStorage.setItem(getVoteKey(dilemme.id), choice);
