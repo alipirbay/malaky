@@ -236,7 +236,7 @@ const GameScreen = () => {
           <button onClick={toggleSound} className="rounded-lg bg-card p-2 text-muted-foreground" aria-label={soundEnabled ? "Couper le son" : "Activer le son"}>
             {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
-          <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground">
+          <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground" aria-label="Menu pause">
             <Pause size={16} />
           </button>
         </div>

@@ -38,6 +38,15 @@ const PacksScreen = () => {
         <p className="mt-1">😇 Soft (famille) • 😏 Fun (amis)</p>
       </div>
 
+      {/* Adult content warning */}
+      <div className="mb-4 rounded-2xl bg-destructive/5 border border-destructive/10 p-4">
+        <p className="text-sm font-semibold text-destructive">⚠️ Contenu mature</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Les packs Hot 🔥 et After Dark 🔞 contiennent du contenu pour adultes (+18 ans).
+          Une confirmation d'âge sera demandée avant de jouer.
+        </p>
+      </div>
+
       <div className="space-y-3 pb-6 overflow-y-auto flex-1">
         {STORE_PACKS.map((pack, i) => {
           const purchased =
@@ -48,6 +57,7 @@ const PacksScreen = () => {
                 : false;
 
           const isBundle = pack.id.startsWith("bundle");
+          const isAdult = pack.id === "afterdark" || pack.id === "hot";
 
           return (
             <motion.div
@@ -62,6 +72,9 @@ const PacksScreen = () => {
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-bold text-foreground text-sm">{pack.name}</h3>
                   {isBundle && <Sparkles size={12} className="text-accent" />}
+                  {isAdult && (
+                    <span className="rounded bg-destructive/20 px-1.5 py-0.5 text-[10px] font-bold text-destructive">18+</span>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{pack.description}</p>
                 <p className="mt-0.5 text-[10px] text-muted-foreground/60">{pack.cardCount}+ cartes</p>
@@ -92,12 +105,20 @@ const PacksScreen = () => {
       </button>
 
       <p className="text-center text-[10px] text-muted-foreground/40 mt-3">
-        En achetant, vous acceptez nos{" "}
+        Prix en Ariary malgache (MGA) · Achat unique, sans abonnement
+        <br />
         <button
           onClick={() => setCguOpen(true)}
           className="underline text-muted-foreground/60"
         >
-          Conditions d'utilisation
+          Conditions
+        </button>
+        {" · "}
+        <button
+          onClick={() => window.open("/privacy.html", "_blank")}
+          className="underline text-muted-foreground/60"
+        >
+          Confidentialité
         </button>
       </p>
 

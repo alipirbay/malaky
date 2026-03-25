@@ -13,6 +13,7 @@ import {
   ChevronRight,
   AlertTriangle,
   Smartphone,
+  HelpCircle,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -34,7 +35,7 @@ const SettingsScreen = () => {
   const [cguOpen, setCguOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  const purchasedPacksCount = Object.values(unlockedVibes).filter(Boolean).length - 4; // -4 for soft, fun, facile, intermediaire
+  const purchasedPacksCount = Object.values(unlockedVibes).filter(Boolean).length - 4;
 
   const handleResetProgress = () => {
     if (!showResetConfirm) {
@@ -191,6 +192,18 @@ const SettingsScreen = () => {
                 <Mail size={20} className="text-muted-foreground shrink-0" />
                 <span className={labelClass}>Nous contacter</span>
                 <span className="text-xs text-muted-foreground/50">contact@malaky.app</span>
+              </button>
+
+              <button
+                onClick={() => window.open("/support.html", "_blank")}
+                className={`${rowClass} text-left`}
+              >
+                <HelpCircle size={20} className="text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground text-sm">Page de support</p>
+                  <p className="text-xs text-muted-foreground">malaky.app/support</p>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground/40 shrink-0" />
               </button>
             </div>
           </div>

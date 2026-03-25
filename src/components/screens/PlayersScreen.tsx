@@ -45,6 +45,7 @@ const PlayersScreen = () => {
           onClick={handleAdd}
           disabled={!name.trim() || players.length >= 12}
           className="rounded-xl gradient-primary p-3.5 text-primary-foreground disabled:opacity-30 transition-transform active:scale-95"
+          aria-label="Ajouter le joueur"
         >
           <Plus size={20} />
         </button>

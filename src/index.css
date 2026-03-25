@@ -69,6 +69,14 @@
 }
 
 @layer utilities {
+  /* Safe areas iOS — Dynamic Island / Notch / Home Indicator */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   .card-game {
     @apply bg-card rounded-3xl p-6 shadow-xl;
   }
