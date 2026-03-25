@@ -267,6 +267,7 @@ export const useGameStore = create<GameState>()(
         soundVolume: state.soundVolume,
         vibrationEnabled: state.vibrationEnabled,
         pendingTransactionId: state.pendingTransactionId,
+        quickChallengeDuration: state.quickChallengeDuration,
         players: state.players,
         selectedMode: state.selectedMode,
         selectedVibe: state.selectedVibe,
