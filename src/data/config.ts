@@ -64,7 +64,7 @@ export const VIBES = [
   { id: "fun" as Vibe, name: "Fun", emoji: "😏", description: "Entre amis, léger et drôle", tag: "amis", free: true, priceLabel: "Gratuit" },
   { id: "hot" as Vibe, name: "Hot", emoji: "🔥", description: "Soirée, plus osé", tag: "soirée", free: false, priceLabel: "9 900 Ar" },
   { id: "chaos" as Vibe, name: "Chaos", emoji: "💀", description: "Dangereux, zéro filtre", tag: "dangereux", free: false, priceLabel: "7 900 Ar" },
-  { id: "couple" as Vibe, name: "Couple", emoji: "💕", description: "Romantique et intime", tag: "couple", free: false, priceLabel: "6 900 Ar" },
+  { id: "couple" as Vibe, name: "Couple", emoji: "💕", description: "Romantique et intime", tag: "couple", free: false, priceLabel: "7 900 Ar" },
   { id: "apero" as Vibe, name: "Apéro", emoji: "🍻", description: "Before, fête, désinhibé", tag: "fête", free: false, priceLabel: "5 900 Ar" },
   { id: "mada" as Vibe, name: "Mada", emoji: "🇲🇬", description: "100% gasy, pour vrais Malgaches", tag: "malgache", free: false, priceLabel: "7 900 Ar" },
   { id: "confessions" as Vibe, name: "Confessions", emoji: "🎭", description: "Secrets profonds, vérités", tag: "secrets", free: false, priceLabel: "7 900 Ar" },
