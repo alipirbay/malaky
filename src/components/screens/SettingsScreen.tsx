@@ -36,6 +36,7 @@ const SettingsScreen = () => {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [cguOpen, setCguOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const { clearStats } = usePlayerStats();
 
   const purchasedPacksCount = Object.values(unlockedVibes).filter(Boolean).length - 4;
 
