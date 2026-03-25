@@ -27,7 +27,7 @@ export function useActiveUsers() {
 
       // Probabilistic cleanup of old sessions (~1% chance per heartbeat)
       if (Math.random() < 0.01) {
-        supabase.rpc("cleanup_old_sessions").catch(() => { /* probabilistic cleanup, non-critical */ });
+        void supabase.rpc("cleanup_old_sessions");
       }
     };
 
