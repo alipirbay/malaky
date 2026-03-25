@@ -15,10 +15,15 @@ export type GameMode = "truth_dare" | "never_have_i_ever" | "most_likely" | "wou
 export type Vibe = "soft" | "fun" | "hot" | "chaos" | "couple" | "apero" | "mada" | "confessions" | "vip" | "afterdark" | "facile" | "intermediaire" | "difficile" | "expert";
 export type Difficulty = "facile" | "intermediaire" | "difficile" | "expert";
 
-export interface PlayerAllTimeStats {
-  name: string;
-  totalPlayed: number;
-  totalRefused: number;
-  totalGames: number;
-  lastPlayed: string; // ISO date
+export interface GameSession {
+  id: string;
+  date: string;
+  players: string[];
+  mode: string;
+  vibe: string;
+  cardsPlayed: number;
+  refusals: number;
+  score: number;
+  bravest: string;
+  quizScore?: number;
 }
