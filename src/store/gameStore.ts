@@ -39,7 +39,7 @@ interface GameState {
   unlockVibe: (vibe: Vibe) => void;
   unlockBundle: (vibes: Vibe[]) => void;
   startGame: (vibeOverride?: Vibe) => void;
-  nextCard: (action: "done" | "refuse" | "skip") => void;
+  nextCard: (action: "done" | "refuse" | "skip", wasCorrect?: boolean) => void;
   resetGame: () => void;
   toggleSound: () => void;
   setSoundVolume: (vol: number) => void;
@@ -137,6 +137,27 @@ export const useGameStore = create<GameState>()(
         const { selectedMode, players, unlockedVibes } = state;
         if (vibeOverride) set({ selectedVibe: vibeOverride });
         if (!selectedMode || !selectedVibe || players.length < 2) return;
+
+        // Tsimoa is always free, skip vibe unlock check
+        if (selectedMode === "tsimoa") {
+          const cards = deduplicateShuffle([...getFilteredCards(selectedMode, selectedVibe ?? "fun", players.length)]);
+          const passes: Record<string, number> = {};
+          const playerStats: Record<string, { played: number; refused: number }> = {};
+          players.forEach((player) => {
+            passes[player.name] = 2;
+            playerStats[player.name] = { played: 0, refused: 0 };
+          });
+          set({
+            deck: cards,
+            currentPlayerIndex: 0,
+            currentCardIndex: 0,
+            stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats },
+            passesRemaining: passes,
+            currentScreen: "game",
+          });
+          return;
+        }
+
         const merged = { ...defaultUnlockedVibes, ...unlockedVibes };
         if (!merged[selectedVibe]) {
           set({ currentScreen: "packs" });
@@ -162,7 +183,7 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      nextCard: (action) => {
+      nextCard: (action, wasCorrect) => {
         const { currentCardIndex, currentPlayerIndex, players, deck, stats, passesRemaining } = get();
         if (!players.length || !deck.length) return;
 
@@ -185,7 +206,7 @@ export const useGameStore = create<GameState>()(
             refused: newStats.playerStats[currentPlayer]?.refused || 0,
           };
           // Increment quiz score for quiz cards
-          if (currentCard?.card_type === "quiz") {
+          if (currentCard?.card_type === "quiz" && wasCorrect === true) {
             newStats.quizScore += 1;
           }
         } else if (action === "refuse") {

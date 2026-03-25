@@ -72,6 +72,7 @@ const GameScreen = () => {
     : { label: "", color: "210 40% 98%" };
   const timerProgress = totalDuration > 0 ? timeLeft / totalDuration : 0;
   const isCultureG = selectedMode === "culture_generale";
+  const progressPct = deck.length > 0 ? ((currentCardIndex + 1) / deck.length) * 100 : 0;
 
   useEffect(() => {
     setTimerRunning(false);
@@ -159,6 +160,19 @@ const GameScreen = () => {
     }, 350);
   }, [isAnimating, nextCard, playWhoosh, vibrate, stopTickLoop]);
 
+  const handleQuizAnswer = useCallback((wasCorrect: boolean) => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setDirection(1);
+    playWhoosh();
+    vibrate(wasCorrect ? 30 : 20);
+
+    setTimeout(() => {
+      nextCard("done", wasCorrect);
+      setIsAnimating(false);
+    }, 350);
+  }, [isAnimating, nextCard, playWhoosh, vibrate]);
+
   const handleAction = useCallback((action: "refuse" | "skip") => {
     if (isAnimating) return;
     setIsAnimating(true);
@@ -242,10 +256,20 @@ const GameScreen = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 px-6 pb-4">
+      <div className="flex items-center gap-2 px-6 pb-2">
         <span className="text-sm text-muted-foreground">
           {mode?.emoji} {mode?.name}
         </span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="px-6 pb-4">
+        <div className="h-1 w-full rounded-full bg-muted">
+          <div
+            className="h-1 rounded-full bg-primary transition-all duration-500"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-6">
@@ -287,7 +311,7 @@ const GameScreen = () => {
                       onClick={() => setShowAnswer(true)}
                       className="w-full rounded-xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary transition-transform active:scale-95"
                     >
-                      👁️ Voir la réponse
+                      👁️ Révéler la réponse
                     </button>
                   )}
                 </div>
@@ -354,31 +378,56 @@ const GameScreen = () => {
       </div>
 
       <div className="px-6 pb-8 pt-4 space-y-3">
-        <div className="flex gap-3">
-          <button
-            onClick={() => handleAction("refuse")}
-            disabled={isAnimating}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-destructive/10 py-3 text-sm font-bold text-destructive transition-transform active:scale-95 disabled:opacity-50"
-          >
-            <X size={16} /> Refuser
-          </button>
-          {currentPasses > 0 && (
+        {isQuizCard && showAnswer ? (
+          <div className="flex gap-3">
             <button
-              onClick={() => handleAction("skip")}
+              onClick={() => handleQuizAnswer(false)}
               disabled={isAnimating}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-secondary py-3 text-sm font-bold text-muted-foreground transition-transform active:scale-95 disabled:opacity-50"
+              className="flex-1 rounded-2xl bg-destructive/10 py-4 text-sm font-bold text-destructive transition-transform active:scale-95 disabled:opacity-50"
             >
-              <SkipForward size={16} /> Passer ({currentPasses})
+              ✗ Faux
             </button>
-          )}
-        </div>
-        <button
-          onClick={handleNext}
-          disabled={isAnimating}
-          className="gradient-primary flex w-full items-center justify-center gap-2 rounded-2xl py-5 text-base font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50"
-        >
-          NEXT <ChevronRight size={20} />
-        </button>
+            <button
+              onClick={() => handleQuizAnswer(true)}
+              disabled={isAnimating}
+              className="flex-1 rounded-2xl bg-primary/20 py-4 text-sm font-bold text-primary transition-transform active:scale-95 disabled:opacity-50"
+            >
+              ✓ Correct
+            </button>
+          </div>
+        ) : isQuizCard && !showAnswer ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-muted-foreground">Révèle la réponse d'abord</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleAction("refuse")}
+                disabled={isAnimating}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-destructive/10 py-3 text-sm font-bold text-destructive transition-transform active:scale-95 disabled:opacity-50"
+              >
+                <X size={16} /> Refuser
+              </button>
+              {currentPasses > 0 && (
+                <button
+                  onClick={() => handleAction("skip")}
+                  disabled={isAnimating}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-secondary py-3 text-sm font-bold text-muted-foreground transition-transform active:scale-95 disabled:opacity-50"
+                >
+                  <SkipForward size={16} /> Passer ({currentPasses})
+                </button>
+              )}
+            </div>
+            <button
+              onClick={handleNext}
+              disabled={isAnimating}
+              className="gradient-primary flex w-full items-center justify-center gap-2 rounded-2xl py-5 text-base font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50"
+            >
+              SUIVANT <ChevronRight size={20} />
+            </button>
+          </>
+        )}
       </div>
 
       <AnimatePresence>
@@ -405,6 +454,15 @@ const GameScreen = () => {
                   className="gradient-primary w-full rounded-2xl px-4 py-3 font-semibold text-primary-foreground transition-transform active:scale-95"
                 >
                   Reprendre
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPauseMenu(false);
+                    useGameStore.getState().startGame();
+                  }}
+                  className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
+                >
+                  Rejouer ce mode
                 </button>
                 <button
                   onClick={() => setScreen("vibe")}
