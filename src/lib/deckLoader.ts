@@ -1,9 +1,13 @@
 /**
- * Deck loading logic extracted from gameStore for testability and clarity.
- * Handles both server-side and local fallback card loading.
+ * Deck loading logic — LOCAL-FIRST architecture.
+ * 
+ * Strategy:
+ * 1. Build deck INSTANTLY from local cards (< 100ms)
+ * 2. Enrich in background for FUTURE sessions (non-blocking)
  */
 import type { GameCard, GameMode, Vibe } from "@/data/types";
 import { GAME_LIMITS } from "@/data/constants";
+import { deduplicateShuffle } from "@/lib/shuffleUtils";
 
 interface Player {
   name: string;
@@ -16,33 +20,95 @@ interface LoadDeckParams {
 }
 
 /**
- * Load deck from the server (Supabase edge function).
- * Throws on failure so the caller can fall back to local.
+ * Load deck INSTANTLY from local cards + downloaded packs.
+ * No network call — always synchronous after dynamic import.
  */
-export async function loadDeckFromServer(params: LoadDeckParams): Promise<GameCard[]> {
-  const { getSeenCardIds, markCardsSeen } = await import("@/hooks/useSeenCards");
-  const seenIds = getSeenCardIds();
+export async function loadDeckInstant(params: LoadDeckParams): Promise<GameCard[]> {
+  const { getFilteredCards } = await import("@/data/cards");
+  const { getDownloadedPackCards } = await import("@/lib/packManager");
 
-  const { supabase } = await import("@/integrations/supabase/client");
-  const { data, error } = await supabase.functions.invoke("get-cards", {
-    body: {
-      mode: params.mode,
-      vibe: params.vibe,
-      players: params.players.map(p => p.name),
-      seen_ids: seenIds,
-      count: GAME_LIMITS.CARDS_PER_GAME,
-    },
-  });
+  // Local cards from code (always available)
+  const localCards = getFilteredCards(params.mode, params.vibe, params.players.length);
 
-  if (error || !data?.cards?.length) {
-    throw new Error(error?.message ?? "No cards returned from server");
+  // Cards from downloaded packs (purchased, stored locally)
+  const packCards = getDownloadedPackCards(params.vibe)
+    .filter(c => c.mode === params.mode);
+
+  // Combine and deduplicate
+  return deduplicateShuffle([...localCards, ...packCards]);
+}
+
+/**
+ * Enrich card catalogue in background for FUTURE sessions.
+ * Calls Supabase to fetch new DB cards. NEVER blocking.
+ */
+export function enrichDeckInBackground(params: LoadDeckParams): void {
+  (async () => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { getSeenCardIds, markCardsSeen } = await import("@/hooks/useSeenCards");
+      const seenIds = getSeenCardIds();
+
+      const { data } = await supabase.functions.invoke("get-cards", {
+        body: {
+          mode: params.mode,
+          vibe: params.vibe,
+          players: params.players.map(p => p.name),
+          seen_ids: seenIds,
+          count: 50,
+          skip_ai: true, // Never trigger AI in background sync
+        },
+      });
+
+      if (data?.cards?.length) {
+        cacheCardsLocally(params.mode, params.vibe, data.cards);
+        markCardsSeen(
+          data.cards
+            .map((c: { id?: string }) => c.id)
+            .filter((id: string | undefined): id is string => Boolean(id))
+        );
+      }
+    } catch (e) {
+      // Silent — not critical, we have local cards
+      console.debug("[enrichDeck] Background sync skipped:", e);
+    }
+  })();
+}
+
+/**
+ * Cache server cards in localStorage for future sessions.
+ */
+const CACHE_KEY_PREFIX = "malaky-cards-cache-";
+const MAX_CACHED_PER_COMBO = 200;
+
+function cacheCardsLocally(mode: GameMode, vibe: Vibe, cards: any[]): void {
+  try {
+    const key = `${CACHE_KEY_PREFIX}${mode}-${vibe}`;
+    const existing = JSON.parse(localStorage.getItem(key) || "[]");
+    const merged = [...existing, ...cards];
+    // Deduplicate by template
+    const unique = merged.filter((c: any, i: number, arr: any[]) =>
+      arr.findIndex((x: any) => x.template === c.template) === i
+    );
+    localStorage.setItem(key, JSON.stringify(unique.slice(-MAX_CACHED_PER_COMBO)));
+  } catch (e) {
+    console.debug("[cacheCards] Storage full or error:", e);
   }
+}
 
-  const cards: GameCard[] = data.cards.map(
-    (c: { id?: string; lang?: string; card_type: string; template: string; answer?: string }, i: number) => ({
-      id: c.id ?? `${params.mode}-${params.vibe}-${i}`,
-      mode: params.mode,
-      vibe: params.vibe,
+/**
+ * Get cached server cards from previous sessions.
+ */
+export function getCachedServerCards(mode: GameMode, vibe: Vibe): GameCard[] {
+  try {
+    const key = `${CACHE_KEY_PREFIX}${mode}-${vibe}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const cards = JSON.parse(raw);
+    return cards.map((c: any, i: number) => ({
+      id: c.id ?? `cached-${mode}-${vibe}-${i}`,
+      mode,
+      vibe,
       lang: (c.lang ?? "fr") as "fr" | "mg",
       card_type: c.card_type as GameCard["card_type"],
       text: c.template,
@@ -50,29 +116,10 @@ export async function loadDeckFromServer(params: LoadDeckParams): Promise<GameCa
       requires_prop: "none" as const,
       player_min: 2,
       player_max: GAME_LIMITS.MAX_PLAYERS,
-    })
-  );
-
-  markCardsSeen(
-    data.cards
-      .map((c: { id?: string }) => c.id)
-      .filter((id: string | undefined): id is string => Boolean(id))
-  );
-
-  const { deduplicateShuffle } = await import("@/data/cards");
-  return deduplicateShuffle(cards);
-}
-
-/**
- * Load deck from local card data (offline fallback).
- * Returns empty array if no cards are available.
- */
-export async function loadDeckLocally(params: LoadDeckParams): Promise<GameCard[]> {
-  const { getFilteredCards, deduplicateShuffle } = await import("@/data/cards");
-  const localCards = deduplicateShuffle([
-    ...getFilteredCards(params.mode, params.vibe, params.players.length),
-  ]);
-  return localCards;
+    }));
+  } catch {
+    return [];
+  }
 }
 
 /**

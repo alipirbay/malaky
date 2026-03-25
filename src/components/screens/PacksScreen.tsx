@@ -11,14 +11,25 @@ const PacksScreen = () => {
   const { setScreen, unlockVibe, unlockBundle, unlockedVibes } = useGameStore();
   const [cguOpen, setCguOpen] = useState(false);
 
-  const handleBuy = (pack: (typeof STORE_PACKS)[number]) => {
+  const handleBuy = async (pack: (typeof STORE_PACKS)[number]) => {
     if (pack.id === "bundle_all") {
       const allVibes: Vibe[] = ["hot", "chaos", "couple", "apero", "mada", "confessions", "vip", "afterdark", "difficile", "expert"];
       unlockBundle(allVibes);
+      toast.success('Pack débloqué ! Téléchargement des cartes...');
+      const { downloadPack } = await import("@/lib/packManager");
+      for (const v of allVibes) {
+        downloadPack(v); // fire and forget
+      }
+      toast.success('Cartes téléchargées ! Jouable hors-ligne. ✈️');
     } else if (pack.vibe) {
       unlockVibe(pack.vibe as Vibe);
+      toast.success(`Pack "${pack.name}" débloqué ! Téléchargement...`);
+      const { downloadPack } = await import("@/lib/packManager");
+      const success = await downloadPack(pack.vibe as Vibe);
+      if (success) {
+        toast.success('Cartes prêtes ! Jouable hors-ligne. ✈️');
+      }
     }
-    toast.success(`Pack "${pack.name}" débloqué !`);
   };
 
   return (

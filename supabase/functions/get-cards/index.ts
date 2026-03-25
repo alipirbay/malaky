@@ -32,7 +32,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { mode, vibe, players, seen_ids = [], count = 150 } = await req.json();
+    const { mode, vibe, players, seen_ids = [], count = 50, skip_ai = false } = await req.json();
 
     if (!mode || !vibe) {
       return new Response(JSON.stringify({ error: "mode and vibe required" }), {
@@ -64,9 +64,9 @@ serve(async (req) => {
     const cardsFromDb = dbCards ?? [];
     const needed = count - cardsFromDb.length;
 
-    // 2. If not enough unseen cards → generate with AI
+    // 2. If not enough unseen cards AND AI is allowed → generate with AI
     let aiCards: any[] = [];
-    if (needed > 0) {
+    if (needed > 0 && !skip_ai) {
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
       if (LOVABLE_API_KEY) {

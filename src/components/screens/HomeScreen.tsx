@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense, useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import malakyLogo from "@/assets/malaky-logo.webp";
 import { useGameStore } from "@/store/gameStore";
@@ -13,6 +13,18 @@ const LAUNCH_DATE_MS = new Date('2026-03-24').getTime();
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
   const activeUsers = useActiveUsers();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
 
   const isNew = useMemo(
     () => (Date.now() - LAUNCH_DATE_MS) < 30 * 24 * 60 * 60 * 1000,
@@ -45,6 +57,16 @@ const HomeScreen = () => {
             <span className="text-xs font-bold text-primary">
               {activeUsers.toLocaleString()} joueurs actifs
             </span>
+          </motion.div>
+        )}
+        {!isOnline && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-3 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2"
+          >
+            <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground">Mode hors-ligne</span>
           </motion.div>
         )}
       </motion.div>

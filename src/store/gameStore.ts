@@ -140,24 +140,20 @@ export const useGameStore = create<GameState>()(
           }
         }
 
-        // Show loading state immediately
-        set({ currentScreen: "game", deck: [], currentCardIndex: 0, currentPlayerIndex: 0 });
-
-        // Dynamic import to keep deckLoader out of initial bundle
-        const { loadDeckFromServer, loadDeckLocally, initPlayerData } = await import("@/lib/deckLoader");
+        // Dynamic import — lightweight, no card_content pulled in at top level
+        const { loadDeckInstant, enrichDeckInBackground, getCachedServerCards, initPlayerData } =
+          await import("@/lib/deckLoader");
         const { passes, playerStats } = initPlayerData(players);
         const params = { mode: selectedMode, vibe: selectedVibe, players };
 
-        let deck: GameCard[];
+        // STEP 1: Build deck LOCAL instantly
+        let deck = await loadDeckInstant(params);
 
-        try {
-          deck = await loadDeckFromServer(params);
-        } catch (err) {
-          console.warn("get-cards failed, falling back to local:", err);
-          // Lazy-import toast to keep it out of store bundle
-          const { toast } = await import("sonner");
-          toast.info("Mode hors-ligne : cartes locales chargées", { duration: 2000 });
-          deck = await loadDeckLocally(params);
+        // Bonus: merge with cached server cards from previous sessions
+        const cachedCards = getCachedServerCards(selectedMode, selectedVibe);
+        if (cachedCards.length > 0) {
+          const { deduplicateShuffle } = await import("@/lib/shuffleUtils");
+          deck = deduplicateShuffle([...deck, ...cachedCards]);
         }
 
         if (deck.length === 0) {
@@ -166,6 +162,7 @@ export const useGameStore = create<GameState>()(
           return;
         }
 
+        // STEP 2: Show game IMMEDIATELY
         set({
           deck,
           currentPlayerIndex: 0,
@@ -174,6 +171,9 @@ export const useGameStore = create<GameState>()(
           passesRemaining: passes,
           currentScreen: "game",
         });
+
+        // STEP 3: Enrich in background for future sessions (NON-BLOCKING)
+        enrichDeckInBackground(params);
       },
 
       nextCard: (action, wasCorrect) => {

@@ -2,9 +2,10 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { VIBES, DIFFICULTIES } from "@/data/config";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, WifiOff } from "lucide-react";
 import type { Vibe } from "@/data/types";
 import AgeGateModal from "@/components/AgeGateModal";
+import { isPackDownloaded } from "@/lib/packManager";
 
 const vibeStyles: Partial<Record<Vibe, string>> = {
   soft: "vibe-soft",
@@ -105,6 +106,7 @@ const VibeScreen = () => {
       <div className="flex-1 space-y-3 pb-4 overflow-y-auto">
         {items.map((item, i) => {
           const isUnlocked = item.free || unlockedVibes[item.id];
+          const isOfflineReady = item.free || isPackDownloaded(item.id);
 
           return (
             <motion.button
@@ -128,7 +130,12 @@ const VibeScreen = () => {
                       <span className="rounded bg-destructive/20 px-1.5 py-0.5 text-[10px] font-bold text-destructive">18+</span>
                     )}
                   </div>
-                  <p className="text-xs text-foreground/70 truncate">{item.description}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-foreground/70 truncate">{item.description}</p>
+                    {isOfflineReady && (
+                      <span className="shrink-0 text-[10px] text-primary/60 font-medium">✓ Offline</span>
+                    )}
+                  </div>
                 </div>
                 <span className="shrink-0 rounded-full bg-card/70 px-3 py-1 text-xs font-bold text-foreground">
                   {isUnlocked ? (item.free ? "Gratuit" : "✓") : item.priceLabel}
