@@ -572,7 +572,7 @@ export const neverBase: VibeContent = {
   ],
 };
 
-export const likelyBase: Record<Vibe, string[]> = {
+export const likelyBase: VibeContent = {
   soft: [
     'perdre ses clés le plus souvent ?',
     'être le plus désordonné ?',
