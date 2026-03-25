@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import malakyLogo from "@/assets/malaky-logo.png";
 import { useGameStore } from "@/store/gameStore";
-import { useActiveUsers } from "@/hooks/useActiveUsers";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
 import DailyDilemme from "@/components/DailyDilemme";
 
@@ -10,7 +9,6 @@ const isNew = (new Date().getTime() - LAUNCH_DATE.getTime()) < 30 * 24 * 60 * 60
 
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
-  const activeUsers = useActiveUsers();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-between px-6 py-10 gradient-surface safe-top safe-bottom">
@@ -23,25 +21,7 @@ const HomeScreen = () => {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="text-center"
       >
-        <img src={malakyLogo} alt="Malaky" className="w-72 max-w-[80vw] mx-auto mb-3 drop-shadow-lg" />
-
-        {/* Live users badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary/15 px-4 py-2"
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-          </span>
-          <span className="text-xs font-bold text-primary">
-            {activeUsers > 5
-              ? `${activeUsers.toLocaleString()} joueurs actifs`
-              : "Joue maintenant 🇲🇬"}
-          </span>
-        </motion.div>
+        <img src={malakyLogo} alt="Malaky" className="w-80 max-w-[85vw] mx-auto drop-shadow-2xl" />
       </motion.div>
 
       {/* Daily Dilemme */}
