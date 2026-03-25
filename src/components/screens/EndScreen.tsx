@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { GAME_MODES } from "@/data/cards";
@@ -38,8 +38,12 @@ const EndScreen = () => {
 
   const sessionScore = stats.cardsPlayed - stats.refusals;
 
+  const hasRecorded = useRef(false);
   const { thisSession, bestSession } = useMemo(() => {
-    const session = recordGame({
+    let session;
+    if (!hasRecorded.current) {
+      hasRecorded.current = true;
+      session = recordGame({
       players: players.map(p => p.name),
       mode: selectedMode ?? "",
       vibe: selectedVibe ?? "",
@@ -48,8 +52,9 @@ const EndScreen = () => {
       score: sessionScore,
       bravest,
       quizScore: isCultureG ? stats.quizScore : undefined,
-    });
-    return { thisSession: session, bestSession: getBestSession() };
+      });
+    }
+    return { thisSession: session ?? null, bestSession: getBestSession() };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isNewRecord = thisSession?.id === bestSession?.id && sessionScore > 0;

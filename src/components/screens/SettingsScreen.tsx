@@ -59,6 +59,7 @@ const SettingsScreen = () => {
       vibrationEnabled: true,
       pendingTransactionId: null,
     });
+    clearSeenCards();
     setShowResetConfirm(false);
     toast.success("Données réinitialisées");
   };
