@@ -90,5 +90,5 @@ export const STORE_PACKS = [
   { id: "afterdark", vibe: "afterdark" as Vibe, name: "Pack After Dark 🔞", emoji: "🔞", description: "18+, le plus osé, sans aucun filtre", price: "12 900 Ar", priceValue: 12900, cardCount: 900, free: false },
   { id: "difficile", vibe: "difficile" as Vibe, name: "Culture G Difficile 🟠", emoji: "🟠", description: "Questions pour connaisseurs", price: "5 900 Ar", priceValue: 5900, cardCount: 160, free: false },
   { id: "expert", vibe: "expert" as Vibe, name: "Culture G Expert 🔴", emoji: "🔴", description: "Le niveau ultime de culture générale", price: "7 900 Ar", priceValue: 7900, cardCount: 160, free: false },
-  { id: "bundle_all", vibe: null, name: "Mega Bundle 💎", emoji: "💎", description: "TOUS les packs au meilleur prix", price: "49 900 Ar", priceValue: 49900, cardCount: 7200, free: false },
+  { id: "bundle_all", vibe: null, name: "Mega Bundle 💎", emoji: "💎", description: "TOUS les packs au meilleur prix", price: "34 900 Ar", priceValue: 34900, cardCount: 7200, free: false },
 ] as const;
