@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { GAME_LIMITS } from "@/data/constants";
 import { ArrowLeft, Shuffle, Plus, X } from "lucide-react";
+import { useSounds } from "@/hooks/useSounds";
 
 const PlayersScreen = () => {
   const { players, addPlayer, removePlayer, shufflePlayers, setScreen } = useGameStore();
   const [name, setName] = useState("");
+  const { vibrate } = useSounds();
 
   const handleAdd = () => {
     const trimmed = name.trim();
-    if (trimmed && players.length < 12) {
+    if (trimmed && players.length < GAME_LIMITS.MAX_PLAYERS) {
       addPlayer(trimmed);
       setName("");
+      vibrate(10);
     }
   };
 
@@ -22,7 +26,11 @@ const PlayersScreen = () => {
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => setScreen("home")} className="rounded-xl bg-card p-2.5 text-foreground">
+        <button
+          onClick={() => { setScreen("home"); vibrate(10); }}
+          className="rounded-xl bg-card p-2.5 text-foreground"
+          aria-label="Retour à l'accueil"
+        >
           <ArrowLeft size={20} />
         </button>
         <div>
@@ -34,6 +42,7 @@ const PlayersScreen = () => {
       {/* Input */}
       <div className="flex gap-2 mb-6">
         <input
+          autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -43,7 +52,7 @@ const PlayersScreen = () => {
         />
         <button
           onClick={handleAdd}
-          disabled={!name.trim() || players.length >= 12}
+          disabled={!name.trim() || players.length >= GAME_LIMITS.MAX_PLAYERS}
           className="rounded-xl gradient-primary p-3.5 text-primary-foreground disabled:opacity-30 transition-transform active:scale-95"
           aria-label="Ajouter le joueur"
         >
@@ -69,7 +78,11 @@ const PlayersScreen = () => {
                 {player.name[0].toUpperCase()}
               </div>
               <span className="flex-1 font-medium text-foreground">{player.name}</span>
-              <button onClick={() => removePlayer(i)} className="text-muted-foreground hover:text-destructive transition-colors">
+              <button
+                onClick={() => removePlayer(i)}
+                className="text-muted-foreground hover:text-destructive transition-colors"
+                aria-label={`Retirer ${player.name}`}
+              >
                 <X size={16} />
               </button>
             </motion.div>
@@ -86,24 +99,31 @@ const PlayersScreen = () => {
             </p>
           </div>
         )}
+
+        {players.length === 1 && (
+          <p className="text-center text-sm text-muted-foreground/70 animate-pulse">
+            Encore 1 joueur pour commencer !
+          </p>
+        )}
       </div>
 
       {/* Actions */}
       <div className="space-y-3">
-        {players.length >= 2 && (
+        {players.length >= GAME_LIMITS.MIN_PLAYERS && (
           <button
-            onClick={shufflePlayers}
+            onClick={() => { shufflePlayers(); vibrate(10); }}
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-sm font-medium text-muted-foreground"
+            aria-label="Mélanger l'ordre des joueurs"
           >
             <Shuffle size={16} /> Mélanger l'ordre
           </button>
         )}
         <button
-          onClick={() => setScreen("mode")}
-          disabled={players.length < 2}
+          onClick={() => { setScreen("mode"); vibrate(10); }}
+          disabled={players.length < GAME_LIMITS.MIN_PLAYERS}
           className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground disabled:opacity-30 glow-primary transition-transform active:scale-95"
         >
-          Continuer ({players.length}/12)
+          Continuer ({players.length}/{GAME_LIMITS.MAX_PLAYERS})
         </button>
       </div>
     </div>
