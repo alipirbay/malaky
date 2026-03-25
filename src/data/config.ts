@@ -64,7 +64,7 @@ export const VIBES = [
   { id: "fun" as Vibe, name: "Fun", emoji: "😏", description: "Entre amis, léger et drôle", tag: "amis", free: true, priceLabel: "Gratuit" },
   { id: "hot" as Vibe, name: "Hot", emoji: "🔥", description: "Soirée, plus osé", tag: "soirée", free: false, priceLabel: "9 900 Ar" },
   { id: "chaos" as Vibe, name: "Chaos", emoji: "💀", description: "Dangereux, zéro filtre", tag: "dangereux", free: false, priceLabel: "7 900 Ar" },
-  { id: "couple" as Vibe, name: "Couple", emoji: "💕", description: "Romantique et intime", tag: "couple", free: false, priceLabel: "6 900 Ar" },
+  { id: "couple" as Vibe, name: "Couple", emoji: "💕", description: "Romantique et intime", tag: "couple", free: false, priceLabel: "7 900 Ar" },
   { id: "apero" as Vibe, name: "Apéro", emoji: "🍻", description: "Before, fête, désinhibé", tag: "fête", free: false, priceLabel: "5 900 Ar" },
   { id: "mada" as Vibe, name: "Mada", emoji: "🇲🇬", description: "100% gasy, pour vrais Malgaches", tag: "malgache", free: false, priceLabel: "7 900 Ar" },
   { id: "confessions" as Vibe, name: "Confessions", emoji: "🎭", description: "Secrets profonds, vérités", tag: "secrets", free: false, priceLabel: "7 900 Ar" },
@@ -82,7 +82,7 @@ export const DIFFICULTIES = [
 export const STORE_PACKS = [
   { id: "hot", vibe: "hot" as Vibe, name: "Pack Hot 🔥", emoji: "🔥", description: "Soirée osée et séduction", price: "9 900 Ar", priceValue: 9900, cardCount: 900, free: false },
   { id: "chaos", vibe: "chaos" as Vibe, name: "Pack Chaos 💀", emoji: "💀", description: "Dangereux, zéro filtre", price: "7 900 Ar", priceValue: 7900, cardCount: 900, free: false },
-  { id: "couple", vibe: "couple" as Vibe, name: "Pack Couple 💕", emoji: "💕", description: "Pour les couples, romantique et intime", price: "6 900 Ar", priceValue: 6900, cardCount: 900, free: false },
+  { id: "couple", vibe: "couple" as Vibe, name: "Pack Couple 💕", emoji: "💕", description: "Pour les couples, romantique et intime", price: "7 900 Ar", priceValue: 7900, cardCount: 900, free: false },
   { id: "apero", vibe: "apero" as Vibe, name: "Pack Apéro 🍻", emoji: "🍻", description: "Before, fête et délire", price: "5 900 Ar", priceValue: 5900, cardCount: 900, free: false },
   { id: "mada", vibe: "mada" as Vibe, name: "Pack Mada 🇲🇬", emoji: "🇲🇬", description: "100% culture malgache, authentique", price: "7 900 Ar", priceValue: 7900, cardCount: 900, free: false },
   { id: "confessions", vibe: "confessions" as Vibe, name: "Pack Confessions 🎭", emoji: "🎭", description: "Secrets profonds et vérités cachées", price: "7 900 Ar", priceValue: 7900, cardCount: 900, free: false },
@@ -90,5 +90,5 @@ export const STORE_PACKS = [
   { id: "afterdark", vibe: "afterdark" as Vibe, name: "Pack After Dark 🔞", emoji: "🔞", description: "18+, le plus osé, sans aucun filtre", price: "12 900 Ar", priceValue: 12900, cardCount: 900, free: false },
   { id: "difficile", vibe: "difficile" as Vibe, name: "Culture G Difficile 🟠", emoji: "🟠", description: "Questions pour connaisseurs", price: "5 900 Ar", priceValue: 5900, cardCount: 160, free: false },
   { id: "expert", vibe: "expert" as Vibe, name: "Culture G Expert 🔴", emoji: "🔴", description: "Le niveau ultime de culture générale", price: "7 900 Ar", priceValue: 7900, cardCount: 160, free: false },
-  { id: "bundle_all", vibe: null, name: "Mega Bundle 💎", emoji: "💎", description: "TOUS les packs au meilleur prix", price: "49 900 Ar", priceValue: 49900, cardCount: 7200, free: false },
+  { id: "bundle_all", vibe: null, name: "Mega Bundle 💎", emoji: "💎", description: "TOUS les packs au meilleur prix", price: "34 900 Ar", priceValue: 34900, cardCount: 7200, free: false },
 ] as const;
