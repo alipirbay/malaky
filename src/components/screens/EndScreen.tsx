@@ -52,8 +52,9 @@ const EndScreen = () => {
       score: sessionScore,
       bravest,
       quizScore: isCultureG ? stats.quizScore : undefined,
-    });
-    return { thisSession: session, bestSession: getBestSession() };
+      });
+    }
+    return { thisSession: session ?? null, bestSession: getBestSession() };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isNewRecord = thisSession?.id === bestSession?.id && sessionScore > 0;

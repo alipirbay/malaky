@@ -6,6 +6,20 @@ interface ShareImageData {
   vibe: string;
 }
 
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
 export async function generateShareImage(data: ShareImageData): Promise<Blob | null> {
   try {
     const canvas = document.createElement("canvas");
@@ -52,8 +66,7 @@ export async function generateShareImage(data: ShareImageData): Promise<Blob | n
     ctx.fillStyle = "rgba(99, 102, 241, 0.25)";
     const pillW = 320;
     const pillX = 540 - pillW / 2;
-    ctx.beginPath();
-    ctx.roundRect(pillX, 400, pillW, 52, 26);
+    roundRect(ctx, pillX, 400, pillW, 52, 26);
     ctx.fill();
     ctx.fillStyle = "#A5B4FC";
     ctx.fillText(`${data.mode} · ${data.vibe}`, 540, 433);
@@ -69,8 +82,7 @@ export async function generateShareImage(data: ShareImageData): Promise<Blob | n
     // Stats cards
     const drawStatCard = (x: number, y: number, w: number, h: number, emoji: string, value: string, label: string, color: string) => {
       ctx.fillStyle = "rgba(255,255,255,0.05)";
-      ctx.beginPath();
-      ctx.roundRect(x, y, w, h, 24);
+      roundRect(ctx, x, y, w, h, 24);
       ctx.fill();
 
       ctx.font = "54px sans-serif";
