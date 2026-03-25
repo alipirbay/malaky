@@ -66,7 +66,7 @@ const EndScreen = () => {
       });
       bestSessionRef.current = getBestSession();
     }
-  }); // intentionally no deps — runs once via ref guard
+  }, []); // runs once via ref guard
 
   const thisSession = sessionRef.current;
   const bestSession = bestSessionRef.current ?? getBestSession();

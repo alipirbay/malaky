@@ -30,42 +30,60 @@ export default defineConfig(({ mode }) => ({
         lang: 'fr',
         categories: ['games', 'entertainment'],
         icons: [
-          { src: '/favicon.ico', sizes: '64x64', type: 'image/x-icon' },
-          { src: '/favicon.ico', sizes: '192x192', type: 'image/x-icon', purpose: 'any' },
-          { src: '/favicon.ico', sizes: '512x512', type: 'image/x-icon', purpose: 'any maskable' }
-        ]
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
         runtimeCaching: [
+          {
+            urlPattern: /\.(png|jpg|jpeg|webp|svg|ico)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images',
+              expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts',
-              expiration: { maxEntries: 10, maxAgeSeconds: 31536000 }
-            }
+              expiration: { maxEntries: 10, maxAgeSeconds: 31536000 },
+            },
           },
           {
             urlPattern: /^https:\/\/fonts\.gstatic\.com/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts-static',
-              expiration: { maxEntries: 20, maxAgeSeconds: 31536000 }
-            }
+              expiration: { maxEntries: 20, maxAgeSeconds: 31536000 },
+            },
           },
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/functions/,
             handler: 'NetworkFirst',
-            options: { cacheName: 'supabase-functions', networkTimeoutSeconds: 3 }
-          }
-        ]
-      }
+            options: { cacheName: 'supabase-functions', networkTimeoutSeconds: 3 },
+          },
+        ],
+      },
     }),
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+        },
+      },
     },
   },
 }));

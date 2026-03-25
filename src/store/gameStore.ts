@@ -317,6 +317,7 @@ export const useGameStore = create<GameState>()(
         currentPlayerIndex: state.currentPlayerIndex,
         stats: state.stats,
         passesRemaining: state.passesRemaining,
+        deck: state.deck,
       }),
     }
   )

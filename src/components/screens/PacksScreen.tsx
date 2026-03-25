@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
-import { STORE_PACKS } from "@/data/cards";
+import { STORE_PACKS } from "@/data/config";
 import { ArrowLeft, Check, Lock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import type { Vibe } from "@/data/cards";
+import type { Vibe } from "@/data/types";
 import PrivacyModal from "@/components/PrivacyModal";
 
 const PacksScreen = () => {
@@ -98,10 +98,10 @@ const PacksScreen = () => {
       </div>
 
       <button
-        onClick={() => setScreen("vibe")}
+        onClick={() => setScreen("home")}
         className="rounded-2xl bg-card px-4 py-3 text-sm font-semibold text-foreground transition-transform active:scale-95"
       >
-        Retour aux ambiances
+        Retour à l'accueil
       </button>
 
       <p className="text-center text-[10px] text-muted-foreground/40 mt-3">

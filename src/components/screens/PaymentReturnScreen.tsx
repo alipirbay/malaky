@@ -41,8 +41,6 @@ const PaymentReturnScreen = ({ transactionId, onBack }: PaymentReturnScreenProps
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-
     const check = async () => {
       const txn = await checkStatus(transactionId);
       if (txn) {
@@ -56,7 +54,7 @@ const PaymentReturnScreen = ({ transactionId, onBack }: PaymentReturnScreenProps
 
     check();
     // Poll every 5s for pending transactions
-    interval = setInterval(check, 5000);
+    const interval = setInterval(check, 5000);
 
     return () => clearInterval(interval);
   }, [transactionId, checkStatus]);

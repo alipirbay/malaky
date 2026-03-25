@@ -17,24 +17,46 @@ export function useActiveUsers() {
   const sessionId = useRef(getSessionId());
 
   useEffect(() => {
-    const heartbeat = async () => {
-      await supabase.from("active_sessions").upsert(
-        { session_id: sessionId.current, last_seen: new Date().toISOString() },
-        { onConflict: "session_id" }
-      );
-      const { data } = await supabase.rpc("get_active_users_count");
-      if (typeof data === "number") setCount(data);
+    let interval: ReturnType<typeof setInterval>;
 
-      // Probabilistic cleanup of old sessions (~1% chance per heartbeat)
-      if (Math.random() < 0.01) {
-        void supabase.rpc("cleanup_old_sessions");
+    const heartbeat = async () => {
+      try {
+        await supabase.from("active_sessions").upsert(
+          { session_id: sessionId.current, last_seen: new Date().toISOString() },
+          { onConflict: "session_id" }
+        );
+        const { data } = await supabase.rpc("get_active_users_count");
+        if (typeof data === "number") setCount(data);
+
+        // Probabilistic cleanup (~1% chance)
+        if (Math.random() < 0.01) {
+          void supabase.rpc("cleanup_old_sessions");
+        }
+      } catch (e) {
+        console.warn("Heartbeat failed:", e);
       }
     };
 
-    heartbeat();
-    const interval = setInterval(heartbeat, 30_000);
+    const start = () => {
+      heartbeat();
+      interval = setInterval(heartbeat, 60_000); // 60s instead of 30s
+    };
 
-    return () => clearInterval(interval);
+    const handleVisibility = () => {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        start();
+      }
+    };
+
+    start();
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
 
   return count;

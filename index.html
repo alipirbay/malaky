@@ -10,10 +10,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Malaky" />
-    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" />
 
     <meta property="og:title" content="Malaky - Le jeu de soirée des Malgaches" />
     <meta property="og:description" content="Malaky - Le party game qui ose tout" />
@@ -26,7 +28,15 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Inline splash screen — replaced when React mounts -->
+      <div id="splash" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#060918;">
+        <img src="/icon-192.png" alt="" width="120" height="120" style="animation:pulse 1.5s infinite" />
+      </div>
+    </div>
+    <style>
+      @keyframes pulse { 0%,100% { opacity:0.5; transform:scale(0.95); } 50% { opacity:1; transform:scale(1); } }
+    </style>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
