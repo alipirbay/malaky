@@ -35,6 +35,33 @@ export type Database = {
         }
         Relationships: []
       }
+      card_reports: {
+        Row: {
+          card_text: string
+          created_at: string
+          id: string
+          mode: string | null
+          reason: string
+          vibe: string | null
+        }
+        Insert: {
+          card_text: string
+          created_at?: string
+          id?: string
+          mode?: string | null
+          reason?: string
+          vibe?: string | null
+        }
+        Update: {
+          card_text?: string
+          created_at?: string
+          id?: string
+          mode?: string | null
+          reason?: string
+          vibe?: string | null
+        }
+        Relationships: []
+      }
       daily_dilemmes: {
         Row: {
           active_date: string
