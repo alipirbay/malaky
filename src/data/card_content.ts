@@ -785,7 +785,7 @@ export const ratherA: VibeContent = {
     'Toujours sentir mauvais',
     'Ne plus jamais s\'embrasser',
     'Être le seul à faire la vaisselle',
-    'Ne plus jamais avoir de secrets',
+    'Connaître tous les secrets de ton partenaire',
     'Se donner que des cadeaux inutiles',
     'Avoir un partenaire qui ronfle très fort',
     'Avoir des relations sexuelles mémorables',
