@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import malakyLogo from "@/assets/malaky-logo.png";
 import { useGameStore } from "@/store/gameStore";
-import { useActiveUsers } from "@/hooks/useActiveUsers";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
 import DailyDilemme from "@/components/DailyDilemme";
 
