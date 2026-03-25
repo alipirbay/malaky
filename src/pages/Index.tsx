@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useGameStore } from "@/store/gameStore";
 import HomeScreen from "@/components/screens/HomeScreen";
 import PlayersScreen from "@/components/screens/PlayersScreen";
@@ -9,6 +9,8 @@ import EndScreen from "@/components/screens/EndScreen";
 import PacksScreen from "@/components/screens/PacksScreen";
 import SettingsScreen from "@/components/screens/SettingsScreen";
 import PaymentReturnScreen from "@/components/screens/PaymentReturnScreen";
+import FirstLaunchModal from "@/components/FirstLaunchModal";
+import PrivacyModal from "@/components/PrivacyModal";
 
 const SCREENS = {
   home: HomeScreen,
@@ -28,6 +30,20 @@ const Index = () => {
   const pendingTransactionId = useGameStore((s) => s.pendingTransactionId);
   const setScreen = useGameStore((s) => s.setScreen);
   const setPendingTransaction = useGameStore((s) => s.setPendingTransaction);
+
+  const [showFirstLaunch, setShowFirstLaunch] = useState(false);
+  const [legalModal, setLegalModal] = useState<"privacy" | "cgu" | null>(null);
+
+  useEffect(() => {
+    if (!localStorage.getItem("malaky-terms-accepted")) {
+      setShowFirstLaunch(true);
+    }
+  }, []);
+
+  const handleAcceptTerms = () => {
+    localStorage.setItem("malaky-terms-accepted", "true");
+    setShowFirstLaunch(false);
+  };
 
   // Handle redirect back from VPI payment
   useEffect(() => {
@@ -55,6 +71,23 @@ const Index = () => {
     window.addEventListener('popstate', handler);
     return () => window.removeEventListener('popstate', handler);
   }, [currentScreen, setScreen]);
+
+  if (showFirstLaunch) {
+    return (
+      <>
+        <FirstLaunchModal
+          onAccept={handleAcceptTerms}
+          onShowPrivacy={() => setLegalModal("privacy")}
+          onShowCGU={() => setLegalModal("cgu")}
+        />
+        <PrivacyModal
+          open={legalModal !== null}
+          onClose={() => setLegalModal(null)}
+          type={legalModal ?? "privacy"}
+        />
+      </>
+    );
+  }
 
   if (currentScreen === "payment_return" && pendingTransactionId) {
     return (

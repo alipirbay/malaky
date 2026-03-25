@@ -12,7 +12,7 @@ const HomeScreen = () => {
   const activeUsers = useActiveUsers();
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-between px-6 py-10 gradient-surface">
+    <div className="flex min-h-screen flex-col items-center justify-between px-6 py-10 gradient-surface safe-top safe-bottom">
       <div className="flex-1" />
 
       {/* Center content */}
@@ -115,6 +115,23 @@ const HomeScreen = () => {
         <p className="text-xs font-medium text-muted-foreground/40 tracking-widest uppercase">
           Ose tout. Assume rien.
         </p>
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground/30">
+          <button
+            onClick={() => window.open("/privacy.html", "_blank")}
+            className="underline underline-offset-2"
+          >
+            Confidentialité
+          </button>
+          <span>·</span>
+          <button
+            onClick={() => window.open("/support.html", "_blank")}
+            className="underline underline-offset-2"
+          >
+            Support
+          </button>
+          <span>·</span>
+          <span>© 2026 APli</span>
+        </div>
       </motion.div>
 
       <div className="flex-1" />

@@ -1,8 +1,10 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { VIBES, DIFFICULTIES } from "@/data/cards";
 import { ArrowLeft, Lock } from "lucide-react";
 import type { Vibe } from "@/data/cards";
+import AgeGateModal from "@/components/AgeGateModal";
 
 const vibeStyles: Partial<Record<Vibe, string>> = {
   soft: "vibe-soft",
@@ -21,8 +23,14 @@ const vibeStyles: Partial<Record<Vibe, string>> = {
   expert: "vibe-afterdark",
 };
 
+const ADULT_VIBES = ["afterdark", "hot"];
+
+const hasConfirmedAge = (vibe: Vibe) =>
+  localStorage.getItem(`malaky-age-confirmed-${vibe}`) === "true";
+
 const VibeScreen = () => {
   const { setScreen, unlockedVibes, selectedMode } = useGameStore();
+  const [pendingAdultVibe, setPendingAdultVibe] = useState<Vibe | null>(null);
 
   const isCultureMode = selectedMode === "culture_generale";
   const items = isCultureMode
@@ -34,6 +42,19 @@ const VibeScreen = () => {
       setScreen("packs");
       return;
     }
+    if (ADULT_VIBES.includes(vibe) && !hasConfirmedAge(vibe)) {
+      setPendingAdultVibe(vibe);
+      return;
+    }
+    useGameStore.getState().setVibe(vibe);
+    useGameStore.getState().startGame(vibe);
+  };
+
+  const handleAgeConfirmed = () => {
+    if (!pendingAdultVibe) return;
+    localStorage.setItem(`malaky-age-confirmed-${pendingAdultVibe}`, "true");
+    const vibe = pendingAdultVibe;
+    setPendingAdultVibe(null);
     useGameStore.getState().setVibe(vibe);
     useGameStore.getState().startGame(vibe);
   };
@@ -67,6 +88,7 @@ const VibeScreen = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => handleSelect(item.id, item.free)}
+              aria-label={`Choisir l'ambiance ${item.name}${!isUnlocked ? ` — ${item.priceLabel}` : ""}`}
               className={`relative w-full rounded-2xl border-0 p-4 text-left overflow-hidden transition-transform active:scale-[0.97] ${vibeStyles[item.id] || "vibe-soft"} ${
                 isUnlocked ? "" : "opacity-80"
               }`}
@@ -77,6 +99,9 @@ const VibeScreen = () => {
                   <div className="flex items-center gap-2">
                     <h3 className="text-lg font-black text-foreground">{item.name}</h3>
                     {!isUnlocked && <Lock size={14} className="text-foreground/70" />}
+                    {ADULT_VIBES.includes(item.id) && (
+                      <span className="rounded bg-destructive/20 px-1.5 py-0.5 text-[10px] font-bold text-destructive">18+</span>
+                    )}
                   </div>
                   <p className="text-xs text-foreground/70 truncate">{item.description}</p>
                 </div>
@@ -88,6 +113,16 @@ const VibeScreen = () => {
           );
         })}
       </div>
+
+      <AnimatePresence>
+        {pendingAdultVibe && (
+          <AgeGateModal
+            packName={items.find(i => i.id === pendingAdultVibe)?.name ?? ""}
+            onConfirm={handleAgeConfirmed}
+            onCancel={() => setPendingAdultVibe(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
