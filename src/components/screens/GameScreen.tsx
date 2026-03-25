@@ -159,6 +159,26 @@ const GameScreen = () => {
     }, 350);
   }, [isAnimating, nextCard, playWhoosh, vibrate, stopTickLoop]);
 
+  const handleAction = useCallback((action: "refuse" | "skip") => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setDirection(1);
+    vibrate(20);
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    stopTickLoop();
+
+    setTimeout(() => {
+      nextCard(action);
+      setIsAnimating(false);
+    }, 350);
+  }, [isAnimating, nextCard, vibrate, stopTickLoop]);
+
+  const currentPasses = passesRemaining[currentPlayer?.name] ?? 0;
+
   if (!card || !currentPlayer) {
     return (
       <div className="gradient-surface flex min-h-screen items-center justify-center">
