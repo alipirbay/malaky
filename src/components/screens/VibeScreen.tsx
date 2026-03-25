@@ -17,6 +17,19 @@ const vibeStyles: Record<Vibe, string> = {
   afterdark: "vibe-afterdark",
 };
 
+const vibeDecoEmojis: Record<Vibe, string[]> = {
+  soft: ["☁️", "🌈", "✨", "🦋"],
+  fun: ["😂", "🎉", "🎈", "⚡"],
+  hot: ["💋", "🌶️", "💫", "🔥"],
+  chaos: ["💀", "🃏", "💣", "⚡"],
+  couple: ["💕", "💘", "🌹", "💗"],
+  apero: ["🍷", "🧀", "🍸", "🫒"],
+  mada: ["🌴", "🦎", "🌺", "🍚"],
+  confessions: ["🎭", "🤫", "👁️", "🔮"],
+  vip: ["💎", "✨", "🥂", "⭐"],
+  afterdark: ["🍑", "🍆", "🔞", "😈"],
+};
+
 const VibeScreen = () => {
   const { setVibe, setScreen, unlockedVibes } = useGameStore();
 
