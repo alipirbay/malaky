@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense, useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import malakyLogo from "@/assets/malaky-logo.webp";
 import { useGameStore } from "@/store/gameStore";
