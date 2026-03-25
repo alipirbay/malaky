@@ -1,7 +1,9 @@
 // Auto-generated card content
 import type { Vibe } from "./types";
 
-export const truthPrompts: Record<Vibe, string[]> = {
+type VibeContent = Partial<Record<Vibe, string[]>>;
+
+export const truthPrompts: VibeContent = {
   soft: [
     'Avoue ta plus grosse bêtise d\'enfant.',
     'Raconte un moment où tu as eu très honte.',
