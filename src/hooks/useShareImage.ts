@@ -115,7 +115,8 @@ export async function generateShareImage(data: ShareImageData): Promise<Blob | n
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), "image/png", 0.95);
     });
-  } catch {
+  } catch (e) {
+    console.warn("Failed to generate share image:", e);
     return null;
   }
 }

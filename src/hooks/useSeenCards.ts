@@ -5,7 +5,8 @@ export function getSeenCardIds(): string[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (e) {
+    console.warn("Failed to read seen cards:", e);
     return [];
   }
 }
@@ -15,7 +16,9 @@ export function markCardsSeen(ids: string[]): void {
     const existing = getSeenCardIds();
     const updated = [...new Set([...existing, ...ids])].slice(-MAX_SEEN);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch {}
+  } catch (e) {
+    console.warn("Failed to save seen cards:", e);
+  }
 }
 
 export function clearSeenCards(): void {

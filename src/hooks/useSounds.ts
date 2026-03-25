@@ -22,16 +22,27 @@ function playTone(freq: number, duration: number, volume: number, type: Oscillat
   osc.stop(ctx.currentTime + duration);
 }
 
-function playNoise(duration: number, volume: number) {
+// Pre-generated noise buffer — created once, reused for all whoosh sounds
+let cachedNoiseBuffer: AudioBuffer | null = null;
+const NOISE_DURATION = 0.25;
+
+function getNoiseBuffer(): AudioBuffer {
+  if (cachedNoiseBuffer) return cachedNoiseBuffer;
   const ctx = getCtx();
-  const bufferSize = ctx.sampleRate * duration;
+  const bufferSize = Math.ceil(ctx.sampleRate * NOISE_DURATION);
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) {
     data[i] = (Math.random() * 2 - 1) * Math.max(0, 1 - i / bufferSize);
   }
+  cachedNoiseBuffer = buffer;
+  return buffer;
+}
+
+function playNoise(volume: number) {
+  const ctx = getCtx();
   const source = ctx.createBufferSource();
-  source.buffer = buffer;
+  source.buffer = getNoiseBuffer();
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(volume * 0.15, ctx.currentTime);
   const filter = ctx.createBiquadFilter();
@@ -76,7 +87,7 @@ export function useSounds() {
 
   const playWhoosh = useCallback(() => {
     if (!soundEnabled) return;
-    playNoise(0.25, vol);
+    playNoise(vol);
   }, [soundEnabled, vol]);
 
   const playConfirm = useCallback(() => {

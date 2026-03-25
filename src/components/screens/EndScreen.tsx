@@ -1,7 +1,7 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
-import { GAME_MODES } from "@/data/cards";
+import { GAME_MODES } from "@/data/config";
 import { Trophy, RotateCcw, Share2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
@@ -16,49 +16,62 @@ const endings = [
 ];
 
 const EndScreen = () => {
-  const { stats, players, resetGame, setScreen, selectedMode, selectedVibe } = useGameStore();
+  const stats = useGameStore((s) => s.stats);
+  const players = useGameStore((s) => s.players);
+  const resetGame = useGameStore((s) => s.resetGame);
+  const setScreen = useGameStore((s) => s.setScreen);
+  const selectedMode = useGameStore((s) => s.selectedMode);
+  const selectedVibe = useGameStore((s) => s.selectedVibe);
   const { recordGame, getBestSession } = usePlayerStats();
 
   const isCultureG = selectedMode === "culture_generale";
-  const modeName = GAME_MODES.find(m => m.id === selectedMode)?.name ?? "";
+  const modeName = useMemo(
+    () => GAME_MODES.find(m => m.id === selectedMode)?.name ?? "",
+    [selectedMode]
+  );
 
-  let bravest = players[0]?.name || "";
-  let bestScore = -1;
-  Object.entries(stats.playerStats).forEach(([name, s]) => {
-    const score = s.played - s.refused;
-    if (score > bestScore) { bestScore = score; bravest = name; }
-  });
+  const { bravest, laziest, sessionScore } = useMemo(() => {
+    let _bravest = players[0]?.name || "";
+    let bestScore = -1;
+    let _laziest = players[0]?.name || "";
+    let worstScore = -Infinity;
 
-  let laziest = players[0]?.name || "";
-  let worstScore = -Infinity;
-  Object.entries(stats.playerStats).forEach(([name, s]) => {
-    const score = s.refused - s.played;
-    if (score > worstScore) { worstScore = score; laziest = name; }
-  });
+    Object.entries(stats.playerStats).forEach(([name, s]) => {
+      const score = s.played - s.refused;
+      if (score > bestScore) { bestScore = score; _bravest = name; }
+      const wscore = s.refused - s.played;
+      if (wscore > worstScore) { worstScore = wscore; _laziest = name; }
+    });
 
-  const sessionScore = stats.cardsPlayed - stats.refusals;
+    return { bravest: _bravest, laziest: _laziest, sessionScore: stats.cardsPlayed - stats.refusals };
+  }, [stats, players]);
 
+  // Record game in useEffect (side effect), with guard against double-fire in StrictMode
   const hasRecorded = useRef(false);
-  const { thisSession, bestSession } = useMemo(() => {
-    let session;
+  const sessionRef = useRef<ReturnType<typeof recordGame> | null>(null);
+  const bestSessionRef = useRef<ReturnType<typeof getBestSession>>(null);
+
+  useEffect(() => {
     if (!hasRecorded.current) {
       hasRecorded.current = true;
-      session = recordGame({
-      players: players.map(p => p.name),
-      mode: selectedMode ?? "",
-      vibe: selectedVibe ?? "",
-      cardsPlayed: stats.cardsPlayed,
-      refusals: stats.refusals,
-      score: sessionScore,
-      bravest,
-      quizScore: isCultureG ? stats.quizScore : undefined,
+      sessionRef.current = recordGame({
+        players: players.map(p => p.name),
+        mode: selectedMode ?? "",
+        vibe: selectedVibe ?? "",
+        cardsPlayed: stats.cardsPlayed,
+        refusals: stats.refusals,
+        score: sessionScore,
+        bravest,
+        quizScore: isCultureG ? stats.quizScore : undefined,
       });
+      bestSessionRef.current = getBestSession();
     }
-    return { thisSession: session ?? null, bestSession: getBestSession() };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }); // intentionally no deps — runs once via ref guard
+
+  const thisSession = sessionRef.current;
+  const bestSession = bestSessionRef.current ?? getBestSession();
 
   const isNewRecord = thisSession?.id === bestSession?.id && sessionScore > 0;
-
   const ending = useMemo(() => endings[Math.floor(Math.random() * endings.length)], []);
 
   const handleShare = async () => {
@@ -75,7 +88,9 @@ const EndScreen = () => {
         const file = new File([blob], "malaky-score.png", { type: "image/png" });
         await navigator.share({ title: "Malaky", text, files: [file] });
         return;
-      } catch {}
+      } catch (e) {
+        console.warn("Share failed:", e);
+      }
     }
     if (blob) {
       const url = URL.createObjectURL(blob);
@@ -110,7 +125,6 @@ const EndScreen = () => {
         transition={{ delay: 0.2 }}
         className="w-full max-w-sm space-y-3 mb-10"
       >
-        {/* Score de la partie */}
         <div className="card-game text-center">
           <p className="text-sm text-muted-foreground mb-1">Cette partie</p>
           <div className="flex items-center justify-center gap-2">
@@ -137,7 +151,6 @@ const EndScreen = () => {
           </div>
         )}
 
-        {/* Joueurs */}
         <div className="card-game space-y-2">
           <div className="flex items-center gap-4">
             <div className="rounded-full bg-primary/20 p-3">
@@ -161,7 +174,6 @@ const EndScreen = () => {
           )}
         </div>
 
-        {/* Meilleur record all-time */}
         {bestSession && !isNewRecord && bestSession.score > 0 && (
           <div className="card-game">
             <p className="text-sm font-bold text-foreground mb-2">🥇 Record à battre</p>
