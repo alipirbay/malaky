@@ -30,6 +30,7 @@ interface GameState {
   soundEnabled: boolean;
   soundVolume: number;
   vibrationEnabled: boolean;
+  quickChallengeDuration: 10 | 15 | 20;
   addPlayer: (name: string) => void;
   removePlayer: (index: number) => void;
   shufflePlayers: () => void;
