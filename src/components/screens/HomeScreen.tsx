@@ -10,6 +10,7 @@ const isNew = (new Date().getTime() - LAUNCH_DATE.getTime()) < 30 * 24 * 60 * 60
 
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
+  const activeUsers = useActiveUsers();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-between px-6 py-10 gradient-surface safe-top safe-bottom">
