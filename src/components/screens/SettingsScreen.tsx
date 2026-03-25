@@ -67,7 +67,7 @@ const SettingsScreen = () => {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface">
+      <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button

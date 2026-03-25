@@ -60,7 +60,7 @@ const VibeScreen = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface">
+    <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
       <div className="mb-6 flex items-center gap-3">
         <button onClick={() => setScreen("mode")} className="rounded-xl bg-card p-2.5 text-foreground">
           <ArrowLeft size={20} />

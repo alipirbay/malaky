@@ -38,6 +38,15 @@ const Index = () => {
     if (!localStorage.getItem("malaky-terms-accepted")) {
       setShowFirstLaunch(true);
     }
+    // If reloaded on game screen with empty deck, rebuild or go home
+    const state = useGameStore.getState();
+    if (state.currentScreen === 'game' && state.deck.length === 0) {
+      if (state.selectedMode && state.selectedVibe && state.players.length >= 2) {
+        state.startGame(state.selectedVibe);
+      } else {
+        state.setScreen('home');
+      }
+    }
   }, []);
 
   const handleAcceptTerms = () => {
