@@ -17,41 +17,195 @@ const vibeStyles: Record<Vibe, string> = {
   afterdark: "vibe-afterdark",
 };
 
-/**
- * Dense repeating SVG pattern tiles per vibe.
- * Each tile is ~80x80 and repeats to fill the card.
- * Shapes are outline-only, themed to the vibe.
- */
-const vibePatterns: Record<Vibe, string> = {
-  // Soft: clouds, stars, butterflies, rainbows
-  soft: `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='white' stroke-width='1.2' opacity='0.15'><circle cx='15' cy='15' r='5'/><circle cx='21' cy='15' r='5'/><circle cx='18' cy='11' r='5'/><path d='M55 12l2-4 2 4-2 2z'/><path d='M60 14l1.5-3 1.5 3-1.5 1.5z'/><circle cx='40' cy='45' r='4'/><circle cx='46' cy='45' r='4'/><circle cx='43' cy='41' r='4'/><path d='M12 55l3-5 3 5-3 3z'/><path d='M65 55a5 5 0 0 1 8 0' /><path d='M65 55a5 5 0 0 0 8 0'/><circle cx='35' cy='70' r='3'/><path d='M70 35l2-3 2 3-2 1.5z'/></g></svg>`)}")`,
+/* Recognizable outline icons per vibe, placed densely across each card */
+const VibePattern = ({ vibe }: { vibe: Vibe }) => {
+  const patterns: Record<Vibe, React.ReactNode> = {
+    soft: (
+      <svg viewBox="0 0 300 70" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+        <g fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          {/* Cloud */}
+          <path d="M25 35a8 8 0 0 1 15 0h1a5 5 0 0 1 0 10H22a6 6 0 0 1 0-12z"/>
+          {/* Star */}
+          <path d="M70 20l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z"/>
+          {/* Butterfly */}
+          <path d="M105 30c-6-8-15-5-12 2 3 7 12 5 12 5s9 2 12-5c3-7-6-10-12-2z"/>
+          {/* Rainbow arc */}
+          <path d="M140 48a18 18 0 0 1 36 0" /><path d="M144 48a14 14 0 0 1 28 0"/>
+          {/* Small cloud */}
+          <path d="M195 30a5 5 0 0 1 10 0 4 4 0 0 1 0 7h-13a4 4 0 0 1 0-8z"/>
+          {/* Sparkle */}
+          <path d="M240 25l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>
+          {/* Sun */}
+          <circle cx="280" cy="35" r="6"/><path d="M280 25v-4M280 45v4M270 35h-4M290 35h4M273 28l-3-3M287 42l3 3M273 42l-3 3M287 28l3-3"/>
+        </g>
+      </svg>
+    ),
+    fun: (
+      <svg viewBox="0 0 300 70" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+        <g fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          {/* Balloon */}
+          <ellipse cx="25" cy="25" rx="9" ry="11"/><path d="M25 36l-1 3 2 0-1 3"/><path d="M25 42v10"/>
+          {/* Confetti */}
+          <rect x="60" y="20" width="6" height="6" rx="1" transform="rotate(25 63 23)"/>
+          <rect x="80" y="38" width="5" height="5" rx="1" transform="rotate(-15 82 40)"/>
+          {/* Party hat */}
+          <path d="M110 50l12-35 12 35z"/><path d="M114 42h16"/><ellipse cx="122" cy="15" rx="4" ry="3"/>
+          {/* Smiley */}
+          <circle cx="165" cy="32" r="12"/><circle cx="160" cy="28" r="2"/><circle cx="170" cy="28" r="2"/><path d="M158 37a8 8 0 0 0 14 0"/>
+          {/* Musical note */}
+          <path d="M205 20v25"/><circle cx="205" cy="45" r="5"/><path d="M205 20l15-5v5l-15 5"/>
+          {/* Star burst */}
+          <path d="M250 30l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
+        </g>
+      </svg>
+    ),
+    hot: (
+      <svg viewBox="0 0 300 70" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+        <g fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          {/* Flame */}
+          <path d="M20 50c0-15 8-22 8-30 4 8 10 12 10 30a14 14 0 0 1-18 0z"/><path d="M24 50c0-8 4-12 4-18 2 5 5 8 5 18"/>
+          {/* Lips */}
+          <path d="M65 32c5-6 12-6 17 0-5 8-12 8-17 0z"/><path d="M65 32c5 4 12 4 17 0"/>
+          {/* Chili pepper */}
+          <path d="M110 15c2-5 5-7 8-5s3 8-2 20c-3 8-8 15-12 18"/><path d="M110 15c-3-4-2-8 2-10"/>
+          {/* Heart */}
+          <path d="M155 30c0-6 5-11 10-11s10 5 10 11c0 12-10 20-10 20s-10-8-10-20z"/>
+          {/* Fire spark */}
+          <path d="M205 25l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+          {/* Small flame */}
+          <path d="M250 50c0-10 5-15 5-22 3 6 7 10 7 22a10 10 0 0 1-12 0z"/>
+        </g>
+      </svg>
+    ),
+    chaos: (
+      <svg viewBox="0 0 300 70" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+        <g fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          {/* Skull */}
+          <path d="M15 35a12 12 0 1 1 24 0v4l-4 5h-16l-4-5z"/><circle cx="22" cy="31" r="3"/><circle cx="34" cy="31" r="3"/><path d="M25 40v4M28 40v4M31 40v4"/>
+          {/* Lightning */}
+          <path d="M70 10l-8 22h10l-10 28 20-30h-10z"/>
+          {/* Bomb */}
+          <circle cx="125" cy="40" r="12"/><path d="M133 28l5-10"/><path d="M136 16l3-2M140 18l2 3M136 20l4 1"/>
+          {/* Explosion */}
+          <path d="M180 35l5-15 5 10 8-8-3 12 10 2-10 5 5 10-10-5-5 10-3-12-10 3 8-12z"/>
+          {/* Dice */}
+          <rect x="235" y="22" width="22" height="22" rx="3" transform="rotate(10 246 33)"/><circle cx="242" cy="29" r="1.5"/><circle cx="250" cy="37" r="1.5"/><circle cx="246" cy="33" r="1.5"/>
+        </g>
+      </svg>
+    ),
+    couple: (
+      <svg viewBox="0 0 300 70" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+        <g fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          {/* Big heart */}
+          <path d="M20 30c0-7 6-12 12-12s12 5 12 12c0 14-12 22-12 22S20 44 20 30z"/>
+          {/* Ring */}
+          <circle cx="75" cy="35" r="9"/><path d="M70 26l5-6 5 6"/><path d="M72 26h6"/>
+          {/* Love letter */}
+          <rect x="100" y="22" width="25" height="18" rx="2"/><path d="M100 24l12.5 10L125 24"/>
+          {/* Small hearts scattered */}
+          <path d="M150 20c0-4 3-6 6-6s6 2 6 6c0 7-6 11-6 11s-6-4-6-11z"/>
+          <path d="M185 40c0-3 2-5 5-5s5 2 5 5c0 5-5 9-5 9s-5-4-5-9z"/>
+          {/* Rose */}
+          <circle cx="230" cy="30" r="8"/><path d="M226 30c4-3 8 0 8 0s-1 5-4 4"/><path d="M230 38v18"/><path d="M230 45c-5-2-7 2-7 2"/>
+          {/* Tiny heart */}
+          <path d="M270 25c0-3 2-5 4-5s4 2 4 5c0 5-4 8-4 8s-4-3-4-8z"/>
+        </g>
+      </svg>
+    ),
+    apero: (
+      <svg viewBox="0 0 300 70" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+        <g fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          {/* Wine glass */}
+          <path d="M15 15l-5 18a8 8 0 0 0 16 0l-5-18z"/><path d="M18 33v15"/><path d="M12 48h12"/>
+          {/* Beer mug */}
+          <rect x="55" y="18" width="16" height="28" rx="3"/><path d="M71 24h6a4 4 0 0 1 0 16h-6"/><path d="M58 18c2-4 5-6 10-4"/>
+          {/* Cheese */}
+          <path d="M105 45l25-15v20z"/><circle cx="115" cy="42" r="2"/><circle cx="122" cy="38" r="1.5"/>
+          {/* Cocktail */}
+          <path d="M150 15l-12 20h24z"/><path d="M150 35v15"/><path d="M142 50h16"/><circle cx="157" cy="20" r="3"/><path d="M157 20l8-8"/>
+          {/* Olive on pick */}
+          <path d="M200 15v35"/><circle cx="200" cy="25" r="5"/><ellipse cx="200" cy="25" rx="2" ry="3"/>
+          {/* Pretzel */}
+          <path d="M240 25a10 10 0 0 1 10 10 10 10 0 0 1-20 0 10 10 0 0 1 10-10z"/><path d="M235 22l5 8 5-8"/>
+          {/* Bottle */}
+          <path d="M275 18h8v6l2 4v20h-12v-20l2-4z"/><path d="M277 12h4v6h-4z"/>
+        </g>
+      </svg>
+    ),
+    mada: (
+      <svg viewBox="0 0 300 70" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+        <g fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          {/* Palm tree */}
+          <path d="M25 55v-30"/><path d="M25 25c-10-3-15 3-15 3"/><path d="M25 25c10-3 15 3 15 3"/><path d="M25 28c-8 0-12 5-12 5"/><path d="M25 28c8 0 12 5 12 5"/>
+          {/* Baobab */}
+          <path d="M75 55v-20h10v20"/><path d="M72 35a12 12 0 0 1 16 0"/><path d="M70 35c-5-8 0-15 0-15"/><path d="M90 35c5-8 0-15 0-15"/>
+          {/* Vanilla pod */}
+          <path d="M120 15c2 12 0 30-5 40"/><path d="M122 15c2 12 4 30-1 40"/>
+          {/* Chameleon */}
+          <circle cx="175" cy="30" r="10"/><path d="M185 30h12c0 8-6 10-6 10"/><circle cx="172" cy="28" r="2.5"/><path d="M165 35c-5 5-5 15-5 15"/>
+          {/* Flower */}
+          <circle cx="230" cy="35" r="4"/><circle cx="230" cy="27" r="4"/><circle cx="230" cy="43" r="4"/><circle cx="224" cy="31" r="4"/><circle cx="236" cy="31" r="4"/><circle cx="224" cy="39" r="4"/><circle cx="236" cy="39" r="4"/>
+          {/* Zebu horn */}
+          <path d="M270 50c0-15 5-30 12-35"/><path d="M280 50c0-15-5-30-12-35"/>
+        </g>
+      </svg>
+    ),
+    confessions: (
+      <svg viewBox="0 0 300 70" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+        <g fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          {/* Theater mask happy */}
+          <path d="M15 20a15 15 0 0 1 25 0v10a15 13 0 0 1-25 0z"/><circle cx="23" cy="28" r="2.5"/><circle cx="34" cy="28" r="2.5"/><path d="M24 37a6 6 0 0 0 10 0"/>
+          {/* Theater mask sad */}
+          <path d="M70 20a15 15 0 0 1 25 0v10a15 13 0 0 1-25 0z"/><circle cx="78" cy="28" r="2.5"/><circle cx="89" cy="28" r="2.5"/><path d="M79 40a6 6 0 0 1 8 0"/>
+          {/* Key */}
+          <circle cx="130" cy="25" r="7"/><path d="M137 25h20"/><path d="M150 25v6"/><path d="M155 25v4"/>
+          {/* Eye */}
+          <path d="M180 35c8-12 22-12 30 0-8 12-22 12-30 0z"/><circle cx="195" cy="35" r="5"/><circle cx="195" cy="35" r="2"/>
+          {/* Whisper bubble */}
+          <path d="M240 20c12 0 20 6 20 14s-8 14-20 14c-4 0-7-1-10-2l-8 5 3-7c-3-3-5-6-5-10 0-8 8-14 20-14z"/>
+          <circle cx="233" cy="34" r="1.5"/><circle cx="240" cy="34" r="1.5"/><circle cx="247" cy="34" r="1.5"/>
+        </g>
+      </svg>
+    ),
+    vip: (
+      <svg viewBox="0 0 300 70" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+        <g fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          {/* Crown */}
+          <path d="M10 45l5-20 8 10 8-15 8 15 8-10 5 20z"/><path d="M10 45h42"/>
+          {/* Diamond */}
+          <path d="M80 20h20l-10 25z"/><path d="M80 20l4-8h12l4 8"/>
+          {/* Champagne glass */}
+          <path d="M125 15l-6 18a6 6 0 0 0 12 0l-6-18z"/><path d="M125 33v14"/><path d="M119 47h12"/><circle cx="130" cy="18" r="2"/>
+          {/* Star */}
+          <path d="M175 15l5 10 11 2-8 7 2 11-10-5-10 5 2-11-8-7 11-2z"/>
+          {/* Trophy */}
+          <path d="M220 18h20v15a10 10 0 0 1-20 0z"/><path d="M220 25h-6a6 6 0 0 1 6-6"/><path d="M240 25h6a6 6 0 0 0-6-6"/><path d="M230 43v5"/><path d="M224 48h12"/>
+          {/* Gem */}
+          <path d="M270 25h16l-8 20z"/><path d="M270 25l3-6h10l3 6"/><path d="M278 25v20"/>
+        </g>
+      </svg>
+    ),
+    afterdark: (
+      <svg viewBox="0 0 300 70" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+        <g fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          {/* Peach */}
+          <path d="M20 50c0-14 6-25 12-25s12 11 12 25"/><path d="M32 25v-5"/><path d="M27 50a5 10 0 0 0 10 0"/>
+          {/* Eggplant */}
+          <path d="M75 15c-3-3 0-8 5-7"/><path d="M77 15c8 2 12 10 10 25-1 10-6 15-12 13s-8-10-7-20c1-10 5-16 9-18z"/>
+          {/* Cherry */}
+          <circle cx="130" cy="42" r="8"/><circle cx="148" cy="38" r="8"/><path d="M130 34c2-10 10-18 15-20"/><path d="M148 30c-2-10-5-15-5-22"/>
+          {/* Lips */}
+          <path d="M180 35c6-8 14-8 20 0-6 10-14 10-20 0z"/><path d="M180 35c6 5 14 5 20 0"/>
+          {/* Devil horns */}
+          <path d="M230 45a12 12 0 1 1 24 0"/><path d="M232 35c-3-12 2-20 2-20"/><path d="M252 35c3-12-2-20-2-20"/>
+          {/* Flame */}
+          <path d="M280 55c0-12 6-18 6-25 3 6 6 10 6 25a10 10 0 0 1-12 0z"/>
+        </g>
+      </svg>
+    ),
+  };
 
-  // Fun: party, confetti, balloons, smileys
-  fun: `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='white' stroke-width='1.2' opacity='0.15'><circle cx='15' cy='15' r='6'/><circle cx='13' cy='13' r='1.5'/><circle cx='17' cy='13' r='1.5'/><path d='M12 17a4 4 0 0 0 6 0'/><path d='M50 10l-3 12 8-2z'/><rect x='55' y='8' width='4' height='4' rx='0.5' transform='rotate(15 57 10)'/><circle cx='35' cy='50' r='5'/><path d='M35 44v-5'/><path d='M65 45l2-4 2 4'/><path d='M62 48l2-4 2 4'/><rect x='8' y='55' width='5' height='5' rx='1' transform='rotate(20 10 57)'/><path d='M40 70l3-6 3 6'/><circle cx='70' cy='70' r='4'/><path d='M68 68r2'/><path d='M72 68r2'/></g></svg>`)}")`,
-
-  // Hot: flames, lips, sparks
-  hot: `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='white' stroke-width='1.2' opacity='0.15'><path d='M15 25Q15 15 20 10Q25 15 25 25Q20 30 15 25Z'/><path d='M50 20Q50 12 54 8Q58 12 58 20Q54 24 50 20Z'/><path d='M35 55Q38 48 41 55Q38 60 35 55Z'/><path d='M65 45Q65 37 69 33Q73 37 73 45Q69 49 65 45Z'/><path d='M10 60Q13 55 16 60Q13 64 10 60Z'/><path d='M55 65l2-4 2 4-2 2z'/><path d='M30 15l1.5-3 1.5 3-1.5 1.5z'/><circle cx='70' cy='15' r='3'/><path d='M42 35Q42 28 46 25Q50 28 50 35Q46 38 42 35Z'/></g></svg>`)}")`,
-
-  // Chaos: skulls, lightning, explosions, danger
-  chaos: `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='white' stroke-width='1.2' opacity='0.15'><path d='M12 20a7 7 0 1 1 14 0v3l-3 4h-8l-3-4z'/><circle cx='16' cy='18' r='1.5'/><circle cx='22' cy='18' r='1.5'/><path d='M55 8l-3 8 4-2 -2 10 5-8-4 2z'/><path d='M35 50l8 4-4 8-8-4z'/><path d='M65 40l-2 6 3-1-1 7 3-5-3 1z'/><path d='M10 60l5-5 5 5-5 5z'/><circle cx='50' cy='65' r='5'/><circle cx='48' cy='63' r='1.2'/><circle cx='52' cy='63' r='1.2'/><path d='M70 20l3 3-3 3-3-3z'/></g></svg>`)}")`,
-
-  // Couple: hearts, rings, love letters
-  couple: `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='white' stroke-width='1.2' opacity='0.15'><path d='M10 18Q13 12 16 18Q13 24 10 18Z'/><path d='M50 15Q54 8 58 15Q54 22 50 15Z'/><path d='M30 50Q33 44 36 50Q33 56 30 50Z'/><path d='M65 55Q67 51 69 55Q67 59 65 55Z'/><circle cx='70' cy='20' r='5'/><circle cx='76' cy='20' r='5'/><path d='M15 60Q18 55 21 60Q18 65 15 60Z'/><path d='M45 70Q47 66 49 70Q47 74 45 70Z'/><circle cx='40' cy='15' r='4'/><circle cx='44' cy='15' r='4'/><path d='M60 40Q62 36 64 40Q62 44 60 40Z'/><path d='M5 40Q7 36 9 40Q7 44 5 40Z'/></g></svg>`)}")`,
-
-  // Apero: glasses, bottles, cheese, olives
-  apero: `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='white' stroke-width='1.2' opacity='0.15'><path d='M12 8l-4 14 8 0zM12 22v8M8 30h8'/><circle cx='50' cy='15' r='5'/><path d='M50 20v6M46 26h8'/><path d='M35 50l-3 10 6 0zM35 60v5M32 65h6'/><path d='M65 35h8v-10l-8 3z'/><circle cx='15' cy='55' r='4'/><circle cx='70' cy='60' r='3'/><circle cx='55' cy='55' r='2.5'/><path d='M30 20a4 3 0 1 1 8 0v4h-8z'/><circle cx='65' cy='15' r='2'/></g></svg>`)}")`,
-
-  // Mada: palm trees, lemurs, flowers, vanilla
-  mada: `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='white' stroke-width='1.2' opacity='0.15'><path d='M15 35v-20'/><path d='M15 15Q8 10 5 15'/><path d='M15 15Q22 10 25 15'/><path d='M15 18Q10 14 8 18'/><path d='M15 18Q20 14 22 18'/><path d='M55 20a6 4 0 1 1 0 8l-3-4z'/><path d='M55 24h10'/><circle cx='35' cy='55' r='5'/><path d='M30 55l5-5M40 55l-5-5M35 50v-3M35 60v3M30 55h-2M40 55h2'/><path d='M65 50v-15'/><path d='M65 35Q58 30 55 35'/><path d='M65 35Q72 30 75 35'/><circle cx='15' cy='65' r='3'/></g></svg>`)}")`,
-
-  // Confessions: masks, eyes, keys, whispers
-  confessions: `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='white' stroke-width='1.2' opacity='0.15'><ellipse cx='15' cy='15' rx='8' ry='5'/><circle cx='12' cy='14' r='2'/><circle cx='18' cy='14' r='2'/><path d='M50 10a8 5 0 1 1 0 10h-4l-2-5z'/><path d='M30 55l2-8 3 0 2 8-3.5 3z'/><circle cx='33.5' cy='50' r='2'/><ellipse cx='65' cy='45' rx='7' ry='4'/><circle cx='62' cy='44' r='1.5'/><circle cx='68' cy='44' r='1.5'/><path d='M10 65l5 0 2 2-2 2-5 0-2-2z'/><circle cx='55' cy='65' r='4'/><path d='M53 64l4 0'/><path d='M55 62v4'/><path d='M70 20l-3 3'/><circle cx='70' cy='20' r='3'/></g></svg>`)}")`,
-
-  // VIP: crowns, diamonds, champagne, stars
-  vip: `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='white' stroke-width='1.2' opacity='0.15'><path d='M8 22l4-10 4 6 4-6 4 10z'/><path d='M50 15l2-5 2 3 2-3 2 5z'/><polygon points='35,45 37,51 43,51 38,55 40,61 35,57 30,61 32,55 27,51 33,51'/><path d='M65 35l1.5-4 1.5 2 1.5-2 1.5 4z'/><polygon points='15,60 16.5,64 20.5,64 17.5,67 18.5,71 15,68 11.5,71 12.5,67 9.5,64 13.5,64'/><path d='M55 60l-3 8 6 0z M55 68v4 M52 72h6'/><circle cx='70' cy='15' r='3'/><path d='M40 20l2 4-2 2-2-2z'/></g></svg>`)}")`,
-
-  // After Dark: peaches, eggplants, devil horns, flames
-  afterdark: `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='white' stroke-width='1.2' opacity='0.15'><path d='M10 25Q10 15 17 13Q18 18 20 15Q25 18 22 25Q17 30 10 25Z'/><path d='M50 15Q50 8 54 5Q58 8 58 15Q55 18 52 18Q50 17 50 15Z'/><path d='M35 55Q38 48 41 55Q38 60 35 55Z'/><path d='M30 55Q30 45 37 43Q38 48 40 45Q45 48 42 55Q37 60 30 55Z'/><path d='M60 50Q63 43 66 50Q63 55 60 50Z'/><path d='M65 40Q65 32 69 28Q73 32 73 40Q69 44 65 40Z'/><circle cx='15' cy='60' r='5'/><path d='M12 55Q10 50 15 50Q13 55 18 55'/><path d='M55 65l2-4 2 4-2 2z'/><path d='M10 40Q12 36 14 40Q12 44 10 40Z'/></g></svg>`)}")`,
+  return patterns[vibe];
 };
 
 const VibeScreen = () => {
@@ -95,11 +249,10 @@ const VibeScreen = () => {
                 isUnlocked ? "" : "opacity-80"
               }`}
             >
-              {/* Dense pattern background */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{ backgroundImage: vibePatterns[vibe.id], backgroundSize: "80px 80px" }}
-              />
+              {/* Dense recognizable outlined icons */}
+              <div className="absolute inset-0 pointer-events-none select-none opacity-[0.12]">
+                <VibePattern vibe={vibe.id} />
+              </div>
 
               <div className="relative flex items-center gap-3">
                 <span className="text-3xl">{vibe.emoji}</span>
