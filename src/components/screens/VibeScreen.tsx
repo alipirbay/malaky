@@ -4,7 +4,7 @@ import { VIBES } from "@/data/cards";
 import { ArrowLeft, Lock } from "lucide-react";
 import type { Vibe } from "@/data/cards";
 
-const vibeStyles: Record<Vibe, string> = {
+const vibeStyles: Partial<Record<Vibe, string>> = {
   soft: "vibe-soft",
   fun: "vibe-fun",
   hot: "vibe-hot",
@@ -15,6 +15,10 @@ const vibeStyles: Record<Vibe, string> = {
   confessions: "vibe-confessions",
   vip: "vibe-vip",
   afterdark: "vibe-afterdark",
+  facile: "vibe-soft",
+  intermediaire: "vibe-fun",
+  difficile: "vibe-hot",
+  expert: "vibe-afterdark",
 };
 
 const VibeScreen = () => {

@@ -1317,7 +1317,7 @@ export const dilemmeA: VibeContent = {
   ],
 };
 
-export const dilemmeB: Record<Vibe, string[]> = {
+export const dilemmeB: VibeContent = {
   soft: [
     'Pouvoir nager mais devoir danser',
     'Avoir une voiture normale mais autonome',

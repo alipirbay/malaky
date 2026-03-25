@@ -63,6 +63,10 @@ const defaultUnlockedVibes: Record<Vibe, boolean> = {
   confessions: false,
   vip: false,
   afterdark: false,
+  facile: true,
+  intermediaire: true,
+  difficile: false,
+  expert: false,
 };
 
 export const useGameStore = create<GameState>()(
