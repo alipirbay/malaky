@@ -37,6 +37,7 @@ const GameScreen = () => {
     setScreen,
     soundEnabled,
     toggleSound,
+    passesRemaining,
   } = useGameStore();
 
   const { playClick, playTick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
