@@ -54,7 +54,7 @@ export const GAME_MODES = [
     name: "Mode Tsimoa",
     subtitle: "Bilan d'année entre amis",
     emoji: "🎊",
-    badge: "Saisonnier",
+    badge: "Spécial Fêtes",
     color: "mango" as const,
   },
 ];

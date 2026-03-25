@@ -53,6 +53,11 @@ const ModeScreen = () => {
               <span className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-foreground/80">
                 {mode.badge}
               </span>
+              {mode.id === "tsimoa" && (
+                <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">
+                  Gratuit
+                </span>
+              )}
             </div>
           </motion.button>
         ))}

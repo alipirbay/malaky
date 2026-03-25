@@ -17,7 +17,7 @@ const FirstLaunchModal = ({ onAccept, onShowPrivacy, onShowCGU }: FirstLaunchMod
         className="w-full max-w-sm text-center"
       >
         <img src={malakyLogo} alt="Malaky" className="w-64 max-w-[75vw] mx-auto mb-3 drop-shadow-lg" />
-        <p className="text-sm text-muted-foreground mb-8">Le jeu de soirée des Malgaches 🇲🇬</p>
+        <p className="text-sm text-muted-foreground mb-8">Ose tout. Assume rien. 🇲🇬</p>
 
         <div className="rounded-2xl bg-card p-5 text-left space-y-4 mb-6">
           <p className="text-xs text-muted-foreground leading-relaxed">

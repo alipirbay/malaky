@@ -51,7 +51,6 @@ export const cultureQuestions: Record<Difficulty, QuizEntry[]> = {
     { q: "Quel animal endémique de Madagascar est un primate aux grands yeux ?", a: "Le lémurien" },
     { q: "Quel arbre géant emblématique pousse dans l'ouest de Madagascar ?", a: "Le baobab" },
     { q: "Quelle est la capitale de Madagascar ?", a: "Antananarivo" },
-    { q: "Combien d'ethnies officielles compte Madagascar ?", a: "18 ethnies" },
     { q: "Quel animal est le symbole de Madagascar ?", a: "Le lémurien" },
     { q: "Quelle langue parle-t-on à Madagascar en plus du français ?", a: "Le malgache" },
     { q: "Quelle est la principale exportation de Madagascar ?", a: "La vanille (80% du marché mondial)" },

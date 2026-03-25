@@ -206,7 +206,7 @@ export const useGameStore = create<GameState>()(
             refused: newStats.playerStats[currentPlayer]?.refused || 0,
           };
           // Increment quiz score for quiz cards
-          if (currentCard?.card_type === "quiz") {
+          if (currentCard?.card_type === "quiz" && wasCorrect === true) {
             newStats.quizScore += 1;
           }
         } else if (action === "refuse") {
