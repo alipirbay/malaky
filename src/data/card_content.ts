@@ -149,7 +149,7 @@ export const truthPrompts: VibeContent = {
     'dis ce qui te manque le plus quand tu es loin de Mada.',
     'raconte ta meilleure soirée dans un bar à Tana.',
     'avoue si tu peux nommer les 18 tribus de Madagascar.',
-    'dis ce que tu penses du système D à la malgache.',
+    'parle du système D à la malgache et comment tu l\'as pratiqué.',
     'raconte une fois où tu as utilisé le "fihavanana" pour t\'en sortir.',
     'dis quelle nourriture de rue malgache est ta préférée et pourquoi.',
     'avoue ce que tu penses vraiment du famadihana.',
