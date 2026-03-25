@@ -260,9 +260,8 @@ const SettingsScreen = () => {
 
             <button
               onClick={() => { 
-                const { clearSeenCards } = require("@/hooks/useSeenCards");
                 clearSeenCards();
-                toast.success("Cartes vues réinitialisées"); 
+                toast.success("Cartes vues réinitialisées");
               }}
               className={`${rowClass} text-left`}
             >
