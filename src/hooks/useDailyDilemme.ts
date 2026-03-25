@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getMadagascarDateString, getMsUntilMadagascarMidnight } from "@/lib/dateUtils";
 
 interface DailyDilemme {
   id: string;
@@ -23,50 +24,9 @@ export function useDailyDilemme() {
   const [hasVoted, setHasVoted] = useState(false);
   const [voting, setVoting] = useState(false);
 
-  // Check localStorage for today's vote
   const getVoteKey = (id: string) => `dilemme-voted-${id}`;
 
-  const fetchDilemme = useCallback(async () => {
-    setLoading(true);
-    try {
-      // First try to get from DB
-      const today = new Date().toISOString().split("T")[0];
-      const { data: existing } = await supabase
-        .from("daily_dilemmes")
-        .select("*")
-        .eq("active_date", today)
-        .maybeSingle();
-
-      if (existing) {
-        setDilemme(existing as DailyDilemme);
-        const voted = localStorage.getItem(getVoteKey(existing.id));
-        if (voted) {
-          setHasVoted(true);
-          await fetchVotes(existing.id);
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Generate via edge function
-      const { data, error } = await supabase.functions.invoke("generate-daily-dilemme");
-      if (error) throw error;
-      if (data?.dilemme) {
-        setDilemme(data.dilemme);
-        const voted = localStorage.getItem(getVoteKey(data.dilemme.id));
-        if (voted) {
-          setHasVoted(true);
-          await fetchVotes(data.dilemme.id);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch dilemme:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchVotes = async (dilemmeId: string) => {
+  const fetchVotes = useCallback(async (dilemmeId: string) => {
     const { data } = await supabase.rpc("get_daily_dilemme_votes", { p_dilemme_id: dilemmeId });
     if (data && data.length > 0) {
       const row = data[0];
@@ -76,7 +36,47 @@ export function useDailyDilemme() {
         totalVotes: row.total_votes ?? 1,
       });
     }
-  };
+  }, []);
+
+  const fetchDilemme = useCallback(async () => {
+    setLoading(true);
+    try {
+      const today = getMadagascarDateString();
+      const { data: existing } = await supabase
+        .from("daily_dilemmes")
+        .select("*")
+        .eq("active_date", today)
+        .maybeSingle();
+
+      if (existing) {
+        const d = existing as DailyDilemme;
+        setDilemme(d);
+        const voted = localStorage.getItem(getVoteKey(d.id));
+        if (voted) {
+          setHasVoted(true);
+          await fetchVotes(d.id);
+        }
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("generate-daily-dilemme");
+      if (error) throw error;
+      if (data?.dilemme) {
+        const d = data.dilemme as DailyDilemme;
+        setDilemme(d);
+        const voted = localStorage.getItem(getVoteKey(d.id));
+        if (voted) {
+          setHasVoted(true);
+          await fetchVotes(d.id);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch dilemme:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchVotes]);
 
   const vote = async (choice: "a" | "b") => {
     if (!dilemme || voting || hasVoted) return;
@@ -98,14 +98,5 @@ export function useDailyDilemme() {
     fetchDilemme();
   }, [fetchDilemme]);
 
-  // Calculate time until next dilemme (midnight)
-  const getTimeUntilNext = () => {
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    return tomorrow.getTime() - now.getTime();
-  };
-
-  return { dilemme, loading, voteResult, hasVoted, voting, vote, getTimeUntilNext };
+  return { dilemme, loading, voteResult, hasVoted, voting, vote, getTimeUntilNext: getMsUntilMadagascarMidnight };
 }

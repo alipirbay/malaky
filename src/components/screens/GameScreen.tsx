@@ -63,7 +63,7 @@ const GameScreen = () => {
   const mode = GAME_MODES.find((item) => item.id === selectedMode);
 
   const cardText = card
-    ? fillPlayerNames(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
+    ? fillCardTemplate(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
     : "";
   const isQuizCard = card?.card_type === "quiz";
   const isTimerCard = card?.card_type === "timer";
