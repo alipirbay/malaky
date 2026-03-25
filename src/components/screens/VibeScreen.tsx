@@ -58,10 +58,6 @@ const VibeScreen = () => {
                 isUnlocked ? "" : "opacity-80"
               }`}
             >
-              {/* Dense recognizable outlined icons */}
-              <div className="absolute inset-0 pointer-events-none select-none opacity-[0.12]">
-                <VibePattern vibe={vibe.id} />
-              </div>
 
               <div className="relative flex items-center gap-3">
                 <span className="text-3xl">{vibe.emoji}</span>
