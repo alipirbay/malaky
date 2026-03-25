@@ -30,6 +30,7 @@ interface GameState {
   soundEnabled: boolean;
   soundVolume: number;
   vibrationEnabled: boolean;
+  quickChallengeDuration: 10 | 15 | 20;
   addPlayer: (name: string) => void;
   removePlayer: (index: number) => void;
   shufflePlayers: () => void;
@@ -45,6 +46,7 @@ interface GameState {
   setSoundVolume: (vol: number) => void;
   toggleVibration: () => void;
   setPendingTransaction: (id: string | null) => void;
+  setQuickChallengeDuration: (d: 10 | 15 | 20) => void;
 }
 
 const PLAYER_COLORS = [
@@ -87,6 +89,7 @@ export const useGameStore = create<GameState>()(
       soundVolume: 80,
       vibrationEnabled: true,
       pendingTransactionId: null,
+      quickChallengeDuration: 15,
 
       addPlayer: (name) => {
         const { players } = get();
@@ -254,6 +257,7 @@ export const useGameStore = create<GameState>()(
       setSoundVolume: (vol) => set({ soundVolume: vol }),
       toggleVibration: () => set((s) => ({ vibrationEnabled: !s.vibrationEnabled })),
       setPendingTransaction: (id) => set({ pendingTransactionId: id }),
+      setQuickChallengeDuration: (d) => set({ quickChallengeDuration: d }),
     }),
     {
       name: "malaky-store",
@@ -263,6 +267,7 @@ export const useGameStore = create<GameState>()(
         soundVolume: state.soundVolume,
         vibrationEnabled: state.vibrationEnabled,
         pendingTransactionId: state.pendingTransactionId,
+        quickChallengeDuration: state.quickChallengeDuration,
         players: state.players,
         selectedMode: state.selectedMode,
         selectedVibe: state.selectedVibe,

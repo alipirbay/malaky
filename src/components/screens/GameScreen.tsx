@@ -2,8 +2,10 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { fillPlayerNames, GAME_MODES } from "@/data/cards";
-import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward } from "lucide-react";
+import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward, Flag } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
+import { reportCard } from "@/hooks/useCardReport";
+import { toast } from "sonner";
 
 const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   truth: { label: "Vérité", color: "217 91% 60%" },
@@ -39,6 +41,7 @@ const GameScreen = () => {
     toggleSound,
     passesRemaining,
     stats,
+    selectedVibe,
   } = useGameStore();
 
   const { playClick, playTick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
@@ -51,6 +54,7 @@ const GameScreen = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [reported, setReported] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentPlayer = players[currentPlayerIndex];
@@ -64,7 +68,8 @@ const GameScreen = () => {
   const isTimerCard = card?.card_type === "timer";
   const isQuickChallengeMode = selectedMode === "quick_challenge";
   const isAutoTimer = isQuickChallengeMode && !isTimerCard && card != null;
-  const AUTO_DURATION = 15;
+  const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
+  const AUTO_DURATION = isAutoTimer ? quickChallengeDuration : 15;
   const totalDuration = isTimerCard ? extractDuration(cardText) : AUTO_DURATION;
   const showTimer = isTimerCard || isAutoTimer;
   const cardMeta = card
@@ -79,6 +84,7 @@ const GameScreen = () => {
     setTimerDone(false);
     setTimeLeft(totalDuration);
     setShowAnswer(false);
+    setReported(false);
 
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -298,6 +304,27 @@ const GameScreen = () => {
               </span>
 
               <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
+
+              {/* Report button */}
+              {!reported ? (
+                <button
+                  onClick={async () => {
+                    const ok = await reportCard(card.text, selectedMode, selectedVibe ?? null);
+                    if (ok) {
+                      setReported(true);
+                      toast("Signalement envoyé. Merci ! 🙏", { duration: 2000 });
+                    }
+                  }}
+                  className="absolute bottom-3 right-3 rounded-lg p-1.5 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+                  aria-label="Signaler cette carte"
+                >
+                  <Flag size={12} />
+                </button>
+              ) : (
+                <span className="absolute bottom-3 right-3 text-[10px] text-muted-foreground/40">
+                  ✓ signalé
+                </span>
+              )}
 
               {isQuizCard && (
                 <div className="mt-4 w-full px-4">

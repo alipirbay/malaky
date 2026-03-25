@@ -14,11 +14,13 @@ import {
   AlertTriangle,
   Smartphone,
   HelpCircle,
+  Trophy,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import PrivacyModal from "@/components/PrivacyModal";
+import { usePlayerStats } from "@/hooks/usePlayerStats";
 
 const SettingsScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
@@ -34,6 +36,7 @@ const SettingsScreen = () => {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [cguOpen, setCguOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const { clearStats } = usePlayerStats();
 
   const purchasedPacksCount = Object.values(unlockedVibes).filter(Boolean).length - 4;
 
@@ -240,6 +243,17 @@ const SettingsScreen = () => {
                   Annuler
                 </button>
               )}
+            </button>
+
+            <button
+              onClick={() => { clearStats(); toast.success("Palmarès effacé"); }}
+              className={`${rowClass} text-left`}
+            >
+              <Trophy size={20} className="text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground text-sm">Effacer le palmarès</p>
+                <p className="text-xs text-muted-foreground">Remet les stats historiques à zéro</p>
+              </div>
             </button>
           </div>
 

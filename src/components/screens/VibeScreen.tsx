@@ -30,6 +30,8 @@ const hasConfirmedAge = (vibe: Vibe) =>
 
 const VibeScreen = () => {
   const { setScreen, unlockedVibes, selectedMode } = useGameStore();
+  const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
+  const setQuickChallengeDuration = useGameStore((s) => s.setQuickChallengeDuration);
   const [pendingAdultVibe, setPendingAdultVibe] = useState<Vibe | null>(null);
 
   const isCultureMode = selectedMode === "culture_generale";
@@ -76,6 +78,29 @@ const VibeScreen = () => {
           </p>
         </div>
       </div>
+
+      {selectedMode === "quick_challenge" && (
+        <div className="mb-4">
+          <p className="text-sm font-bold text-foreground mb-2">
+            ⏱️ Durée du chrono
+          </p>
+          <div className="flex gap-2">
+            {([10, 15, 20] as const).map((d) => (
+              <button
+                key={d}
+                onClick={() => setQuickChallengeDuration(d)}
+                className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-all ${
+                  quickChallengeDuration === d
+                    ? "gradient-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground"
+                }`}
+              >
+                {d}s
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 space-y-3 pb-4 overflow-y-auto">
         {items.map((item, i) => {

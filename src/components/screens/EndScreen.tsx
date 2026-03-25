@@ -1,7 +1,11 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { GAME_MODES } from "@/data/cards";
 import { Trophy, RotateCcw, Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { usePlayerStats } from "@/hooks/usePlayerStats";
+import { generateShareImage } from "@/hooks/useShareImage";
 
 const endings = [
   "Ity no fialam-boly gasy tena izy! 🇲🇬",
@@ -12,9 +16,17 @@ const endings = [
 ];
 
 const EndScreen = () => {
-  const { stats, players, resetGame, setScreen, selectedMode } = useGameStore();
+  const { stats, players, resetGame, setScreen, selectedMode, selectedVibe } = useGameStore();
+  const { recordGame, allStats } = usePlayerStats();
 
-  // Find bravest player (most cards played, least refused)
+  // Record game stats on mount
+  useEffect(() => {
+    if (Object.keys(stats.playerStats).length > 0) {
+      recordGame(stats.playerStats);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Find bravest player
   let bravest = players[0]?.name || "";
   let bestScore = -1;
   Object.entries(stats.playerStats).forEach(([name, s]) => {
@@ -25,7 +37,7 @@ const EndScreen = () => {
     }
   });
 
-  // Find laziest player (most refusals)
+  // Find laziest player
   let laziest = players[0]?.name || "";
   let worstScore = -Infinity;
   Object.entries(stats.playerStats).forEach(([name, s]) => {
@@ -39,6 +51,10 @@ const EndScreen = () => {
   const ending = endings[Math.floor(Math.random() * endings.length)];
   const isCultureG = selectedMode === "culture_generale";
 
+  const topPlayers = Object.values(allStats)
+    .filter(p => players.some(pl => pl.name === p.name))
+    .sort((a, b) => b.totalPlayed - a.totalPlayed);
+
   const handleReplay = () => {
     setScreen("vibe");
   };
@@ -48,17 +64,42 @@ const EndScreen = () => {
   };
 
   const handleShare = async () => {
-    const text = `Je viens de finir une partie de Malaky ! 🎉\n${stats.cardsPlayed} cartes jouées • ${stats.refusals} refus\nLe plus téméraire : ${bravest}\n\nJoue sur malaky.app`;
-    if (navigator.share) {
+    const modeName = GAME_MODES.find(m => m.id === selectedMode)?.name ?? selectedMode ?? "";
+    const vibeName = selectedVibe ?? "";
+
+    const blob = await generateShareImage({
+      bravest,
+      cardsPlayed: stats.cardsPlayed,
+      refusals: stats.refusals,
+      mode: modeName,
+      vibe: vibeName,
+    });
+
+    const text = `Je viens de finir une partie de Malaky ! 🎉\n${stats.cardsPlayed} cartes · ${bravest} était le plus brave\n\nmalaky.app`;
+
+    if (blob && navigator.share) {
       try {
-        await navigator.share({ title: "Malaky", text });
+        const file = new File([blob], "malaky-score.png", { type: "image/png" });
+        await navigator.share({ title: "Malaky", text, files: [file] });
+        return;
       } catch {
-        // User cancelled share
+        // Fallback below
       }
-    } else {
-      await navigator.clipboard.writeText(text);
-      toast.success("Copié dans le presse-papier !");
     }
+
+    if (blob) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "malaky-score.png";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Image téléchargée !");
+      return;
+    }
+
+    await navigator.clipboard.writeText(text);
+    toast.success("Copié dans le presse-papier !");
   };
 
   return (
@@ -118,6 +159,23 @@ const EndScreen = () => {
           <div className="card-game text-center">
             <p className="text-2xl font-black text-accent">{stats.quizScore}</p>
             <p className="text-xs text-muted-foreground">bonnes réponses quiz</p>
+          </div>
+        )}
+
+        {/* Palmarès total */}
+        {topPlayers.length > 0 && (
+          <div className="card-game">
+            <p className="text-sm font-bold text-foreground mb-2">
+              Palmarès total 🏆
+            </p>
+            {topPlayers.map((p) => (
+              <div key={p.name} className="flex items-center justify-between py-1">
+                <span className="text-sm text-foreground">{p.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {p.totalPlayed} cartes · {p.totalGames} partie{p.totalGames > 1 ? "s" : ""}
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </motion.div>
