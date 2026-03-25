@@ -1001,7 +1001,7 @@ export const ratherB: VibeContent = {
   ],
 };
 
-export const challengeActions: Record<Vibe, string[]> = {
+export const challengeActions: VibeContent = {
   soft: [
     'Fais 5 flexions en chantant.',
     'Compte jusqu\'à 10 à l\'envers.',
