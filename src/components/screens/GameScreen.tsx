@@ -47,6 +47,7 @@ const GameScreen = () => {
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerDone, setTimerDone] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentPlayer = players[currentPlayerIndex];
