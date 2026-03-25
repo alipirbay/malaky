@@ -132,7 +132,8 @@ export const useGameStore = create<GameState>()(
       startGame: () => {
         const { selectedMode, selectedVibe, players, unlockedVibes } = get();
         if (!selectedMode || !selectedVibe || players.length < 2) return;
-        if (!unlockedVibes[selectedVibe]) {
+        const merged = { ...defaultUnlockedVibes, ...unlockedVibes };
+        if (!merged[selectedVibe]) {
           set({ currentScreen: "packs" });
           return;
         }
