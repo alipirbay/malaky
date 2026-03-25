@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { GameMode, Vibe, GameCard } from "@/data/types";
+import { GAME_LIMITS } from "@/data/constants";
 
 interface Player {
   name: string;
@@ -55,20 +56,9 @@ const PLAYER_COLORS = [
 ];
 
 const defaultUnlockedVibes: Record<Vibe, boolean> = {
-  soft: true,
-  fun: true,
-  hot: false,
-  chaos: false,
-  couple: false,
-  apero: false,
-  mada: false,
-  confessions: false,
-  vip: false,
-  afterdark: false,
-  facile: true,
-  intermediaire: true,
-  difficile: false,
-  expert: false,
+  soft: true, fun: true, hot: false, chaos: false, couple: false,
+  apero: false, mada: false, confessions: false, vip: false, afterdark: false,
+  facile: true, intermediaire: true, difficile: false, expert: false,
 };
 
 export const useGameStore = create<GameState>()(
@@ -92,7 +82,7 @@ export const useGameStore = create<GameState>()(
 
       addPlayer: (name) => {
         const { players } = get();
-        if (players.length >= 12) return;
+        if (players.length >= GAME_LIMITS.MAX_PLAYERS) return;
         const trimmed = name.trim();
         if (!trimmed) return;
         if (players.some(p => p.name.toLowerCase() === trimmed.toLowerCase())) return;
@@ -138,7 +128,7 @@ export const useGameStore = create<GameState>()(
         const selectedVibe = vibeOverride ?? state.selectedVibe;
         const { selectedMode, players, unlockedVibes } = state;
         if (vibeOverride) set({ selectedVibe: vibeOverride });
-        if (!selectedMode || !selectedVibe || players.length < 2) return;
+        if (!selectedMode || !selectedVibe || players.length < GAME_LIMITS.MIN_PLAYERS) return;
 
         const isTsimoa = selectedMode === "tsimoa";
 
@@ -150,82 +140,40 @@ export const useGameStore = create<GameState>()(
           }
         }
 
-        // Show loading state
+        // Show loading state immediately
         set({ currentScreen: "game", deck: [], currentCardIndex: 0, currentPlayerIndex: 0 });
 
-        const passes: Record<string, number> = {};
-        const playerStats: Record<string, { played: number; refused: number }> = {};
-        players.forEach((player) => {
-          passes[player.name] = 2;
-          playerStats[player.name] = { played: 0, refused: 0 };
-        });
+        // Dynamic import to keep deckLoader out of initial bundle
+        const { loadDeckFromServer, loadDeckLocally, initPlayerData } = await import("@/lib/deckLoader");
+        const { passes, playerStats } = initPlayerData(players);
+        const params = { mode: selectedMode, vibe: selectedVibe, players };
+
+        let deck: GameCard[];
 
         try {
-          const { getSeenCardIds, markCardsSeen } = await import("@/hooks/useSeenCards");
-          const seen_ids = getSeenCardIds();
-
-          const { supabase } = await import("@/integrations/supabase/client");
-          const { data, error } = await supabase.functions.invoke("get-cards", {
-            body: {
-              mode: selectedMode,
-              vibe: selectedVibe,
-              players: players.map(p => p.name),
-              seen_ids,
-              count: 150,
-            },
-          });
-
-          if (error || !data?.cards?.length) throw new Error("No cards returned");
-
-          const cards: GameCard[] = data.cards.map((c: { id?: string; lang?: string; card_type: string; template: string; answer?: string }, i: number) => ({
-            id: c.id ?? `${selectedMode}-${selectedVibe}-${i}`,
-            mode: selectedMode,
-            vibe: selectedVibe,
-            lang: (c.lang ?? "fr") as "fr" | "mg",
-            card_type: c.card_type as GameCard["card_type"],
-            text: c.template, // Keep raw template — personalized at render time
-            answer: c.answer ?? undefined,
-            requires_prop: "none" as const,
-            player_min: 2,
-            player_max: 12,
-          }));
-
-          markCardsSeen(data.cards.map((c: { id?: string }) => c.id).filter((id): id is string => Boolean(id)));
-
-          // Dynamic import to avoid pulling card data into initial bundle
-          const { deduplicateShuffle } = await import("@/data/cards");
-
-          set({
-            deck: deduplicateShuffle(cards),
-            currentPlayerIndex: 0,
-            currentCardIndex: 0,
-            stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats },
-            passesRemaining: passes,
-            currentScreen: "game",
-          });
-
+          deck = await loadDeckFromServer(params);
         } catch (err) {
           console.warn("get-cards failed, falling back to local:", err);
-
-          // Dynamic import — local card data only loaded when actually needed
-          const { getFilteredCards, deduplicateShuffle } = await import("@/data/cards");
-          const localCards = deduplicateShuffle([...getFilteredCards(selectedMode, selectedVibe, players.length)]);
-
-          if (localCards.length === 0) {
-            console.error("No local cards available for", selectedMode, selectedVibe);
-            set({ currentScreen: "vibe" });
-            return;
-          }
-
-          set({
-            deck: localCards,
-            currentPlayerIndex: 0,
-            currentCardIndex: 0,
-            stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats },
-            passesRemaining: passes,
-            currentScreen: "game",
-          });
+          // Lazy-import toast to keep it out of store bundle
+          const { toast } = await import("sonner");
+          toast.info("Mode hors-ligne : cartes locales chargées", { duration: 2000 });
+          deck = await loadDeckLocally(params);
         }
+
+        if (deck.length === 0) {
+          console.error("No cards available for", selectedMode, selectedVibe);
+          set({ currentScreen: "vibe" });
+          return;
+        }
+
+        set({
+          deck,
+          currentPlayerIndex: 0,
+          currentCardIndex: 0,
+          stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats },
+          passesRemaining: passes,
+          currentScreen: "game",
+        });
       },
 
       nextCard: (action, wasCorrect) => {

@@ -12,6 +12,18 @@ function getMadagascarDateString(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: MADAGASCAR_TZ });
 }
 
+// Fallback dilemmes in case AI generation fails
+const FALLBACK_DILEMMES = [
+  { question: "Taxi-be bondé ou marcher 5km sous la pluie ?", option_a: "Taxi-be bondé", option_b: "Marcher sous la pluie", topic: "société" },
+  { question: "Jirama stable pendant 1 an ou WiFi gratuit pendant 1 an ?", option_a: "Jirama stable", option_b: "WiFi gratuit", topic: "technologie" },
+  { question: "Vivre à Tana toute ta vie ou ne jamais y retourner ?", option_a: "Tana pour toujours", option_b: "Jamais y retourner", topic: "société" },
+  { question: "Manger que du riz pendant 1 mois ou jamais de riz pendant 1 mois ?", option_a: "Que du riz", option_b: "Zéro riz", topic: "culture" },
+  { question: "Avoir le pouvoir de parler toutes les langues ou de jouer tous les instruments ?", option_a: "Toutes les langues", option_b: "Tous les instruments", topic: "culture" },
+  { question: "Être célèbre à Madagascar ou riche à l'étranger ?", option_a: "Célèbre à Mada", option_b: "Riche à l'étranger", topic: "société" },
+  { question: "Revivre ton enfance ou avancer de 10 ans ?", option_a: "Revivre l'enfance", option_b: "Avancer de 10 ans", topic: "société" },
+  { question: "Supprimer Instagram ou supprimer TikTok ?", option_a: "Supprimer Insta", option_b: "Supprimer TikTok", topic: "technologie" },
+];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -23,7 +35,6 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Use Madagascar date consistently
     const today = getMadagascarDateString();
     const { data: existing } = await supabase
       .from("daily_dilemmes")
@@ -37,18 +48,21 @@ serve(async (req) => {
       });
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `Tu es un générateur de dilemmes quotidiens pour Malaky, le jeu préféré des Malgaches.
+    let dilemmeData;
+
+    try {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            {
+              role: "system",
+              content: `Tu es un générateur de dilemmes quotidiens pour Malaky, le jeu préféré des Malgaches.
 Génère UN dilemme ancré dans la réalité malgache ou dans des sujets qui parlent aux Malgaches.
 
 SUJETS PRIORITAIRES (alterne chaque jour) :
@@ -68,68 +82,73 @@ RÈGLES :
 - Peut alterner français et quelques mots malgaches courants
 
 Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
-          },
-          {
-            role: "user",
-            content: `Génère le dilemme du jour (${today}). Options courtes sans parenthèses. Format JSON :
+            },
+            {
+              role: "user",
+              content: `Génère le dilemme du jour (${today}). Options courtes sans parenthèses. Format JSON :
 {"question": "La question du dilemme", "option_a": "Choix A court", "option_b": "Choix B court", "topic": "catégorie"}`,
-          },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "create_dilemme",
-              description: "Create a daily dilemme question with two options",
-              parameters: {
-                type: "object",
-                properties: {
-                  question: { type: "string", description: "The dilemme question" },
-                  option_a: { type: "string", description: "First choice" },
-                  option_b: { type: "string", description: "Second choice" },
-                  topic: { type: "string", enum: ["politique", "économie", "société", "culture", "sport", "technologie", "environnement"] },
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "create_dilemme",
+                description: "Create a daily dilemme question with two options",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    question: { type: "string", description: "The dilemme question" },
+                    option_a: { type: "string", description: "First choice" },
+                    option_b: { type: "string", description: "Second choice" },
+                    topic: { type: "string", enum: ["politique", "économie", "société", "culture", "sport", "technologie", "environnement"] },
+                  },
+                  required: ["question", "option_a", "option_b", "topic"],
+                  additionalProperties: false,
                 },
-                required: ["question", "option_a", "option_b", "topic"],
-                additionalProperties: false,
               },
             },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "create_dilemme" } },
-      }),
-    });
+          ],
+          tool_choice: { type: "function", function: { name: "create_dilemme" } },
+        }),
+      });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("AI error:", response.status, errText);
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("AI error:", response.status, errText);
 
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited, please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        if (response.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limited, please try again later." }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (response.status === 402) {
+          return new Response(JSON.stringify({ error: "Credits exhausted." }), {
+            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        throw new Error(`AI gateway error: ${response.status}`);
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Credits exhausted." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`AI gateway error: ${response.status}`);
-    }
 
-    const aiData = await response.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+      const aiData = await response.json();
+      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
 
-    let dilemmeData;
-    if (toolCall?.function?.arguments) {
-      dilemmeData = JSON.parse(toolCall.function.arguments);
-    } else {
-      const content = aiData.choices?.[0]?.message?.content || "";
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        dilemmeData = JSON.parse(jsonMatch[0]);
+      if (toolCall?.function?.arguments) {
+        dilemmeData = JSON.parse(toolCall.function.arguments);
       } else {
-        throw new Error("Could not parse AI response");
+        const content = aiData.choices?.[0]?.message?.content || "";
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          dilemmeData = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error("Could not parse AI response");
+        }
       }
+    } catch (aiErr) {
+      console.warn("AI generation failed, using fallback:", aiErr);
+      // Deterministic fallback based on day of year
+      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      dilemmeData = FALLBACK_DILEMMES[dayOfYear % FALLBACK_DILEMMES.length];
     }
 
     const { data: newDilemme, error: insertError } = await supabase
