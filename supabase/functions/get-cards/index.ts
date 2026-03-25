@@ -32,7 +32,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { mode, vibe, players, seen_ids = [], count = 150 } = await req.json();
+    const { mode, vibe, players, seen_ids = [], count = 50, skip_ai = false } = await req.json();
 
     if (!mode || !vibe) {
       return new Response(JSON.stringify({ error: "mode and vibe required" }), {
