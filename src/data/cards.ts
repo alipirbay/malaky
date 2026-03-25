@@ -120,14 +120,15 @@ const buildNeverDeck = (vibe: Vibe): GameCard[] => {
 
   // Each "never" statement used directly
   for (const entry of base) {
-    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `Je n'ai jamais ${entry}`));
+    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `${NEVER_PREFIXES[0]}${entry}`));
   }
 
-  // Fill to minimum by adding player-targeted variants
+  // Fill to minimum with natural first-person variants
   let fillIdx = 0;
   while (cards.length < MINIMUM_CARDS_PER_COMBO) {
     const entry = base[fillIdx % base.length];
-    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `{player}, as-tu déjà ${entry}`));
+    const prefix = NEVER_PREFIXES[(Math.floor(fillIdx / base.length) % (NEVER_PREFIXES.length - 1)) + 1];
+    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `${prefix}${entry}`));
     fillIdx++;
   }
 
