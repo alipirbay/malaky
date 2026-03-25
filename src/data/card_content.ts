@@ -371,7 +371,7 @@ export const dareActions: Record<Vibe, string[]> = {
     'Vante-toi de quelque chose de ridicule pendant 30 secondes.',
     'Invente un nom prétentieux pour ton animal de compagnie.',
     'Fais semblant de perdre un bijou de grande valeur.',
-    'Décris une voiture de sport en détails avec conviction.',
+    'Vends une voiture de sport imaginaire comme si tu étais dans une pub.',
     'Écris une fausse critique de restaurant 3 étoiles.',
     'Fais comme si tu négociais une grosse affaire au téléphone.',
     'Invente un compte en banque fictif avec des millions.',
