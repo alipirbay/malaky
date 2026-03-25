@@ -147,6 +147,7 @@ export type Database = {
           created_at: string
           dilemme_id: string | null
           id: string
+          voter_fingerprint: string | null
         }
         Insert: {
           card_text: string
@@ -154,6 +155,7 @@ export type Database = {
           created_at?: string
           dilemme_id?: string | null
           id?: string
+          voter_fingerprint?: string | null
         }
         Update: {
           card_text?: string
@@ -161,6 +163,7 @@ export type Database = {
           created_at?: string
           dilemme_id?: string | null
           id?: string
+          voter_fingerprint?: string | null
         }
         Relationships: [
           {
