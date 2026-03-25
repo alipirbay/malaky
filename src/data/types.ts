@@ -14,3 +14,11 @@ export interface GameCard {
 export type GameMode = "truth_dare" | "never_have_i_ever" | "most_likely" | "would_you_rather" | "quick_challenge" | "culture_generale" | "tsimoa";
 export type Vibe = "soft" | "fun" | "hot" | "chaos" | "couple" | "apero" | "mada" | "confessions" | "vip" | "afterdark" | "facile" | "intermediaire" | "difficile" | "expert";
 export type Difficulty = "facile" | "intermediaire" | "difficile" | "expert";
+
+export interface PlayerAllTimeStats {
+  name: string;
+  totalPlayed: number;
+  totalRefused: number;
+  totalGames: number;
+  lastPlayed: string; // ISO date
+}
