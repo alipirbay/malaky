@@ -399,7 +399,7 @@ export const dareActions: VibeContent = {
   ],
 };
 
-export const neverBase: Record<Vibe, string[]> = {
+export const neverBase: VibeContent = {
   soft: [
     'fait la grasse matinée jusqu\'à midi.',
     'oublié l\'anniversaire d\'un proche.',
