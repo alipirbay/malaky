@@ -54,8 +54,8 @@ const VibeScreen = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => handleSelect(vibe.id, vibe.free)}
-              className={`w-full rounded-2xl border-2 p-4 text-left transition-transform active:scale-[0.97] ${vibeStyles[vibe.id]} ${
-                isUnlocked ? "" : "opacity-70"
+              className={`w-full rounded-2xl border-0 p-4 text-left transition-transform active:scale-[0.97] ${vibeStyles[vibe.id]} ${
+                isUnlocked ? "" : "opacity-80"
               }`}
             >
               <div className="flex items-center gap-3">
