@@ -38,8 +38,12 @@ const EndScreen = () => {
 
   const sessionScore = stats.cardsPlayed - stats.refusals;
 
+  const hasRecorded = useRef(false);
   const { thisSession, bestSession } = useMemo(() => {
-    const session = recordGame({
+    let session;
+    if (!hasRecorded.current) {
+      hasRecorded.current = true;
+      session = recordGame({
       players: players.map(p => p.name),
       mode: selectedMode ?? "",
       vibe: selectedVibe ?? "",
