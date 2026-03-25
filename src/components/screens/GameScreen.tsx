@@ -198,8 +198,12 @@ const GameScreen = () => {
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStart === null) return;
     const diff = touchStart - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 60) {
-      if (diff > 0) handleNext();
+    if (Math.abs(diff) > 60 && diff > 0) {
+      if (isQuizCard && !showAnswer) {
+        setTouchStart(null);
+        return;
+      }
+      handleNext();
     }
     setTouchStart(null);
   };

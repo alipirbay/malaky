@@ -23,7 +23,7 @@ const SCREENS = {
   settings: SettingsScreen,
 } as const;
 
-const VALID_SCREENS = ['home', 'players', 'mode', 'vibe', 'game', 'end', 'packs', 'settings'];
+const VALID_SCREENS = ['home', 'players', 'mode', 'vibe', 'packs', 'settings'];
 
 const Index = () => {
   const currentScreen = useGameStore((s) => s.currentScreen);
@@ -37,6 +37,15 @@ const Index = () => {
   useEffect(() => {
     if (!localStorage.getItem("malaky-terms-accepted")) {
       setShowFirstLaunch(true);
+    }
+    // If reloaded on game screen with empty deck, rebuild or go home
+    const state = useGameStore.getState();
+    if (state.currentScreen === 'game' && state.deck.length === 0) {
+      if (state.selectedMode && state.selectedVibe && state.players.length >= 2) {
+        state.startGame(state.selectedVibe);
+      } else {
+        state.setScreen('home');
+      }
     }
   }, []);
 
