@@ -23,7 +23,7 @@ const SCREENS = {
   settings: SettingsScreen,
 } as const;
 
-const VALID_SCREENS = ['home', 'players', 'mode', 'vibe', 'game', 'end', 'packs', 'settings'];
+const VALID_SCREENS = ['home', 'players', 'mode', 'vibe', 'packs', 'settings'];
 
 const Index = () => {
   const currentScreen = useGameStore((s) => s.currentScreen);
