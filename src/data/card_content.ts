@@ -715,7 +715,7 @@ export const likelyBase: VibeContent = {
   ],
 };
 
-export const ratherA: Record<Vibe, string[]> = {
+export const ratherA: VibeContent = {
   soft: [
     'Voler comme un oiseau',
     'Écouter la même chanson',
