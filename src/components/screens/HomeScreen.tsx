@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import malakyLogo from "@/assets/malaky-logo.png";
 import { useGameStore } from "@/store/gameStore";
 import { useActiveUsers } from "@/hooks/useActiveUsers";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
@@ -22,9 +23,7 @@ const HomeScreen = () => {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="text-center"
       >
-        <h1 className="text-5xl font-black tracking-tight text-gradient mb-2">
-          MALAKY
-        </h1>
+        <img src={malakyLogo} alt="Malaky" className="h-16 mx-auto mb-2" />
 
         {/* Live users badge */}
         <motion.div
