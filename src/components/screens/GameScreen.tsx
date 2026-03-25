@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { fillPlayerNames, GAME_MODES } from "@/data/cards";
-import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw } from "lucide-react";
+import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 
 const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
@@ -37,6 +37,7 @@ const GameScreen = () => {
     setScreen,
     soundEnabled,
     toggleSound,
+    passesRemaining,
   } = useGameStore();
 
   const { playClick, playTick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
@@ -157,6 +158,26 @@ const GameScreen = () => {
       setIsAnimating(false);
     }, 350);
   }, [isAnimating, nextCard, playWhoosh, vibrate, stopTickLoop]);
+
+  const handleAction = useCallback((action: "refuse" | "skip") => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setDirection(1);
+    vibrate(20);
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    stopTickLoop();
+
+    setTimeout(() => {
+      nextCard(action);
+      setIsAnimating(false);
+    }, 350);
+  }, [isAnimating, nextCard, vibrate, stopTickLoop]);
+
+  const currentPasses = passesRemaining[currentPlayer?.name] ?? 0;
 
   if (!card || !currentPlayer) {
     return (
@@ -315,7 +336,25 @@ const GameScreen = () => {
         </AnimatePresence>
       </div>
 
-      <div className="px-6 pb-8 pt-4">
+      <div className="px-6 pb-8 pt-4 space-y-3">
+        <div className="flex gap-3">
+          <button
+            onClick={() => handleAction("refuse")}
+            disabled={isAnimating}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-destructive/10 py-3 text-sm font-bold text-destructive transition-transform active:scale-95 disabled:opacity-50"
+          >
+            <X size={16} /> Refuser
+          </button>
+          {currentPasses > 0 && (
+            <button
+              onClick={() => handleAction("skip")}
+              disabled={isAnimating}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-secondary py-3 text-sm font-bold text-muted-foreground transition-transform active:scale-95 disabled:opacity-50"
+            >
+              <SkipForward size={16} /> Passer ({currentPasses})
+            </button>
+          )}
+        </div>
         <button
           onClick={handleNext}
           disabled={isAnimating}

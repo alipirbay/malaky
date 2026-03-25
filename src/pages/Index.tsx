@@ -32,10 +32,32 @@ const Index = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("payment_return") === "true" && pendingTransactionId) {
       setScreen("payment_return");
-      // Clean URL
       window.history.replaceState({}, "", window.location.pathname);
     }
+  }, [pendingTransactionId, setScreen]);
+
+  // Sync screen to hash
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash && hash !== currentScreen && hash !== "payment_return") {
+      setScreen(hash as any);
+    }
   }, []);
+
+  useEffect(() => {
+    if (currentScreen !== "payment_return") {
+      window.location.hash = currentScreen;
+    }
+  }, [currentScreen]);
+
+  useEffect(() => {
+    const handler = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (hash && hash !== currentScreen) setScreen(hash as any);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, [currentScreen, setScreen]);
 
   if (currentScreen === "payment_return" && pendingTransactionId) {
     return (

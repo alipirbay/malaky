@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const VPI_BASE_URL = "https://preprod.vanilla-pay.net";
+const VPI_BASE_URL = Deno.env.get("VPI_BASE_URL") ?? "https://preprod.vanilla-pay.net";
 const VPI_VERSION = "2023-01-12";
 
 serve(async (req) => {

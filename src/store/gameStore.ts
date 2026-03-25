@@ -92,6 +92,7 @@ export const useGameStore = create<GameState>()(
         if (players.length >= 12) return;
         const trimmed = name.trim();
         if (!trimmed) return;
+        if (players.some(p => p.name.toLowerCase() === trimmed.toLowerCase())) return;
         const color = PLAYER_COLORS[players.length % PLAYER_COLORS.length];
         set({ players: [...players, { name: trimmed, color }] });
       },
