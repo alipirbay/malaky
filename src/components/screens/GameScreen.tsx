@@ -231,6 +231,28 @@ const GameScreen = () => {
 
               <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
 
+              {isQuizCard && (
+                <div className="mt-4 w-full px-4">
+                  {showAnswer ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="rounded-xl bg-primary/10 p-4 text-center"
+                    >
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Réponse</p>
+                      <p className="text-lg font-bold text-primary">{card?.answer}</p>
+                    </motion.div>
+                  ) : (
+                    <button
+                      onClick={() => setShowAnswer(true)}
+                      className="w-full rounded-xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary transition-transform active:scale-95"
+                    >
+                      👁️ Voir la réponse
+                    </button>
+                  )}
+                </div>
+              )}
+
               {showTimer && (
                 <div className="mt-6 flex flex-col items-center gap-3">
                   <div className="relative flex h-24 w-24 items-center justify-center">
