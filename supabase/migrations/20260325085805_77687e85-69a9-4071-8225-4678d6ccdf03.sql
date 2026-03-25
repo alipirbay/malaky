@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Anyone can read their own transactions" ON public.payment_transactions;
