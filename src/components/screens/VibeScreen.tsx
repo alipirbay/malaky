@@ -2,9 +2,10 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { VIBES, DIFFICULTIES } from "@/data/config";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, WifiOff } from "lucide-react";
 import type { Vibe } from "@/data/types";
 import AgeGateModal from "@/components/AgeGateModal";
+import { isPackDownloaded } from "@/lib/packManager";
 
 const vibeStyles: Partial<Record<Vibe, string>> = {
   soft: "vibe-soft",
