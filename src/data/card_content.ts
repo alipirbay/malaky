@@ -497,7 +497,7 @@ export const neverBase: VibeContent = {
     'fait un blackout complet.',
     'menti sur mon taux d\'alcoolémie.',
     'rentré pieds nus d\'une soirée.',
-    'réveillé dans un endroit étrange.',
+    'passé la nuit dans un endroit inattendu.',
     'pris un shot d\'insectes.',
     'fait un pari stupide en soirée.',
     'dragué un(e) inconnu(e) en boîte.',
