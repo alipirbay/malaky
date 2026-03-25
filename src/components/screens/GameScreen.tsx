@@ -68,7 +68,8 @@ const GameScreen = () => {
   const isTimerCard = card?.card_type === "timer";
   const isQuickChallengeMode = selectedMode === "quick_challenge";
   const isAutoTimer = isQuickChallengeMode && !isTimerCard && card != null;
-  const AUTO_DURATION = 15;
+  const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
+  const AUTO_DURATION = isAutoTimer ? quickChallengeDuration : 15;
   const totalDuration = isTimerCard ? extractDuration(cardText) : AUTO_DURATION;
   const showTimer = isTimerCard || isAutoTimer;
   const cardMeta = card
