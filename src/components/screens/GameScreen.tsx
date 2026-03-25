@@ -218,15 +218,10 @@ const GameScreen = () => {
 
   if (!card || !currentPlayer) {
     return (
-      <div className="gradient-surface flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="mb-4 text-xl font-bold text-foreground">Pas assez de cartes pour cette config 😅</p>
-          <button
-            onClick={() => setScreen("vibe")}
-            className="gradient-primary rounded-xl px-6 py-3 font-semibold text-primary-foreground"
-          >
-            Changer les paramètres
-          </button>
+      <div className="gradient-surface flex min-h-screen items-center justify-center safe-top safe-bottom">
+        <div className="text-center space-y-4">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-lg font-medium text-muted-foreground">Chargement des cartes...</p>
         </div>
       </div>
     );
