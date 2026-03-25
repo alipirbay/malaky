@@ -805,7 +805,7 @@ export const ratherA: VibeContent = {
     'Être le roi de la piste de danse',
     'Toujours payer ta tournée',
     'Avoir un détecteur de bonne musique',
-    'Boire en mangeant un gâteau',
+    'Boire uniquement à jeun',
     'Boire uniquement des sodas',
     'Ne plus jamais aller en soirée',
   ],
