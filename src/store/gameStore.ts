@@ -257,6 +257,7 @@ export const useGameStore = create<GameState>()(
       setSoundVolume: (vol) => set({ soundVolume: vol }),
       toggleVibration: () => set((s) => ({ vibrationEnabled: !s.vibrationEnabled })),
       setPendingTransaction: (id) => set({ pendingTransactionId: id }),
+      setQuickChallengeDuration: (d) => set({ quickChallengeDuration: d }),
     }),
     {
       name: "malaky-store",
