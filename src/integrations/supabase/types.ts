@@ -159,6 +159,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_sessions: { Args: never; Returns: undefined }
       get_active_users_count: { Args: never; Returns: number }
       get_daily_dilemme_votes: {
         Args: { p_dilemme_id: string }
