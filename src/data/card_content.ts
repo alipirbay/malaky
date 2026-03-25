@@ -858,7 +858,7 @@ export const ratherA: VibeContent = {
   ],
 };
 
-export const ratherB: Record<Vibe, string[]> = {
+export const ratherB: VibeContent = {
   soft: [
     'Nager comme un poisson',
     'Ne jamais écouter de musique',
