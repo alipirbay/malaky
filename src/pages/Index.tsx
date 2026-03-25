@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import HomeScreen from "@/components/screens/HomeScreen";
 import FirstLaunchModal from "@/components/FirstLaunchModal";
@@ -78,7 +79,7 @@ const Index = () => {
     }
   }, [pendingTransactionId, setScreen]);
 
-  // Sync screen → hash (push state only when screen changes to avoid loops)
+  // Sync screen → hash
   useEffect(() => {
     const targetHash = currentScreen === "home" ? "" : currentScreen;
     const currentHash = window.location.hash.replace("#", "");
@@ -141,9 +142,19 @@ const Index = () => {
 
   return (
     <div className="max-w-md mx-auto min-h-screen">
-      <Suspense fallback={<ScreenFallback />}>
-        <Screen />
-      </Suspense>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentScreen}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Suspense fallback={<ScreenFallback />}>
+            <Screen />
+          </Suspense>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
