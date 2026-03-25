@@ -24,7 +24,13 @@ const createCard = (
 
 const hasExplicitDuration = (text: string) => /(\d+)\s*(?:s|sec|secondes?|minute|minutes)/i.test(text) || /une?\s+minute/i.test(text);
 
-// Deduplicate and space out cards so no similar text appears within a window
+const NEVER_PREFIXES = [
+  "Je n'ai jamais ",
+  "Franchement, je n'ai jamais ",
+  "Honnêtement, je n'ai jamais ",
+  "J'avoue, je n'ai jamais ",
+  "Pour être honnête, je n'ai jamais ",
+];
 export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
   const seen = new Set<string>();
   const unique = cards.filter(c => {
@@ -38,7 +44,10 @@ export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
     [unique[i], unique[j]] = [unique[j], unique[i]];
   }
 
-  const getBase = (text: string) => text.split('.')[0].trim();
+  const getBase = (text: string) => text
+    .replace(/^(Je n'ai jamais |Franchement, je n'ai jamais |Honnêtement, je n'ai jamais |J'avoue, je n'ai jamais |Pour être honnête, je n'ai jamais )/i, "")
+    .split('.')[0]
+    .trim();
 
   const MIN_GAP = 8;
   const result: GameCard[] = [];
@@ -111,14 +120,15 @@ const buildNeverDeck = (vibe: Vibe): GameCard[] => {
 
   // Each "never" statement used directly
   for (const entry of base) {
-    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `Je n'ai jamais ${entry}`));
+    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `${NEVER_PREFIXES[0]}${entry}`));
   }
 
-  // Fill to minimum by adding player-targeted variants
+  // Fill to minimum with natural first-person variants
   let fillIdx = 0;
   while (cards.length < MINIMUM_CARDS_PER_COMBO) {
     const entry = base[fillIdx % base.length];
-    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `{player}, as-tu déjà ${entry}`));
+    const prefix = NEVER_PREFIXES[(Math.floor(fillIdx / base.length) % (NEVER_PREFIXES.length - 1)) + 1];
+    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `${prefix}${entry}`));
     fillIdx++;
   }
 
