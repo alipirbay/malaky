@@ -1,6 +1,3 @@
-export type { GameCard, GameMode, Vibe, Difficulty } from "./types";
-export { GAME_MODES, VIBES, DIFFICULTIES, STORE_PACKS } from "./config";
-
 import type { GameCard, GameMode, Vibe, Difficulty } from "./types";
 import { GAME_MODES, VIBES, DIFFICULTIES } from "./config";
 import {
