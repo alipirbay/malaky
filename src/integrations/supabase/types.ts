@@ -62,6 +62,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cards: {
+        Row: {
+          active: boolean
+          answer: string | null
+          card_type: string
+          created_at: string
+          id: string
+          lang: string
+          mode: string
+          play_count: number
+          quality_score: number
+          report_count: number
+          source: string
+          template: string
+          vibe: string
+        }
+        Insert: {
+          active?: boolean
+          answer?: string | null
+          card_type: string
+          created_at?: string
+          id?: string
+          lang?: string
+          mode: string
+          play_count?: number
+          quality_score?: number
+          report_count?: number
+          source?: string
+          template: string
+          vibe: string
+        }
+        Update: {
+          active?: boolean
+          answer?: string | null
+          card_type?: string
+          created_at?: string
+          id?: string
+          lang?: string
+          mode?: string
+          play_count?: number
+          quality_score?: number
+          report_count?: number
+          source?: string
+          template?: string
+          vibe?: string
+        }
+        Relationships: []
+      }
       daily_dilemmes: {
         Row: {
           active_date: string
@@ -204,6 +252,7 @@ export type Database = {
           total_votes: number
         }[]
       }
+      increment_play_count: { Args: { card_ids: string[] }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

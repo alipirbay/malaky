@@ -39,7 +39,7 @@ interface GameState {
   setScreen: (screen: GameState["currentScreen"]) => void;
   unlockVibe: (vibe: Vibe) => void;
   unlockBundle: (vibes: Vibe[]) => void;
-  startGame: (vibeOverride?: Vibe) => void;
+  startGame: (vibeOverride?: Vibe) => Promise<void>;
   nextCard: (action: "done" | "refuse" | "skip", wasCorrect?: boolean) => void;
   resetGame: () => void;
   toggleSound: () => void;
@@ -134,40 +134,25 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      startGame: (vibeOverride?: Vibe) => {
+      startGame: async (vibeOverride?: Vibe) => {
         const state = get();
         const selectedVibe = vibeOverride ?? state.selectedVibe;
         const { selectedMode, players, unlockedVibes } = state;
         if (vibeOverride) set({ selectedVibe: vibeOverride });
         if (!selectedMode || !selectedVibe || players.length < 2) return;
 
-        // Tsimoa is always free, skip vibe unlock check
-        if (selectedMode === "tsimoa") {
-          const cards = deduplicateShuffle([...getFilteredCards(selectedMode, selectedVibe ?? "fun", players.length)]);
-          const passes: Record<string, number> = {};
-          const playerStats: Record<string, { played: number; refused: number }> = {};
-          players.forEach((player) => {
-            passes[player.name] = 2;
-            playerStats[player.name] = { played: 0, refused: 0 };
-          });
-          set({
-            deck: cards,
-            currentPlayerIndex: 0,
-            currentCardIndex: 0,
-            stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats },
-            passesRemaining: passes,
-            currentScreen: "game",
-          });
-          return;
+        const isTsimoa = selectedMode === "tsimoa";
+
+        if (!isTsimoa) {
+          const merged = { ...defaultUnlockedVibes, ...unlockedVibes };
+          if (!merged[selectedVibe]) {
+            set({ currentScreen: "packs" });
+            return;
+          }
         }
 
-        const merged = { ...defaultUnlockedVibes, ...unlockedVibes };
-        if (!merged[selectedVibe]) {
-          set({ currentScreen: "packs" });
-          return;
-        }
-
-        const cards = deduplicateShuffle([...getFilteredCards(selectedMode, selectedVibe, players.length)]);
+        // Show loading state
+        set({ currentScreen: "game", deck: [], currentCardIndex: 0, currentPlayerIndex: 0 });
 
         const passes: Record<string, number> = {};
         const playerStats: Record<string, { played: number; refused: number }> = {};
@@ -176,14 +161,63 @@ export const useGameStore = create<GameState>()(
           playerStats[player.name] = { played: 0, refused: 0 };
         });
 
-        set({
-          deck: cards,
-          currentPlayerIndex: 0,
-          currentCardIndex: 0,
-          stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats },
-          passesRemaining: passes,
-          currentScreen: "game",
-        });
+        try {
+          const { getSeenCardIds, markCardsSeen } = await import("@/hooks/useSeenCards");
+          const seen_ids = getSeenCardIds();
+
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { data, error } = await supabase.functions.invoke("get-cards", {
+            body: {
+              mode: selectedMode,
+              vibe: selectedVibe,
+              players: players.map(p => p.name),
+              seen_ids,
+              count: 150,
+            },
+          });
+
+          if (error || !data?.cards?.length) throw new Error("No cards returned");
+
+          const { fillPlayerNames } = await import("@/data/cards");
+
+          const cards: GameCard[] = data.cards.map((c: any, i: number) => ({
+            id: c.id ?? `${selectedMode}-${selectedVibe}-${i}`,
+            mode: selectedMode,
+            vibe: selectedVibe,
+            lang: c.lang ?? "fr",
+            card_type: c.card_type,
+            text: fillPlayerNames(c.template, players[0]?.name ?? "", players.map(p => p.name)),
+            answer: c.answer ?? undefined,
+            requires_prop: "none" as const,
+            player_min: 2,
+            player_max: 12,
+          }));
+
+          markCardsSeen(data.cards.map((c: any) => c.id).filter(Boolean));
+
+          set({
+            deck: deduplicateShuffle(cards),
+            currentPlayerIndex: 0,
+            currentCardIndex: 0,
+            stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats },
+            passesRemaining: passes,
+            currentScreen: "game",
+          });
+
+        } catch (err) {
+          console.error("get-cards failed, falling back to local:", err);
+
+          const localCards = deduplicateShuffle([...getFilteredCards(selectedMode, selectedVibe, players.length)]);
+
+          set({
+            deck: localCards,
+            currentPlayerIndex: 0,
+            currentCardIndex: 0,
+            stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats },
+            passesRemaining: passes,
+            currentScreen: "game",
+          });
+        }
       },
 
       nextCard: (action, wasCorrect) => {

@@ -15,12 +15,14 @@ import {
   Smartphone,
   HelpCircle,
   Trophy,
+  RefreshCw,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import PrivacyModal from "@/components/PrivacyModal";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
+import { clearSeenCards } from "@/hooks/useSeenCards";
 
 const SettingsScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
@@ -253,6 +255,20 @@ const SettingsScreen = () => {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground text-sm">Effacer le palmarès</p>
                 <p className="text-xs text-muted-foreground">Remet les stats historiques à zéro</p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => { 
+                clearSeenCards();
+                toast.success("Cartes vues réinitialisées");
+              }}
+              className={`${rowClass} text-left`}
+            >
+              <RefreshCw size={20} className="text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground text-sm">Réinitialiser les cartes vues</p>
+                <p className="text-xs text-muted-foreground">Reverras toutes les cartes depuis le début</p>
               </div>
             </button>
           </div>
