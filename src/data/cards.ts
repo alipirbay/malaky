@@ -44,7 +44,10 @@ export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
     [unique[i], unique[j]] = [unique[j], unique[i]];
   }
 
-  const getBase = (text: string) => text.split('.')[0].trim();
+  const getBase = (text: string) => text
+    .replace(/^(Je n'ai jamais |Franchement, je n'ai jamais |Honnêtement, je n'ai jamais |J'avoue, je n'ai jamais |Pour être honnête, je n'ai jamais )/i, "")
+    .split('.')[0]
+    .trim();
 
   const MIN_GAP = 8;
   const result: GameCard[] = [];
