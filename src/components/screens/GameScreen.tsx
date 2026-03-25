@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
-import { fillPlayerNames, GAME_MODES } from "@/data/cards";
+import { GAME_MODES } from "@/data/cards";
+import { fillCardTemplate } from "@/lib/cardUtils";
 import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward, Flag } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 import { reportCard } from "@/hooks/useCardReport";
@@ -62,7 +63,7 @@ const GameScreen = () => {
   const mode = GAME_MODES.find((item) => item.id === selectedMode);
 
   const cardText = card
-    ? fillPlayerNames(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
+    ? fillCardTemplate(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
     : "";
   const isQuizCard = card?.card_type === "quiz";
   const isTimerCard = card?.card_type === "timer";

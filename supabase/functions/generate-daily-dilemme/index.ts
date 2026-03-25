@@ -6,6 +6,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const MADAGASCAR_TZ = "Indian/Antananarivo";
+
+function getMadagascarDateString(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: MADAGASCAR_TZ });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -17,8 +23,8 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Check if today's dilemme already exists
-    const today = new Date().toISOString().split("T")[0];
+    // Use Madagascar date consistently
+    const today = getMadagascarDateString();
     const { data: existing } = await supabase
       .from("daily_dilemmes")
       .select("*")
@@ -31,7 +37,6 @@ serve(async (req) => {
       });
     }
 
-    // Generate dilemme via AI
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -61,11 +66,6 @@ RÈGLES :
 - Doit diviser vraiment les gens (ni trop évident, ni trop clivant)
 - Pas de politique partisane, pas de religion
 - Peut alterner français et quelques mots malgaches courants
-
-EXEMPLES DE BONS DILEMMES MADA :
-"Vivre toute ta vie à Tana ou en province ?" → "Tana pour toujours" / "Province et liberté"
-"Taxi-be ou taxi particulier ?" → "Taxi-be, c'est la vie" / "Taxi toujours"
-"Jirama ou groupe électrogène ?" → "On supporte Jirama" / "Groupe, point final"
 
 Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
           },
@@ -118,12 +118,11 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
 
     const aiData = await response.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    
+
     let dilemmeData;
     if (toolCall?.function?.arguments) {
       dilemmeData = JSON.parse(toolCall.function.arguments);
     } else {
-      // Fallback: try parsing content directly
       const content = aiData.choices?.[0]?.message?.content || "";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -133,7 +132,6 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
       }
     }
 
-    // Insert into DB
     const { data: newDilemme, error: insertError } = await supabase
       .from("daily_dilemmes")
       .insert({

@@ -178,22 +178,20 @@ export const useGameStore = create<GameState>()(
 
           if (error || !data?.cards?.length) throw new Error("No cards returned");
 
-          const { fillPlayerNames } = await import("@/data/cards");
-
-          const cards: GameCard[] = data.cards.map((c: any, i: number) => ({
+          const cards: GameCard[] = data.cards.map((c: { id?: string; lang?: string; card_type: string; template: string; answer?: string }, i: number) => ({
             id: c.id ?? `${selectedMode}-${selectedVibe}-${i}`,
             mode: selectedMode,
             vibe: selectedVibe,
-            lang: c.lang ?? "fr",
-            card_type: c.card_type,
-            text: fillPlayerNames(c.template, players[0]?.name ?? "", players.map(p => p.name)),
+            lang: (c.lang ?? "fr") as "fr" | "mg",
+            card_type: c.card_type as GameCard["card_type"],
+            text: c.template, // Keep raw template — personalized at render time
             answer: c.answer ?? undefined,
             requires_prop: "none" as const,
             player_min: 2,
             player_max: 12,
           }));
 
-          markCardsSeen(data.cards.map((c: any) => c.id).filter(Boolean));
+          markCardsSeen(data.cards.map((c: { id?: string }) => c.id).filter((id): id is string => Boolean(id)));
 
           set({
             deck: deduplicateShuffle(cards),
