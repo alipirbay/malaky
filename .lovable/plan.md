@@ -1,43 +1,24 @@
 
 
-## Plan: Sons fonctionnels + Paramètres revus
+## Plan: Désactiver paiement mobile + Supprimer formes des ambiances
 
-### Modifications demandees
+### 1. Supprimer les formes SVG dans VibeScreen
 
-1. **SettingsScreen** - Refonte complete
-   - Supprimer l'option "Langue"
-   - Son: switch on/off fonctionnel + slider de volume (0-100%)
-   - Vibrations: switch on/off fonctionnel
-   - Confidentialite: garde tel quel
-   - Footer: "Made with ❤️ by APli"
-   - Persister les settings dans le store (zustand persist)
+- Retirer le composant `VibePattern` et tout le bloc `vibePatterns` (lignes 20-209)
+- Retirer le `<div>` qui affiche les formes (lignes 252-255)
+- Les cartes gardent leurs couleurs de fond (gradients) sans aucune décoration
 
-2. **Sound system** - Nouveau hook `useSounds.ts`
-   - Creer un hook centralise qui gere tous les sons via Web Audio API (pas besoin d'ElevenLabs, sons generes programmatiquement)
-   - Sons a implementer:
-     - **Clic bouton**: court "pop" synthetique
-     - **Chrono tick**: bip a chaque seconde pendant le countdown
-     - **Chrono fin**: alarme/buzzer quand temps ecoule
-     - **Transition carte**: whoosh leger au changement de carte
-     - **Vote dilemme**: son de confirmation
-   - Le hook lit `soundEnabled` et `soundVolume` depuis le store
-   - Sons generes via `OscillatorNode` + `GainNode` (zero fichier audio a charger)
+### 2. Désactiver le paiement dans PacksScreen
 
-3. **GameStore** - Ajout settings
-   - Ajouter `soundEnabled: boolean`, `soundVolume: number`, `vibrationEnabled: boolean`
-   - Actions: `toggleSound`, `setSoundVolume`, `toggleVibration`
-   - Persister ces valeurs dans le localStorage via `partialize`
-
-4. **Integration des sons dans les composants**
-   - `GameScreen`: son tick chrono, buzzer fin, whoosh carte next
-   - `HomeScreen` / boutons: son clic
-   - `DailyDilemme`: son confirmation vote
-   - Bouton Volume2 dans GameScreen: toggle mute rapide
+- Au lieu de lancer le processus VPI, le bouton "Acheter" débloque directement le pack (appel `unlockVibe` ou `unlockBundle`)
+- Supprimer le modal de choix Mobile Money / Carte bancaire
+- Supprimer les imports `usePayment`, `CreditCard`, `Smartphone`, `Loader2`
+- Le bouton affichera toujours le prix mais débloquera gratuitement en un clic (mode test)
+- Ajouter un petit toast "Pack débloqué !" pour confirmer
 
 ### Details techniques
 
-- Sons synthetiques via Web Audio API (`AudioContext`, `OscillatorNode`) - pas de fichiers audio, chargement instantane
-- Le slider volume utilise le composant `Slider` deja present dans le projet
-- Le switch utilise le composant `Switch` deja present
-- Vibration via `navigator.vibrate()` (mobile uniquement, silencieux sur desktop)
+- `VibeScreen.tsx`: suppression de ~190 lignes de SVG, le fichier passe de 278 à ~80 lignes
+- `PacksScreen.tsx`: `handleBuy` appelle directement `unlockVibe(pack.vibe)` ou `unlockBundle()` sans passer par VPI
+- Le code VPI (edge functions, hook) reste intact pour réactivation future
 
