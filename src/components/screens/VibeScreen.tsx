@@ -67,11 +67,28 @@ const VibeScreen = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => handleSelect(vibe.id, vibe.free)}
-              className={`w-full rounded-2xl border-0 p-4 text-left transition-transform active:scale-[0.97] ${vibeStyles[vibe.id]} ${
+              className={`relative w-full rounded-2xl border-0 p-4 text-left overflow-hidden transition-transform active:scale-[0.97] ${vibeStyles[vibe.id]} ${
                 isUnlocked ? "" : "opacity-80"
               }`}
             >
-              <div className="flex items-center gap-3">
+              {/* Decorative floating emojis */}
+              <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
+                {vibeDecoEmojis[vibe.id].map((emoji, j) => (
+                  <span
+                    key={j}
+                    className="absolute text-lg opacity-[0.12]"
+                    style={{
+                      top: `${15 + j * 22}%`,
+                      right: `${8 + j * 18}%`,
+                      transform: `rotate(${-15 + j * 20}deg) scale(${1 + j * 0.15})`,
+                    }}
+                  >
+                    {emoji}
+                  </span>
+                ))}
+              </div>
+
+              <div className="relative flex items-center gap-3">
                 <span className="text-3xl">{vibe.emoji}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
