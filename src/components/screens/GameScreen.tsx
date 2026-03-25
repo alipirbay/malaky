@@ -336,7 +336,25 @@ const GameScreen = () => {
         </AnimatePresence>
       </div>
 
-      <div className="px-6 pb-8 pt-4">
+      <div className="px-6 pb-8 pt-4 space-y-3">
+        <div className="flex gap-3">
+          <button
+            onClick={() => handleAction("refuse")}
+            disabled={isAnimating}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-destructive/10 py-3 text-sm font-bold text-destructive transition-transform active:scale-95 disabled:opacity-50"
+          >
+            <X size={16} /> Refuser
+          </button>
+          {currentPasses > 0 && (
+            <button
+              onClick={() => handleAction("skip")}
+              disabled={isAnimating}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-secondary py-3 text-sm font-bold text-muted-foreground transition-transform active:scale-95 disabled:opacity-50"
+            >
+              <SkipForward size={16} /> Passer ({currentPasses})
+            </button>
+          )}
+        </div>
         <button
           onClick={handleNext}
           disabled={isAnimating}
