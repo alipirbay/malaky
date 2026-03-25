@@ -233,7 +233,7 @@ const GameScreen = () => {
           <span className="text-xs text-muted-foreground">
             {currentCardIndex + 1}/{deck.length}
           </span>
-          <button onClick={toggleSound} className="rounded-lg bg-card p-2 text-muted-foreground">
+          <button onClick={toggleSound} className="rounded-lg bg-card p-2 text-muted-foreground" aria-label={soundEnabled ? "Couper le son" : "Activer le son"}>
             {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
           <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground">
