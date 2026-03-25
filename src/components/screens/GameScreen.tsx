@@ -57,6 +57,7 @@ const GameScreen = () => {
   const cardText = card
     ? fillPlayerNames(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
     : "";
+  const isQuizCard = card?.card_type === "quiz";
   const isTimerCard = card?.card_type === "timer"; // manual GO button
   const isQuickChallengeMode = selectedMode === "quick_challenge";
   // Auto-timer: non-action cards in défis express get a 15s auto countdown
