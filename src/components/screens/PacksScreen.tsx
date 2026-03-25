@@ -10,7 +10,7 @@ const PacksScreen = () => {
 
   const handleBuy = (pack: (typeof STORE_PACKS)[number]) => {
     if (pack.id === "bundle_all") {
-      const allVibes: Vibe[] = ["hot", "chaos", "couple", "apero", "mada", "confessions", "vip", "afterdark"];
+      const allVibes: Vibe[] = ["hot", "chaos", "couple", "apero", "mada", "confessions", "vip", "afterdark", "difficile", "expert"];
       unlockBundle(allVibes);
     } else if (pack.vibe) {
       unlockVibe(pack.vibe as Vibe);

@@ -12,6 +12,7 @@ const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   duel: { label: "Duel", color: "280 65% 60%" },
   vote: { label: "Vote", color: "142 71% 45%" },
   timer: { label: "Chrono", color: "25 95% 53%" },
+  quiz: { label: "Quiz", color: "262 83% 58%" },
 };
 
 function extractDuration(text: string): number {
@@ -46,6 +47,7 @@ const GameScreen = () => {
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerDone, setTimerDone] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentPlayer = players[currentPlayerIndex];
@@ -55,6 +57,7 @@ const GameScreen = () => {
   const cardText = card
     ? fillPlayerNames(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
     : "";
+  const isQuizCard = card?.card_type === "quiz";
   const isTimerCard = card?.card_type === "timer"; // manual GO button
   const isQuickChallengeMode = selectedMode === "quick_challenge";
   // Auto-timer: non-action cards in défis express get a 15s auto countdown
@@ -71,6 +74,7 @@ const GameScreen = () => {
     setTimerRunning(false);
     setTimerDone(false);
     setTimeLeft(totalDuration);
+    setShowAnswer(false);
 
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -227,6 +231,28 @@ const GameScreen = () => {
               </span>
 
               <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
+
+              {isQuizCard && (
+                <div className="mt-4 w-full px-4">
+                  {showAnswer ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="rounded-xl bg-primary/10 p-4 text-center"
+                    >
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Réponse</p>
+                      <p className="text-lg font-bold text-primary">{card?.answer}</p>
+                    </motion.div>
+                  ) : (
+                    <button
+                      onClick={() => setShowAnswer(true)}
+                      className="w-full rounded-xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary transition-transform active:scale-95"
+                    >
+                      👁️ Voir la réponse
+                    </button>
+                  )}
+                </div>
+              )}
 
               {showTimer && (
                 <div className="mt-6 flex flex-col items-center gap-3">

@@ -1,7 +1,9 @@
 // Auto-generated card content
 import type { Vibe } from "./types";
 
-export const truthPrompts: Record<Vibe, string[]> = {
+type VibeContent = Partial<Record<Vibe, string[]>>;
+
+export const truthPrompts: VibeContent = {
   soft: [
     'Avoue ta plus grosse bêtise d\'enfant.',
     'Raconte un moment où tu as eu très honte.',
@@ -224,7 +226,7 @@ export const truthPrompts: Record<Vibe, string[]> = {
   ],
 };
 
-export const dareActions: Record<Vibe, string[]> = {
+export const dareActions: VibeContent = {
   soft: [
     'Fais une grimace la plus moche possible.',
     'Chante l\'alphabet à l\'envers.',
@@ -397,7 +399,7 @@ export const dareActions: Record<Vibe, string[]> = {
   ],
 };
 
-export const neverBase: Record<Vibe, string[]> = {
+export const neverBase: VibeContent = {
   soft: [
     'fait la grasse matinée jusqu\'à midi.',
     'oublié l\'anniversaire d\'un proche.',
@@ -570,7 +572,7 @@ export const neverBase: Record<Vibe, string[]> = {
   ],
 };
 
-export const likelyBase: Record<Vibe, string[]> = {
+export const likelyBase: VibeContent = {
   soft: [
     'perdre ses clés le plus souvent ?',
     'être le plus désordonné ?',
@@ -713,7 +715,7 @@ export const likelyBase: Record<Vibe, string[]> = {
   ],
 };
 
-export const ratherA: Record<Vibe, string[]> = {
+export const ratherA: VibeContent = {
   soft: [
     'Voler comme un oiseau',
     'Écouter la même chanson',
@@ -856,7 +858,7 @@ export const ratherA: Record<Vibe, string[]> = {
   ],
 };
 
-export const ratherB: Record<Vibe, string[]> = {
+export const ratherB: VibeContent = {
   soft: [
     'Nager comme un poisson',
     'Ne jamais écouter de musique',
@@ -999,7 +1001,7 @@ export const ratherB: Record<Vibe, string[]> = {
   ],
 };
 
-export const challengeActions: Record<Vibe, string[]> = {
+export const challengeActions: VibeContent = {
   soft: [
     'Fais 5 flexions en chantant.',
     'Compte jusqu\'à 10 à l\'envers.',
@@ -1142,7 +1144,7 @@ export const challengeActions: Record<Vibe, string[]> = {
   ],
 };
 
-export const dilemmeA: Record<Vibe, string[]> = {
+export const dilemmeA: VibeContent = {
   soft: [
     'Pouvoir voler mais devoir chanter',
     'Avoir une voiture volante mais autonome',
@@ -1315,7 +1317,7 @@ export const dilemmeA: Record<Vibe, string[]> = {
   ],
 };
 
-export const dilemmeB: Record<Vibe, string[]> = {
+export const dilemmeB: VibeContent = {
   soft: [
     'Pouvoir nager mais devoir danser',
     'Avoir une voiture normale mais autonome',

@@ -1,4 +1,4 @@
-import type { GameMode, Vibe } from "./types";
+import type { GameMode, Vibe, Difficulty } from "./types";
 
 export const GAME_MODES = [
   {
@@ -41,6 +41,14 @@ export const GAME_MODES = [
     badge: "Rapide",
     color: "mango" as const,
   },
+  {
+    id: "culture_generale" as GameMode,
+    name: "Culture Générale",
+    subtitle: "Teste tes connaissances",
+    emoji: "🧠",
+    badge: "Quiz",
+    color: "primary" as const,
+  },
 ];
 
 export const VIBES = [
@@ -56,6 +64,13 @@ export const VIBES = [
   { id: "afterdark" as Vibe, name: "After Dark", emoji: "🔞", description: "18+, sans aucun filtre", tag: "18+", free: false, priceLabel: "12 900 Ar" },
 ];
 
+export const DIFFICULTIES = [
+  { id: "facile" as Difficulty, name: "Facile", emoji: "🟢", description: "Questions accessibles pour tous", free: true, priceLabel: "Gratuit" },
+  { id: "intermediaire" as Difficulty, name: "Intermédiaire", emoji: "🟡", description: "Un cran au-dessus, il faut réfléchir", free: true, priceLabel: "Gratuit" },
+  { id: "difficile" as Difficulty, name: "Difficile", emoji: "🟠", description: "Pour les vrais connaisseurs", free: false, priceLabel: "5 900 Ar" },
+  { id: "expert" as Difficulty, name: "Expert", emoji: "🔴", description: "Seuls les érudits survivent", free: false, priceLabel: "7 900 Ar" },
+];
+
 export const STORE_PACKS = [
   { id: "hot", vibe: "hot" as Vibe, name: "Pack Hot 🔥", emoji: "🔥", description: "Soirée osée et séduction", price: "9 900 Ar", priceValue: 9900, cardCount: 900, free: false },
   { id: "chaos", vibe: "chaos" as Vibe, name: "Pack Chaos 💀", emoji: "💀", description: "Dangereux, zéro filtre", price: "7 900 Ar", priceValue: 7900, cardCount: 900, free: false },
@@ -65,5 +80,7 @@ export const STORE_PACKS = [
   { id: "confessions", vibe: "confessions" as Vibe, name: "Pack Confessions 🎭", emoji: "🎭", description: "Secrets profonds et vérités cachées", price: "7 900 Ar", priceValue: 7900, cardCount: 900, free: false },
   { id: "vip", vibe: "vip" as Vibe, name: "Pack VIP 👑", emoji: "👑", description: "Questions premium, ego et pouvoir", price: "9 900 Ar", priceValue: 9900, cardCount: 900, free: false },
   { id: "afterdark", vibe: "afterdark" as Vibe, name: "Pack After Dark 🔞", emoji: "🔞", description: "18+, le plus osé, sans aucun filtre", price: "12 900 Ar", priceValue: 12900, cardCount: 900, free: false },
+  { id: "difficile", vibe: "difficile" as Vibe, name: "Culture G Difficile 🟠", emoji: "🟠", description: "Questions pour connaisseurs", price: "5 900 Ar", priceValue: 5900, cardCount: 160, free: false },
+  { id: "expert", vibe: "expert" as Vibe, name: "Culture G Expert 🔴", emoji: "🔴", description: "Le niveau ultime de culture générale", price: "7 900 Ar", priceValue: 7900, cardCount: 160, free: false },
   { id: "bundle_all", vibe: null, name: "Mega Bundle 💎", emoji: "💎", description: "TOUS les packs au meilleur prix", price: "49 900 Ar", priceValue: 49900, cardCount: 7200, free: false },
 ] as const;
