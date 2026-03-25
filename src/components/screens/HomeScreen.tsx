@@ -23,9 +23,7 @@ const HomeScreen = () => {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="text-center"
       >
-        <h1 className="text-5xl font-black tracking-tight text-gradient mb-2">
-          MALAKY
-        </h1>
+        <img src={malakyLogo} alt="Malaky" className="h-16 mx-auto mb-2" />
 
         {/* Live users badge */}
         <motion.div

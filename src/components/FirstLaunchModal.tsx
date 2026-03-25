@@ -16,7 +16,7 @@ const FirstLaunchModal = ({ onAccept, onShowPrivacy, onShowCGU }: FirstLaunchMod
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm text-center"
       >
-        <h1 className="text-4xl font-black tracking-tight text-gradient mb-2">MALAKY</h1>
+        <img src={malakyLogo} alt="Malaky" className="h-14 mx-auto mb-2" />
         <p className="text-sm text-muted-foreground mb-8">Le jeu de soirée des Malgaches 🇲🇬</p>
 
         <div className="rounded-2xl bg-card p-5 text-left space-y-4 mb-6">
