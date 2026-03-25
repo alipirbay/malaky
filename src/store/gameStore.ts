@@ -183,7 +183,7 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      nextCard: (action) => {
+      nextCard: (action, wasCorrect) => {
         const { currentCardIndex, currentPlayerIndex, players, deck, stats, passesRemaining } = get();
         if (!players.length || !deck.length) return;
 
