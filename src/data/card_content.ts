@@ -236,7 +236,7 @@ export const dareActions: Record<Vibe, string[]> = {
     'Invente une petite danse sur place.',
     'Parle avec un accent étranger pendant 30 secondes.',
     'Fais un compliment sincère à chaque joueur.',
-    'Décris ton doudou imaginaire avec conviction.',
+    'Décris ton doudou imaginaire comme si tout le monde le connaissait déjà.',
     'Garde la main sur le nez pendant 30 secondes.',
     'Raconte une blague pour enfant.',
     'Écris ton prénom en l\'air avec ton coude.',
