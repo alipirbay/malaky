@@ -341,7 +341,7 @@ export function validateCardCoverage() {
       for (const diff of DIFFICULTIES) {
         const total = allCards.filter(c => c.mode === mode.id && c.vibe === diff.id).length;
         if (total < 10) {
-          console.warn(`Low card count for ${mode.id}/${diff.id}: ${total}`);
+          // Low card count detected
         }
       }
     } else {
