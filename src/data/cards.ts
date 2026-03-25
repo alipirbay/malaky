@@ -363,10 +363,3 @@ export function getFilteredCards(mode: GameMode, vibe: Vibe, playerCount: number
   return deck;
 }
 
-export function fillPlayerNames(text: string, currentPlayer: string, allPlayers: string[]): string {
-  const otherPlayers = allPlayers.filter(p => p !== currentPlayer);
-  const fallback = otherPlayers[0] || currentPlayer;
-  let result = text.split("{player}").join(currentPlayer);
-  result = result.split("{player2}").join(fallback);
-  return result;
-}
