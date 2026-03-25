@@ -160,7 +160,7 @@ export const truthPrompts: VibeContent = {
     'explique ce que tu penses du mélange français-malgache dans la langue.',
     'raconte ta dernière expérience en taxi-brousse.',
     'avoue si tu préfères le riz de midi ou de soir.',
-    'dis ce que les Malgaches font mieux que tout le monde.',
+    'nomme 3 choses que les Malgaches font mieux que tout le monde.',
   ],
   confessions: [
     'dis ton plus grand regret que tu n\'as jamais partagé.',
