@@ -22,7 +22,7 @@ const vibeStyles: Partial<Record<Vibe, string>> = {
 };
 
 const VibeScreen = () => {
-  const { setVibe, setScreen, unlockedVibes, selectedMode } = useGameStore();
+  const { setScreen, unlockedVibes, selectedMode } = useGameStore();
 
   const isCultureMode = selectedMode === "culture_generale";
   const items = isCultureMode
@@ -34,10 +34,8 @@ const VibeScreen = () => {
       setScreen("packs");
       return;
     }
-    setVibe(vibe);
-    setTimeout(() => {
-      useGameStore.getState().startGame();
-    }, 0);
+    useGameStore.getState().setVibe(vibe);
+    useGameStore.getState().startGame(vibe);
   };
 
   return (

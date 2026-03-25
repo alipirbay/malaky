@@ -5,7 +5,7 @@ import type { GameCard, GameMode, Vibe, Difficulty } from "./types";
 import { GAME_MODES, VIBES, DIFFICULTIES } from "./config";
 import {
   truthPrompts, dareActions, neverBase, likelyBase,
-  ratherA, ratherB, challengeActions,
+  ratherA, ratherB, challengeActions, madaCardsMg,
 } from "./card_content";
 import { cultureQuestions } from "./culture_questions";
 
@@ -46,7 +46,7 @@ export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
 
   // Space cards with similar bases apart using Set for O(1) lookups
   const getBase = (text: string) => text
-    .replace(/^(Je n'ai jamais |Franchement, je n'ai jamais |Honnêtement, je n'ai jamais |J'avoue, je n'ai jamais |Pour être honnête, je n'ai jamais )/i, "")
+    .replace(/^(Je n'ai jamais )/i, "")
     .split('.')[0]
     .trim();
 
@@ -98,6 +98,13 @@ const buildTruthDareDeck = (vibe: Vibe): GameCard[] => {
 
   for (let i = 0; i < dares.length; i++) {
     cards.push(createCard("truth_dare", vibe, idx++, "dare", `{player}, ${dares[i]}`, i % 5 === 0 ? "phone" : "none"));
+  }
+
+  // For mada vibe, add bilingual cards (30% of deck)
+  if (vibe === "mada") {
+    for (const mgCard of madaCardsMg) {
+      cards.push(createCard("truth_dare", vibe, idx++, "truth", `{player}, ${mgCard}`));
+    }
   }
 
   const allBase = [...prompts, ...dares];

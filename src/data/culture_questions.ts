@@ -50,6 +50,14 @@ export const cultureQuestions: Record<Difficulty, QuizEntry[]> = {
     { q: "Quel rang Madagascar occupe-t-elle parmi les plus grandes îles du monde ?", a: "4e plus grande île" },
     { q: "Quel animal endémique de Madagascar est un primate aux grands yeux ?", a: "Le lémurien" },
     { q: "Quel arbre géant emblématique pousse dans l'ouest de Madagascar ?", a: "Le baobab" },
+    { q: "Quelle est la capitale de Madagascar ?", a: "Antananarivo" },
+    { q: "Combien d'ethnies officielles compte Madagascar ?", a: "18 ethnies" },
+    { q: "Quel animal est le symbole de Madagascar ?", a: "Le lémurien" },
+    { q: "Quelle langue parle-t-on à Madagascar en plus du français ?", a: "Le malgache" },
+    { q: "Quelle est la principale exportation de Madagascar ?", a: "La vanille (80% du marché mondial)" },
+    { q: "Comment s'appelle le plat national malgache à base de zébu ?", a: "Le romazava" },
+    { q: "Quelle est la religion traditionnelle malgache liée aux ancêtres ?", a: "Le culte des ancêtres (Razana)" },
+    { q: "Comment s'appelle le marché central d'Antananarivo ?", a: "Analakely" },
   ],
   intermediaire: [
     // Histoire
@@ -98,6 +106,16 @@ export const cultureQuestions: Record<Difficulty, QuizEntry[]> = {
     { q: "Quel roi malgache a fondé la ville d'Antananarivo ?", a: "Andrianjaka" },
     { q: "Comment s'appelle le parc national le plus visité de Madagascar ?", a: "Isalo" },
     { q: "Quelle ethnie malgache est connue pour le retournement des morts ?", a: "Les Merina (famadihana)" },
+    { q: "Quel roi malgache a fondé Antananarivo au XVIIe siècle ?", a: "Andrianjaka (vers 1610)" },
+    { q: "Quelle cérémonie malgache consiste à retourner les morts ?", a: "Le famadihana" },
+    { q: "Quel genre musical malgache du sud-ouest est très rythmé ?", a: "Le tsapiky" },
+    { q: "Comment s'appelle le concept malgache de solidarité familiale et sociale ?", a: "Le fihavanana" },
+    { q: "Quelle boisson alcoolisée traditionnelle est faite de canne à sucre ?", a: "Le betsabetsa (ou le trembo)" },
+    { q: "Quel est le plus grand marché aux zébus de Madagascar ?", a: "Ambositra ou Ambalavao" },
+    { q: "Quelle route nationale traverse Madagascar du nord au sud ?", a: "La RN7 (Tana-Toliara)" },
+    { q: "Quel cinéaste malgache a réalisé 'Tabataba' en 1988 ?", a: "Raymond Rajaonarivelo" },
+    { q: "Quel est le nom du palais royal d'Antananarivo ?", a: "Le Rova (ou Manjakamiadana)" },
+    { q: "Quelle ethnie malgache est connue pour ses sculptures funéraires aloalo ?", a: "Les Mahafaly" },
   ],
   difficile: [
     // Histoire
@@ -146,6 +164,12 @@ export const cultureQuestions: Record<Difficulty, QuizEntry[]> = {
     { q: "Quelle est la principale culture d'exportation de Madagascar ?", a: "La vanille" },
     { q: "Quel peuple austronésien a colonisé Madagascar il y a environ 2000 ans ?", a: "Les Austronésiens de Bornéo" },
     { q: "Comment s'appelle le système de tabous traditionnels malgaches ?", a: "Les fady" },
+    { q: "En quelle année a eu lieu l'insurrection malgache contre la colonisation française ?", a: "1947" },
+    { q: "Quel est le nom complet du premier président de Madagascar après l'indépendance ?", a: "Philibert Tsiranana" },
+    { q: "Comment s'appelle la forêt de pierres calcaires du nord-ouest de Madagascar ?", a: "Les Tsingy de Bemaraha" },
+    { q: "Quel est le nom malgache de la tradition oratoire formelle ?", a: "Le kabary" },
+    { q: "Quelle est la principale langue bantoue qui a influencé le malgache ?", a: "Le swahili (côte Est-africaine)" },
+    { q: "Quel roi malgache a unifié les Hauts Plateaux au XVIIIe siècle ?", a: "Andrianampoinimerina" },
   ],
   expert: [
     // Histoire
@@ -194,5 +218,12 @@ export const cultureQuestions: Record<Difficulty, QuizEntry[]> = {
     { q: "Quel pourcentage de la vanille mondiale provient de Madagascar ?", a: "Environ 80%" },
     { q: "Quel caméléon endémique de Madagascar est le plus petit reptile du monde ?", a: "Brookesia nana" },
     { q: "Quel linguiste a classifié les langues austronésiennes dont le malgache ?", a: "Otto Dempwolff" },
+    { q: "Quelle est la date exacte de l'indépendance de Madagascar ?", a: "26 juin 1960" },
+    { q: "Quel groupe de langues regroupe le malgache ?", a: "Les langues austronésiennes (famille malayo-polynésienne)" },
+    { q: "Quel est le nom scientifique du fossa, le principal prédateur de Madagascar ?", a: "Cryptoprocta ferox" },
+    { q: "Quelle organisation internationale a classé Madagascar zone de biodiversité critique ?", a: "Conservation International (hotspot de biodiversité)" },
+    { q: "Quel est l'ancien nom colonial d'Antananarivo sous les Français ?", a: "Tananarive" },
+    { q: "Quelle est la signification littérale de 'Antananarivo' en malgache ?", a: "La ville des mille (soldats)" },
+    { q: "Quel explorateur européen a été le premier à cartographier Madagascar ?", a: "Diogo Dias (Portugais, 1500)" },
   ],
 };

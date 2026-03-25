@@ -38,6 +38,7 @@ const GameScreen = () => {
     soundEnabled,
     toggleSound,
     passesRemaining,
+    stats,
   } = useGameStore();
 
   const { playClick, playTick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
@@ -49,6 +50,7 @@ const GameScreen = () => {
   const [timerDone, setTimerDone] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentPlayer = players[currentPlayerIndex];
@@ -59,9 +61,8 @@ const GameScreen = () => {
     ? fillPlayerNames(card.text, currentPlayer?.name ?? "", players.map((p) => p.name))
     : "";
   const isQuizCard = card?.card_type === "quiz";
-  const isTimerCard = card?.card_type === "timer"; // manual GO button
+  const isTimerCard = card?.card_type === "timer";
   const isQuickChallengeMode = selectedMode === "quick_challenge";
-  // Auto-timer: non-action cards in défis express get a 15s auto countdown
   const isAutoTimer = isQuickChallengeMode && !isTimerCard && card != null;
   const AUTO_DURATION = 15;
   const totalDuration = isTimerCard ? extractDuration(cardText) : AUTO_DURATION;
@@ -70,6 +71,7 @@ const GameScreen = () => {
     ? CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" }
     : { label: "", color: "210 40% 98%" };
   const timerProgress = totalDuration > 0 ? timeLeft / totalDuration : 0;
+  const isCultureG = selectedMode === "culture_generale";
 
   useEffect(() => {
     setTimerRunning(false);
@@ -82,7 +84,6 @@ const GameScreen = () => {
       intervalRef.current = null;
     }
 
-    // Auto-start for non-action cards in quick_challenge
     if (isAutoTimer) {
       setTimerRunning(true);
     }
@@ -109,7 +110,6 @@ const GameScreen = () => {
           }
           return 0;
         }
-
         return prev - 1;
       });
     }, 1000);
@@ -177,6 +177,19 @@ const GameScreen = () => {
     }, 350);
   }, [isAnimating, nextCard, vibrate, stopTickLoop]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const diff = touchStart - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 60) {
+      if (diff > 0) handleNext();
+    }
+    setTouchStart(null);
+  };
+
   const currentPasses = passesRemaining[currentPlayer?.name] ?? 0;
 
   if (!card || !currentPlayer) {
@@ -214,6 +227,9 @@ const GameScreen = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {isCultureG && (
+            <span className="text-xs font-bold text-accent">{stats.quizScore ?? 0} pts</span>
+          )}
           <span className="text-xs text-muted-foreground">
             {currentCardIndex + 1}/{deck.length}
           </span>
@@ -242,6 +258,8 @@ const GameScreen = () => {
             exit={{ opacity: 0, y: -40, scale: 0.95, filter: "blur(4px)" }}
             transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
             className="w-full max-w-sm"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
             <div className="card-game relative flex min-h-[340px] flex-col items-center justify-center overflow-hidden text-center">
               <span
@@ -299,7 +317,6 @@ const GameScreen = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {/* Manual GO button only for timer (action) cards */}
                     {isTimerCard && !timerRunning && !timerDone && (
                       <button
                         onClick={startTimer}

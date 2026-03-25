@@ -11,6 +11,7 @@ interface Player {
 interface GameStats {
   cardsPlayed: number;
   refusals: number;
+  quizScore: number;
   playerStats: Record<string, { played: number; refused: number }>;
 }
 
@@ -37,7 +38,7 @@ interface GameState {
   setScreen: (screen: GameState["currentScreen"]) => void;
   unlockVibe: (vibe: Vibe) => void;
   unlockBundle: (vibes: Vibe[]) => void;
-  startGame: () => void;
+  startGame: (vibeOverride?: Vibe) => void;
   nextCard: (action: "done" | "refuse" | "skip") => void;
   resetGame: () => void;
   toggleSound: () => void;
@@ -80,7 +81,7 @@ export const useGameStore = create<GameState>()(
       currentPlayerIndex: 0,
       currentCardIndex: 0,
       deck: [],
-      stats: { cardsPlayed: 0, refusals: 0, playerStats: {} },
+      stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats: {} },
       passesRemaining: {},
       soundEnabled: true,
       soundVolume: 80,
@@ -130,8 +131,11 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      startGame: () => {
-        const { selectedMode, selectedVibe, players, unlockedVibes } = get();
+      startGame: (vibeOverride?: Vibe) => {
+        const state = get();
+        const selectedVibe = vibeOverride ?? state.selectedVibe;
+        const { selectedMode, players, unlockedVibes } = state;
+        if (vibeOverride) set({ selectedVibe: vibeOverride });
         if (!selectedMode || !selectedVibe || players.length < 2) return;
         const merged = { ...defaultUnlockedVibes, ...unlockedVibes };
         if (!merged[selectedVibe]) {
@@ -152,7 +156,7 @@ export const useGameStore = create<GameState>()(
           deck: cards,
           currentPlayerIndex: 0,
           currentCardIndex: 0,
-          stats: { cardsPlayed: 0, refusals: 0, playerStats },
+          stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats },
           passesRemaining: passes,
           currentScreen: "game",
         });
@@ -168,9 +172,11 @@ export const useGameStore = create<GameState>()(
         const newStats: GameStats = {
           cardsPlayed: stats.cardsPlayed,
           refusals: stats.refusals,
+          quizScore: stats.quizScore ?? 0,
           playerStats: { ...stats.playerStats },
         };
         const newPasses = { ...passesRemaining };
+        const currentCard = deck[currentCardIndex];
 
         if (action === "done") {
           newStats.cardsPlayed += 1;
@@ -178,6 +184,10 @@ export const useGameStore = create<GameState>()(
             played: (newStats.playerStats[currentPlayer]?.played || 0) + 1,
             refused: newStats.playerStats[currentPlayer]?.refused || 0,
           };
+          // Increment quiz score for quiz cards
+          if (currentCard?.card_type === "quiz") {
+            newStats.quizScore += 1;
+          }
         } else if (action === "refuse") {
           newStats.refusals += 1;
           newStats.playerStats[currentPlayer] = {
@@ -213,7 +223,7 @@ export const useGameStore = create<GameState>()(
           currentPlayerIndex: 0,
           currentCardIndex: 0,
           deck: [],
-          stats: { cardsPlayed: 0, refusals: 0, playerStats: {} },
+          stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats: {} },
           passesRemaining: {},
           unlockedVibes: get().unlockedVibes,
         });
@@ -232,6 +242,15 @@ export const useGameStore = create<GameState>()(
         soundVolume: state.soundVolume,
         vibrationEnabled: state.vibrationEnabled,
         pendingTransactionId: state.pendingTransactionId,
+        players: state.players,
+        selectedMode: state.selectedMode,
+        selectedVibe: state.selectedVibe,
+        currentScreen: state.currentScreen,
+        currentCardIndex: state.currentCardIndex,
+        currentPlayerIndex: state.currentPlayerIndex,
+        deck: state.deck,
+        stats: state.stats,
+        passesRemaining: state.passesRemaining,
       }),
     }
   )

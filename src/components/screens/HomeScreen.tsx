@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { useActiveUsers } from "@/hooks/useActiveUsers";
-import { Sparkles, ShoppingBag, Settings, Zap } from "lucide-react";
+import { ShoppingBag, Settings, Zap } from "lucide-react";
 import DailyDilemme from "@/components/DailyDilemme";
+
+const LAUNCH_DATE = new Date('2026-03-24');
+const isNew = (new Date().getTime() - LAUNCH_DATE.getTime()) < 30 * 24 * 60 * 60 * 1000;
 
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
@@ -35,12 +38,14 @@ const HomeScreen = () => {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
           </span>
           <span className="text-xs font-bold text-primary">
-            {activeUsers > 0 ? activeUsers.toLocaleString() : "..."} en ligne maintenant
+            {activeUsers > 5
+              ? `${activeUsers.toLocaleString()} joueurs actifs`
+              : "Joue maintenant 🇲🇬"}
           </span>
         </motion.div>
       </motion.div>
 
-      {/* Daily Dilemme - Prominent section */}
+      {/* Daily Dilemme */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -57,7 +62,6 @@ const HomeScreen = () => {
         transition={{ delay: 0.5, duration: 0.4 }}
         className="mt-6 w-full max-w-sm space-y-3"
       >
-        {/* Main row: Créer + Packs */}
         <div className="flex gap-3">
           <button
             onClick={() => setScreen("players")}
@@ -76,15 +80,16 @@ const HomeScreen = () => {
             <div className="relative z-10 flex flex-col items-center gap-1">
               <ShoppingBag size={20} className="text-mango-foreground" />
               <span className="text-xs font-bold text-mango-foreground">Packs</span>
-              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold text-mango-foreground">
-                NEW
-              </span>
+              {isNew && (
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold text-mango-foreground">
+                  NEW
+                </span>
+              )}
             </div>
             <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
           </button>
         </div>
 
-        {/* Settings */}
         <button
           onClick={() => setScreen("settings")}
           className="w-full rounded-2xl bg-card px-4 py-4 text-sm font-semibold text-foreground transition-all hover:bg-secondary active:scale-95 flex items-center justify-center gap-2"
@@ -93,7 +98,7 @@ const HomeScreen = () => {
         </button>
       </motion.div>
 
-      {/* Bottom stats + tagline */}
+      {/* Bottom stats */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -101,7 +106,7 @@ const HomeScreen = () => {
         className="mt-8 flex flex-col items-center gap-3"
       >
         <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
-          <span>5 Modes</span>
+          <span>6 Modes</span>
           <span>•</span>
           <span>10 Packs</span>
           <span>•</span>

@@ -21,6 +21,8 @@ const SCREENS = {
   settings: SettingsScreen,
 } as const;
 
+const VALID_SCREENS = ['home', 'players', 'mode', 'vibe', 'game', 'end', 'packs', 'settings'];
+
 const Index = () => {
   const currentScreen = useGameStore((s) => s.currentScreen);
   const pendingTransactionId = useGameStore((s) => s.pendingTransactionId);
@@ -38,25 +40,20 @@ const Index = () => {
 
   // Sync screen to hash
   useEffect(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (hash && hash !== currentScreen && hash !== "payment_return") {
-      setScreen(hash as any);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (currentScreen !== "payment_return") {
-      window.location.hash = currentScreen;
-    }
+    window.location.hash = currentScreen === 'home' ? '' : currentScreen;
   }, [currentScreen]);
 
   useEffect(() => {
     const handler = () => {
-      const hash = window.location.hash.replace("#", "");
-      if (hash && hash !== currentScreen) setScreen(hash as any);
+      const hash = window.location.hash.replace('#', '') as typeof currentScreen;
+      if (VALID_SCREENS.includes(hash) && hash !== currentScreen) {
+        setScreen(hash);
+      } else if (!hash) {
+        setScreen('home');
+      }
     };
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
   }, [currentScreen, setScreen]);
 
   if (currentScreen === "payment_return" && pendingTransactionId) {
