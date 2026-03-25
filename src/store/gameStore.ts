@@ -39,7 +39,7 @@ interface GameState {
   setScreen: (screen: GameState["currentScreen"]) => void;
   unlockVibe: (vibe: Vibe) => void;
   unlockBundle: (vibes: Vibe[]) => void;
-  startGame: (vibeOverride?: Vibe) => void;
+  startGame: (vibeOverride?: Vibe) => Promise<void>;
   nextCard: (action: "done" | "refuse" | "skip", wasCorrect?: boolean) => void;
   resetGame: () => void;
   toggleSound: () => void;
