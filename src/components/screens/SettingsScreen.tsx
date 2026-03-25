@@ -22,6 +22,7 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import PrivacyModal from "@/components/PrivacyModal";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
+import { clearSeenCards } from "@/hooks/useSeenCards";
 
 const SettingsScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
