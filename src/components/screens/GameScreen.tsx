@@ -84,6 +84,7 @@ const GameScreen = () => {
     setTimerDone(false);
     setTimeLeft(totalDuration);
     setShowAnswer(false);
+    setReported(false);
 
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
