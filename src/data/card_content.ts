@@ -1144,7 +1144,7 @@ export const challengeActions: VibeContent = {
   ],
 };
 
-export const dilemmeA: Record<Vibe, string[]> = {
+export const dilemmeA: VibeContent = {
   soft: [
     'Pouvoir voler mais devoir chanter',
     'Avoir une voiture volante mais autonome',
