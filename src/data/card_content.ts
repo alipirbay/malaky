@@ -157,7 +157,7 @@ export const truthPrompts: VibeContent = {
     'raconte une rivalité régionale que tu trouves ridicule.',
     'dis quelle expression malgache résume ta philosophie de vie.',
     'avoue ce que tu changerais en priorité à Madagascar.',
-    'dis ce que tu penses du mélange français-malgache dans la langue.',
+    'explique ce que tu penses du mélange français-malgache dans la langue.',
     'raconte ta dernière expérience en taxi-brousse.',
     'avoue si tu préfères le riz de midi ou de soir.',
     'dis ce que les Malgaches font mieux que tout le monde.',
