@@ -59,6 +59,16 @@ const HomeScreen = () => {
             </span>
           </motion.div>
         )}
+        {!isOnline && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-3 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2"
+          >
+            <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground">Mode hors-ligne</span>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Daily Dilemme — lazy loaded */}
