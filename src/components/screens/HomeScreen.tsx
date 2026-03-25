@@ -13,6 +13,18 @@ const LAUNCH_DATE_MS = new Date('2026-03-24').getTime();
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
   const activeUsers = useActiveUsers();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
 
   const isNew = useMemo(
     () => (Date.now() - LAUNCH_DATE_MS) < 30 * 24 * 60 * 60 * 1000,
