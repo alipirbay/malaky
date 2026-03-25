@@ -879,7 +879,7 @@ export const ratherB: VibeContent = {
     'Ne plus jamais manger',
     'Être tout le temps visible',
     'Lire les pensées des humains',
-    'Vivre dans un film d\'horreur',
+    'Vivre dans un dessin animé',
     'Toujours avoir soif',
     'Ne rien se souvenir jamais',
     'Être ami avec mille souris',
