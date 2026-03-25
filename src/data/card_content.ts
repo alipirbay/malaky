@@ -646,7 +646,7 @@ export const likelyBase: VibeContent = {
     'faire des siestes collé-serré ?',
     'se tromper de prénom en pleine action ?',
     'faire le plus de bêtises ?',
-    'oublier les anniversaires ?',
+    'être le plus doué pour surprendre son partenaire ?',
     'préférer une nuit cocooning ?',
     'être le plus doué en compliment ?',
   ],
