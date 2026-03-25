@@ -3,13 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDailyDilemme } from "@/hooks/useDailyDilemme";
 import { Scale, Clock, TrendingUp, Sparkles } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
-
-const formatCountdown = (ms: number) => {
-  const hours = Math.floor(ms / (1000 * 60 * 60));
-  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-};
+import { formatCountdown } from "@/lib/dateUtils";
 
 const TOPIC_LABELS: Record<string, { emoji: string; label: string }> = {
   politique: { emoji: "🏛️", label: "Politique" },
