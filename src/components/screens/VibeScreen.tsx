@@ -30,6 +30,9 @@ const hasConfirmedAge = (vibe: Vibe) =>
 
 const VibeScreen = () => {
   const { setScreen, unlockedVibes, selectedMode } = useGameStore();
+  const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
+  const setQuickChallengeDuration = useGameStore((s) => s.setQuickChallengeDuration);
+  const [pendingAdultVibe, setPendingAdultVibe] = useState<Vibe | null>(null);
   const [pendingAdultVibe, setPendingAdultVibe] = useState<Vibe | null>(null);
 
   const isCultureMode = selectedMode === "culture_generale";
