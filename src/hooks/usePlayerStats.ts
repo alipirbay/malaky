@@ -1,54 +1,49 @@
 import { useState, useCallback } from "react";
-import type { PlayerAllTimeStats } from "@/data/types";
+import type { GameSession } from "@/data/types";
 
-const STORAGE_KEY = "malaky-player-stats";
+const STORAGE_KEY = "malaky-sessions";
+const MAX_SESSIONS = 20;
 
-function loadStats(): Record<string, PlayerAllTimeStats> {
+function loadSessions(): GameSession[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    return raw ? JSON.parse(raw) : [];
   } catch {
-    return {};
+    return [];
   }
 }
 
-function saveStats(stats: Record<string, PlayerAllTimeStats>) {
+function saveSessions(sessions: GameSession[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
   } catch {}
 }
 
 export function usePlayerStats() {
-  const [allStats, setAllStats] = useState<Record<string, PlayerAllTimeStats>>(loadStats);
+  const [sessions, setSessions] = useState<GameSession[]>(loadSessions);
 
-  const recordGame = useCallback((
-    playerStats: Record<string, { played: number; refused: number }>
-  ) => {
-    const current = loadStats();
-    Object.entries(playerStats).forEach(([name, s]) => {
-      const existing = current[name] ?? { name, totalPlayed: 0, totalRefused: 0, totalGames: 0, lastPlayed: "" };
-      current[name] = {
-        name,
-        totalPlayed: existing.totalPlayed + s.played,
-        totalRefused: existing.totalRefused + s.refused,
-        totalGames: existing.totalGames + 1,
-        lastPlayed: new Date().toISOString(),
-      };
-    });
-    saveStats(current);
-    setAllStats({ ...current });
+  const recordGame = useCallback((session: Omit<GameSession, "id" | "date">): GameSession => {
+    const newSession: GameSession = {
+      ...session,
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+    };
+    const updated = [newSession, ...loadSessions()].slice(0, MAX_SESSIONS);
+    saveSessions(updated);
+    setSessions(updated);
+    return newSession;
   }, []);
-
-  const getTopPlayers = useCallback((): PlayerAllTimeStats[] => {
-    return Object.values(allStats)
-      .sort((a, b) => b.totalPlayed - a.totalPlayed)
-      .slice(0, 10);
-  }, [allStats]);
 
   const clearStats = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
-    setAllStats({});
+    setSessions([]);
   }, []);
 
-  return { allStats, recordGame, getTopPlayers, clearStats };
+  const getBestSession = useCallback((): GameSession | null => {
+    const all = loadSessions();
+    if (!all.length) return null;
+    return all.reduce((best, s) => s.score > best.score ? s : best, all[0]);
+  }, []);
+
+  return { sessions, recordGame, clearStats, getBestSession };
 }

@@ -3,7 +3,7 @@ import malakyLogo from "@/assets/malaky-logo.png";
 import { useGameStore } from "@/store/gameStore";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
 import DailyDilemme from "@/components/DailyDilemme";
-import DailyChallenge from "@/components/DailyChallenge";
+
 import { useActiveUsers } from "@/hooks/useActiveUsers";
 
 const LAUNCH_DATE = new Date('2026-03-24');
@@ -53,15 +53,6 @@ const HomeScreen = () => {
         <DailyDilemme />
       </motion.div>
 
-      {/* Daily Challenge */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.45, duration: 0.4 }}
-        className="mt-4 w-full max-w-sm"
-      >
-        <DailyChallenge />
-      </motion.div>
 
       {/* Action buttons */}
       <motion.div

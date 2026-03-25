@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { GAME_MODES } from "@/data/cards";
-import { Trophy, RotateCcw, Share2 } from "lucide-react";
+import { Trophy, RotateCcw, Share2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
 import { generateShareImage } from "@/hooks/useShareImage";
@@ -17,89 +17,71 @@ const endings = [
 
 const EndScreen = () => {
   const { stats, players, resetGame, setScreen, selectedMode, selectedVibe } = useGameStore();
-  const { recordGame, allStats } = usePlayerStats();
+  const { recordGame, getBestSession } = usePlayerStats();
 
-  // Record game stats on mount
-  useEffect(() => {
-    if (Object.keys(stats.playerStats).length > 0) {
-      recordGame(stats.playerStats);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const isCultureG = selectedMode === "culture_generale";
+  const modeName = GAME_MODES.find(m => m.id === selectedMode)?.name ?? "";
 
-  // Find bravest player
   let bravest = players[0]?.name || "";
   let bestScore = -1;
   Object.entries(stats.playerStats).forEach(([name, s]) => {
     const score = s.played - s.refused;
-    if (score > bestScore) {
-      bestScore = score;
-      bravest = name;
-    }
+    if (score > bestScore) { bestScore = score; bravest = name; }
   });
 
-  // Find laziest player
   let laziest = players[0]?.name || "";
   let worstScore = -Infinity;
   Object.entries(stats.playerStats).forEach(([name, s]) => {
     const score = s.refused - s.played;
-    if (score > worstScore) {
-      worstScore = score;
-      laziest = name;
-    }
+    if (score > worstScore) { worstScore = score; laziest = name; }
   });
 
-  const ending = endings[Math.floor(Math.random() * endings.length)];
-  const isCultureG = selectedMode === "culture_generale";
+  const sessionScore = stats.cardsPlayed - stats.refusals;
 
-  const topPlayers = Object.values(allStats)
-    .filter(p => players.some(pl => pl.name === p.name))
-    .sort((a, b) => b.totalPlayed - a.totalPlayed);
+  const { thisSession, bestSession } = useMemo(() => {
+    const session = recordGame({
+      players: players.map(p => p.name),
+      mode: selectedMode ?? "",
+      vibe: selectedVibe ?? "",
+      cardsPlayed: stats.cardsPlayed,
+      refusals: stats.refusals,
+      score: sessionScore,
+      bravest,
+      quizScore: isCultureG ? stats.quizScore : undefined,
+    });
+    return { thisSession: session, bestSession: getBestSession() };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleReplay = () => {
-    setScreen("vibe");
-  };
+  const isNewRecord = thisSession?.id === bestSession?.id && sessionScore > 0;
 
-  const handleNewGame = () => {
-    resetGame();
-  };
+  const ending = useMemo(() => endings[Math.floor(Math.random() * endings.length)], []);
 
   const handleShare = async () => {
-    const modeName = GAME_MODES.find(m => m.id === selectedMode)?.name ?? selectedMode ?? "";
-    const vibeName = selectedVibe ?? "";
-
     const blob = await generateShareImage({
       bravest,
       cardsPlayed: stats.cardsPlayed,
       refusals: stats.refusals,
       mode: modeName,
-      vibe: vibeName,
+      vibe: selectedVibe ?? "",
     });
-
     const text = `Je viens de finir une partie de Malaky ! 🎉\n${stats.cardsPlayed} cartes · ${bravest} était le plus brave\n\nmalaky.app`;
-
     if (blob && navigator.share) {
       try {
         const file = new File([blob], "malaky-score.png", { type: "image/png" });
         await navigator.share({ title: "Malaky", text, files: [file] });
         return;
-      } catch {
-        // Fallback below
-      }
+      } catch {}
     }
-
     if (blob) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = "malaky-score.png";
-      a.click();
+      a.href = url; a.download = "malaky-score.png"; a.click();
       URL.revokeObjectURL(url);
       toast.success("Image téléchargée !");
       return;
     }
-
     await navigator.clipboard.writeText(text);
-    toast.success("Copié dans le presse-papier !");
+    toast.success("Copié !");
   };
 
   return (
@@ -110,39 +92,27 @@ const EndScreen = () => {
         transition={{ duration: 0.5 }}
         className="text-center mb-10"
       >
-        <div className="text-6xl mb-4">🎉</div>
-        <h2 className="text-3xl font-black text-foreground mb-2">Partie terminée !</h2>
+        <div className="text-6xl mb-4">{isNewRecord ? "🏆" : "🎉"}</div>
+        <h2 className="text-3xl font-black text-foreground mb-2">
+          {isNewRecord ? "Nouveau record !" : "Partie terminée !"}
+        </h2>
         <p className="text-muted-foreground">{ending}</p>
       </motion.div>
 
-      {/* Stats */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
         className="w-full max-w-sm space-y-3 mb-10"
       >
-        <div className="card-game flex items-center gap-4">
-          <div className="rounded-full bg-primary/20 p-3">
-            <Trophy className="text-primary" size={24} />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Le plus téméraire</p>
-            <p className="text-lg font-bold text-foreground">{bravest}</p>
+        {/* Score de la partie */}
+        <div className="card-game text-center">
+          <p className="text-sm text-muted-foreground mb-1">Cette partie</p>
+          <div className="flex items-center justify-center gap-2">
+            <Zap size={20} className="text-primary" />
+            <span className="text-3xl font-black text-foreground">{sessionScore} pts</span>
           </div>
         </div>
-
-        {laziest !== bravest && (
-          <div className="card-game flex items-center gap-4">
-            <div className="rounded-full bg-destructive/20 p-3">
-              <span className="text-xl">😴</span>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Le plus fainéant</p>
-              <p className="text-lg font-bold text-foreground">{laziest}</p>
-            </div>
-          </div>
-        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div className="card-game text-center">
@@ -158,29 +128,54 @@ const EndScreen = () => {
         {isCultureG && stats.quizScore !== undefined && (
           <div className="card-game text-center">
             <p className="text-2xl font-black text-accent">{stats.quizScore}</p>
-            <p className="text-xs text-muted-foreground">bonnes réponses quiz</p>
+            <p className="text-xs text-muted-foreground">bonnes réponses</p>
           </div>
         )}
 
-        {/* Palmarès total */}
-        {topPlayers.length > 0 && (
-          <div className="card-game">
-            <p className="text-sm font-bold text-foreground mb-2">
-              Palmarès total 🏆
-            </p>
-            {topPlayers.map((p) => (
-              <div key={p.name} className="flex items-center justify-between py-1">
-                <span className="text-sm text-foreground">{p.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  {p.totalPlayed} cartes · {p.totalGames} partie{p.totalGames > 1 ? "s" : ""}
-                </span>
+        {/* Joueurs */}
+        <div className="card-game space-y-2">
+          <div className="flex items-center gap-4">
+            <div className="rounded-full bg-primary/20 p-3">
+              <Trophy className="text-primary" size={24} />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Le plus téméraire</p>
+              <p className="text-lg font-bold text-foreground">{bravest}</p>
+            </div>
+          </div>
+          {laziest !== bravest && (
+            <div className="flex items-center gap-4">
+              <div className="rounded-full bg-destructive/20 p-3">
+                <span className="text-xl">😴</span>
               </div>
-            ))}
+              <div>
+                <p className="text-sm text-muted-foreground">Le plus fainéant</p>
+                <p className="text-lg font-bold text-foreground">{laziest}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Meilleur record all-time */}
+        {bestSession && !isNewRecord && bestSession.score > 0 && (
+          <div className="card-game">
+            <p className="text-sm font-bold text-foreground mb-2">🥇 Record à battre</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-foreground">
+                  {bestSession.players.slice(0, 3).join(", ")}
+                  {bestSession.players.length > 3 ? "…" : ""}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {bestSession.mode} · {bestSession.cardsPlayed} cartes
+                </p>
+              </div>
+              <span className="text-lg font-black text-primary">{bestSession.score} pts</span>
+            </div>
           </div>
         )}
       </motion.div>
 
-      {/* Actions */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -188,13 +183,13 @@ const EndScreen = () => {
         className="w-full max-w-sm space-y-3"
       >
         <button
-          onClick={handleReplay}
+          onClick={() => setScreen("vibe")}
           className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary flex items-center justify-center gap-2 transition-transform active:scale-95"
         >
           <RotateCcw size={20} /> Rejouer
         </button>
         <button
-          onClick={handleNewGame}
+          onClick={() => resetGame()}
           className="w-full rounded-2xl bg-card px-6 py-4 text-lg font-semibold text-foreground flex items-center justify-center gap-2 transition-transform active:scale-95"
         >
           Nouvelle partie
@@ -203,7 +198,7 @@ const EndScreen = () => {
           onClick={handleShare}
           className="w-full rounded-2xl bg-card/50 px-6 py-3 text-sm font-medium text-muted-foreground flex items-center justify-center gap-2 transition-transform active:scale-95"
         >
-          <Share2 size={16} /> Partager une carte souvenir
+          <Share2 size={16} /> Partager le score
         </button>
       </motion.div>
     </div>
