@@ -6,6 +6,8 @@ import { GAME_MODES, VIBES, DIFFICULTIES } from "./config";
 import {
   truthPrompts, dareActions, neverBase, likelyBase,
   ratherA, ratherB, challengeActions, madaCardsMg,
+  tsimoaTruths, tsimoaDares, tsimoaNever, tsimoaLikely,
+  tsimoaRatherA, tsimoaRatherB,
 } from "./card_content";
 import { cultureQuestions } from "./culture_questions";
 
