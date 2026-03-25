@@ -27,6 +27,8 @@ const createCard = (
 
 const hasExplicitDuration = (text: string) => /(\d+)\s*(?:s|sec|secondes?|minute|minutes)/i.test(text) || /une?\s+minute/i.test(text);
 
+// === Deduplicate & Shuffle — O(n) lookups ===
+
 export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
   const seen = new Set<string>();
   const unique = cards.filter(c => {
@@ -36,12 +38,50 @@ export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
     return true;
   });
 
+  // Fisher-Yates shuffle
   for (let i = unique.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [unique[i], unique[j]] = [unique[j], unique[i]];
   }
 
-  return unique;
+  // Space cards with similar bases apart using Set for O(1) lookups
+  const getBase = (text: string) => text
+    .replace(/^(Je n'ai jamais |Franchement, je n'ai jamais |Honnêtement, je n'ai jamais |J'avoue, je n'ai jamais |Pour être honnête, je n'ai jamais )/i, "")
+    .split('.')[0]
+    .trim();
+
+  const MIN_GAP = 8;
+  const result: GameCard[] = [];
+  const recentSet = new Set<string>();
+  const recentQueue: string[] = [];
+  const remaining = [...unique];
+  let stuckCount = 0;
+
+  while (remaining.length > 0 && stuckCount < remaining.length * 2) {
+    const idx = remaining.findIndex(c => {
+      const base = getBase(c.text);
+      return !recentSet.has(base);
+    });
+
+    if (idx === -1) {
+      result.push(remaining.shift()!);
+      stuckCount++;
+    } else {
+      const card = remaining.splice(idx, 1)[0];
+      result.push(card);
+      const base = getBase(card.text);
+      recentSet.add(base);
+      recentQueue.push(base);
+      if (recentQueue.length > MIN_GAP) {
+        const oldest = recentQueue.shift()!;
+        recentSet.delete(oldest);
+      }
+      stuckCount = 0;
+    }
+  }
+
+  result.push(...remaining);
+  return result;
 }
 
 // === DECK BUILDERS ===
@@ -189,54 +229,91 @@ const buildCultureDeck = (difficulty: Difficulty): GameCard[] => {
   return cards;
 };
 
-// Build all cards
-export const CARDS: GameCard[] = [];
+// === Lazy deck cache ===
+const deckCache = new Map<string, GameCard[]>();
 
-const ALL_VIBES: Vibe[] = ["soft", "fun", "hot", "chaos", "couple", "apero", "mada", "confessions", "vip", "afterdark"];
-const builders = [buildTruthDareDeck, buildNeverDeck, buildMostLikelyDeck, buildWouldYouRatherDeck, buildQuickChallengeDeck];
+function getDeck(mode: GameMode, vibe: Vibe): GameCard[] {
+  const key = `${mode}::${vibe}`;
+  if (deckCache.has(key)) return deckCache.get(key)!;
 
-for (const vibe of ALL_VIBES) {
-  for (const builder of builders) {
-    CARDS.push(...builder(vibe));
+  let cards: GameCard[] = [];
+
+  if (mode === "culture_generale") {
+    cards = buildCultureDeck(vibe as Difficulty);
+  } else {
+    const builderMap: Record<string, (v: Vibe) => GameCard[]> = {
+      truth_dare: buildTruthDareDeck,
+      never_have_i_ever: buildNeverDeck,
+      most_likely: buildMostLikelyDeck,
+      would_you_rather: buildWouldYouRatherDeck,
+      quick_challenge: buildQuickChallengeDeck,
+    };
+    const builder = builderMap[mode];
+    if (builder) cards = builder(vibe);
   }
+
+  deckCache.set(key, cards);
+  return cards;
 }
 
-// Build culture générale decks
-const ALL_DIFFICULTIES: Difficulty[] = ["facile", "intermediaire", "difficile", "expert"];
-for (const diff of ALL_DIFFICULTIES) {
-  CARDS.push(...buildCultureDeck(diff));
+// Lazy CARDS getter for backward compat
+export function getAllCards(): GameCard[] {
+  const ALL_VIBES: Vibe[] = ["soft", "fun", "hot", "chaos", "couple", "apero", "mada", "confessions", "vip", "afterdark"];
+  const ALL_DIFFICULTIES: Difficulty[] = ["facile", "intermediaire", "difficile", "expert"];
+  const modes: GameMode[] = ["truth_dare", "never_have_i_ever", "most_likely", "would_you_rather", "quick_challenge"];
+
+  const all: GameCard[] = [];
+  for (const vibe of ALL_VIBES) {
+    for (const mode of modes) {
+      all.push(...getDeck(mode, vibe));
+    }
+  }
+  for (const diff of ALL_DIFFICULTIES) {
+    all.push(...getDeck("culture_generale", diff as Vibe));
+  }
+  return all;
 }
 
-// Validate coverage
-const validateCardCoverage = () => {
+// Keep CARDS export for compat — built lazily on first access
+let _cardsBuilt = false;
+let _cards: GameCard[] = [];
+export const CARDS: GameCard[] = new Proxy([] as GameCard[], {
+  get(target, prop, receiver) {
+    if (!_cardsBuilt) {
+      _cards = getAllCards();
+      _cardsBuilt = true;
+    }
+    return Reflect.get(_cards, prop, receiver);
+  },
+});
+
+export function validateCardCoverage() {
+  const allCards = getAllCards();
   for (const mode of GAME_MODES) {
     if (mode.id === "culture_generale") {
       for (const diff of DIFFICULTIES) {
-        const total = CARDS.filter(c => c.mode === mode.id && c.vibe === diff.id).length;
+        const total = allCards.filter(c => c.mode === mode.id && c.vibe === diff.id).length;
         if (total < 10) {
           console.warn(`Low card count for ${mode.id}/${diff.id}: ${total}`);
         }
       }
     } else {
       for (const vibe of VIBES) {
-        const total = CARDS.filter(c => c.mode === mode.id && c.vibe === vibe.id).length;
+        const total = allCards.filter(c => c.mode === mode.id && c.vibe === vibe.id).length;
         if (total < MINIMUM_CARDS_PER_COMBO) {
           console.warn(`Low card count for ${mode.id}/${vibe.id}: ${total}`);
         }
       }
     }
   }
-};
-
-validateCardCoverage();
+}
 
 export function getFilteredCards(mode: GameMode, vibe: Vibe, playerCount: number): GameCard[] {
-  const filtered = CARDS.filter(
-    c => c.mode === mode && c.vibe === vibe && c.player_min <= playerCount && c.player_max >= playerCount
-  );
-  if (mode === "culture_generale") return filtered;
+  const deck = getDeck(mode, vibe);
+  if (mode === "culture_generale") return deck;
+  const filtered = deck.filter(c => c.player_min <= playerCount && c.player_max >= playerCount);
   if (filtered.length >= MINIMUM_CARDS_PER_COMBO) return filtered;
-  return CARDS.filter(c => c.mode === mode && c.vibe === vibe);
+  return deck;
 }
 
 export function fillPlayerNames(text: string, currentPlayer: string, allPlayers: string[]): string {
