@@ -26,6 +26,29 @@ const createCard = (
 
 const hasExplicitDuration = (text: string) => /(\d+)\s*(?:s|sec|secondes?|minute|minutes)/i.test(text) || /une?\s+minute/i.test(text);
 
+/**
+ * French elision: "de" + vowel → "d'", "que" + vowel → "qu'", etc.
+ */
+function elide(prefix: string, text: string): string {
+  const firstChar = text.charAt(0).toLowerCase();
+  const isVowel = "aeiouyàâéèêëîïôùûü".includes(firstChar);
+  
+  if (isVowel) {
+    if (prefix.endsWith("de ")) return prefix.slice(0, -3) + "d'" + text;
+    if (prefix.endsWith("que ")) return prefix.slice(0, -4) + "qu'" + text;
+    if (prefix.endsWith("le ")) return prefix.slice(0, -3) + "l'" + text;
+    if (prefix.endsWith("la ")) return prefix.slice(0, -3) + "l'" + text;
+    if (prefix.endsWith("ne ")) return prefix.slice(0, -3) + "n'" + text;
+    if (prefix.endsWith("se ")) return prefix.slice(0, -3) + "s'" + text;
+  }
+  return prefix + text;
+}
+
+/** Strip trailing '?' and whitespace from card entries (entries sometimes include their own '?'). */
+function clean(entry: string): string {
+  return entry.replace(/\s*\?\s*$/, "").trim();
+}
+
 // Re-export from shuffleUtils to keep backward compat without duplicating code
 export { deduplicateShuffle } from "@/lib/shuffleUtils";
 
@@ -73,15 +96,32 @@ const buildNeverDeck = (vibe: Vibe): GameCard[] => {
   const cards: GameCard[] = [];
   let idx = 1;
 
+  // Primary cards
   for (const entry of base) {
     cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `Je n'ai jamais ${entry}`));
   }
 
+  // Fill with variant formulations (not exact copies)
+  const altPrefixes = [
+    "Levez la main si vous avez déjà ",
+    "{player}, as-tu déjà ",
+    "Qui ici a déjà ",
+  ];
   let fillIdx = 0;
-  while (cards.length < MINIMUM_CARDS_PER_COMBO) {
+  while (cards.length < MINIMUM_CARDS_PER_COMBO && fillIdx < base.length * altPrefixes.length) {
     const entry = base[fillIdx % base.length];
-    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `Je n'ai jamais ${entry}`));
+    const prefix = altPrefixes[Math.floor(fillIdx / base.length) % altPrefixes.length];
+    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `${prefix}${entry}`));
     fillIdx++;
+  }
+
+  // If still not enough, pull from adjacent vibes
+  const bonusVibes: Vibe[] = vibe === "soft" ? ["fun"] : vibe === "fun" ? ["soft", "chaos"] : ["soft", "fun"];
+  for (const bv of bonusVibes) {
+    const bonus = neverBase[bv] || [];
+    for (let i = 0; i < bonus.length && cards.length < MINIMUM_CARDS_PER_COMBO; i++) {
+      cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `Je n'ai jamais ${bonus[i]}`));
+    }
   }
 
   return cards;
@@ -92,15 +132,37 @@ const buildMostLikelyDeck = (vibe: Vibe): GameCard[] => {
   const cards: GameCard[] = [];
   let idx = 1;
 
+  // Variant 1: Group vote — "Qui est le plus susceptible de [action] ?"
   for (const entry of base) {
-    cards.push(createCard("most_likely", vibe, idx++, "vote", `Qui est le plus susceptible de ${entry}`));
+    const prefix = "Qui est le plus susceptible de ";
+    cards.push(createCard("most_likely", vibe, idx++, "vote", `${elide(prefix, clean(entry))} ?`));
   }
 
-  let fillIdx = 0;
-  while (cards.length < MINIMUM_CARDS_PER_COMBO) {
-    const entry = base[fillIdx % base.length];
-    cards.push(createCard("most_likely", vibe, idx++, "vote", `Entre {player} et {player2}, qui est le plus susceptible de ${entry}`));
-    fillIdx++;
+  // Variant 2: Duel — "Entre {player} et {player2}, qui [action] ?" (uses DIFFERENT entries)
+  for (let i = 0; i < base.length && cards.length < MINIMUM_CARDS_PER_COMBO; i++) {
+    const prefix = "Entre {player} et {player2}, qui est le plus susceptible de ";
+    cards.push(createCard("most_likely", vibe, idx++, "vote", `${elide(prefix, clean(base[i]))} ?`));
+  }
+
+  // Variant 3: Player asks — "{player}, d'après toi qui va [action] ?" (even MORE different framing)
+  const altPrefixes = [
+    "{player}, devine qui dans le groupe va ",
+    "{player}, d'après toi qui va ",
+    "Selon {player}, qui ici pourrait ",
+  ];
+  for (let i = 0; i < base.length && cards.length < MINIMUM_CARDS_PER_COMBO; i++) {
+    const prefix = altPrefixes[i % altPrefixes.length];
+    cards.push(createCard("most_likely", vibe, idx++, "vote", `${prefix}${clean(base[i])} ?`));
+  }
+
+  // Variant 4: Cross-vibe bonus entries to reach 150 without repeating
+  const bonusVibes: Vibe[] = vibe === "soft" ? ["fun", "mada"] : vibe === "fun" ? ["soft", "chaos"] : vibe === "hot" ? ["fun", "chaos"] : vibe === "chaos" ? ["fun", "hot"] : vibe === "couple" ? ["soft", "fun", "hot"] : vibe === "apero" ? ["fun", "chaos"] : vibe === "mada" ? ["fun", "soft"] : vibe === "confessions" ? ["soft", "couple"] : vibe === "vip" ? ["fun", "chaos"] : vibe === "afterdark" ? ["hot", "chaos"] : ["soft", "fun"];
+  for (const bv of bonusVibes) {
+    const bonus = likelyBase[bv] || [];
+    for (let i = 0; i < bonus.length && cards.length < MINIMUM_CARDS_PER_COMBO; i++) {
+      const prefix = "Qui est le plus susceptible de ";
+      cards.push(createCard("most_likely", vibe, idx++, "vote", `${elide(prefix, clean(bonus[i]))} ?`));
+    }
   }
 
   return cards;
@@ -147,7 +209,8 @@ const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] => {
   }
 
   for (const l of likelys) {
-    cards.push(createCard("quick_challenge", vibe, idx++, "vote", `Qui est le plus susceptible de ${l}`));
+    const prefix = "Qui est le plus susceptible de ";
+    cards.push(createCard("quick_challenge", vibe, idx++, "vote", `${elide(prefix, clean(l))} ?`));
   }
 
   const rLen = Math.min(rathersA.length, rathersB.length);
@@ -198,7 +261,8 @@ const buildTsimoaDeck = (): GameCard[] => {
     cards.push(createCard("tsimoa", vibe, idx++, "vote", `Je n'ai jamais ${n}`));
   }
   for (const l of tsimoaLikely) {
-    cards.push(createCard("tsimoa", vibe, idx++, "vote", `Qui est le plus susceptible de ${l}`));
+    const prefix = "Qui est le plus susceptible de ";
+    cards.push(createCard("tsimoa", vibe, idx++, "vote", `${elide(prefix, clean(l))} ?`));
   }
   const rLen = Math.min(tsimoaRatherA.length, tsimoaRatherB.length);
   for (let i = 0; i < rLen; i++) {
@@ -305,4 +369,3 @@ export function getFilteredCards(mode: GameMode, vibe: Vibe, playerCount: number
   if (filtered.length >= MINIMUM_CARDS_PER_COMBO) return filtered;
   return deck;
 }
-

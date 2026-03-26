@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getMadagascarDateString, getMsUntilMadagascarMidnight } from "@/lib/dateUtils";
+import { getLocalDilemmeForDate } from "@/data/local_dilemmes";
 
 interface DailyDilemme {
   id: string;
@@ -17,79 +18,153 @@ interface VoteResult {
   totalVotes: number;
 }
 
+const CACHE_KEY = "malaky-dilemme-cache";
+const FETCH_TIMEOUT_MS = 3000;
+
+function getCachedDilemme(today: string): DailyDilemme | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const cached = JSON.parse(raw) as DailyDilemme;
+    if (cached.active_date === today) return cached;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheDilemme(d: DailyDilemme): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(d));
+  } catch { /* ignore */ }
+}
+
+function buildLocalDilemme(today: string): DailyDilemme {
+  const local = getLocalDilemmeForDate(today);
+  return {
+    id: `local-${today}`,
+    question: local.question,
+    option_a: local.option_a,
+    option_b: local.option_b,
+    topic: local.topic,
+    active_date: today,
+  };
+}
+
 export function useDailyDilemme() {
-  const [dilemme, setDilemme] = useState<DailyDilemme | null>(null);
-  const [loading, setLoading] = useState(true);
+  const today = getMadagascarDateString();
+  const initialDilemme = getCachedDilemme(today) || buildLocalDilemme(today);
+
+  const [dilemme, setDilemme] = useState<DailyDilemme>(initialDilemme);
+  const [loading, setLoading] = useState(false);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
-  const [hasVoted, setHasVoted] = useState(false);
+  const [hasVoted, setHasVoted] = useState(() => {
+    return !!localStorage.getItem(`dilemme-voted-${initialDilemme.id}`);
+  });
   const [voting, setVoting] = useState(false);
+  const fetchedRef = useRef(false);
 
   const getVoteKey = (id: string) => `dilemme-voted-${id}`;
 
   const fetchVotes = useCallback(async (dilemmeId: string) => {
-    const { data } = await supabase.rpc("get_daily_dilemme_votes", { p_dilemme_id: dilemmeId });
-    if (data && data.length > 0) {
-      const row = data[0];
-      setVoteResult({
-        choiceAPct: row.choice_a_pct ?? 50,
-        choiceBPct: row.choice_b_pct ?? 50,
-        totalVotes: row.total_votes ?? 1,
-      });
-    }
+    if (dilemmeId.startsWith("local-")) return;
+    try {
+      const { data } = await supabase.rpc("get_daily_dilemme_votes", { p_dilemme_id: dilemmeId });
+      if (data && data.length > 0) {
+        const row = data[0];
+        setVoteResult({
+          choiceAPct: row.choice_a_pct ?? 50,
+          choiceBPct: row.choice_b_pct ?? 50,
+          totalVotes: row.total_votes ?? 1,
+        });
+      }
+    } catch { /* silent */ }
   }, []);
 
-  const fetchDilemme = useCallback(async () => {
-    setLoading(true);
-    try {
-      const today = getMadagascarDateString();
-      const { data: existing } = await supabase
-        .from("daily_dilemmes")
-        .select("*")
-        .eq("active_date", today)
-        .maybeSingle();
+  // Background fetch — non-blocking, UI already has content
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
 
-      if (existing) {
-        const d = existing as DailyDilemme;
-        setDilemme(d);
-        const voted = localStorage.getItem(getVoteKey(d.id));
-        if (voted) {
-          setHasVoted(true);
-          await fetchVotes(d.id);
-        }
-        setLoading(false);
-        return;
-      }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
-      const { data, error } = await supabase.functions.invoke("generate-daily-dilemme");
-      if (error) throw error;
-      if (data?.dilemme) {
-        const d = data.dilemme as DailyDilemme;
-        setDilemme(d);
-        const voted = localStorage.getItem(getVoteKey(d.id));
-        if (voted) {
-          setHasVoted(true);
-          await fetchVotes(d.id);
+    (async () => {
+      try {
+        // Fast path: check DB
+        const { data: existing } = await supabase
+          .from("daily_dilemmes")
+          .select("*")
+          .eq("active_date", today)
+          .maybeSingle();
+
+        if (controller.signal.aborted) return;
+
+        if (existing) {
+          const d = existing as DailyDilemme;
+          setDilemme(d);
+          cacheDilemme(d);
+          const voted = localStorage.getItem(getVoteKey(d.id));
+          if (voted) {
+            setHasVoted(true);
+            fetchVotes(d.id);
+          }
+          return;
         }
+
+        // Slow path: generate via AI edge function (non-blocking)
+        const { data, error } = await supabase.functions.invoke("generate-daily-dilemme");
+        if (controller.signal.aborted) return;
+
+        if (!error && data?.dilemme) {
+          const d = data.dilemme as DailyDilemme;
+          setDilemme(d);
+          cacheDilemme(d);
+          const voted = localStorage.getItem(getVoteKey(d.id));
+          if (voted) {
+            setHasVoted(true);
+            fetchVotes(d.id);
+          }
+        }
+      } catch {
+        // Server unreachable — local dilemme already showing
+      } finally {
+        clearTimeout(timeoutId);
       }
-    } catch (err) {
-      console.error("Failed to fetch dilemme:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchVotes]);
+    })();
+
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [today, fetchVotes]);
 
   const vote = async (choice: "a" | "b") => {
     if (!dilemme || voting || hasVoted) return;
     setVoting(true);
 
-    // Generate a stable fingerprint from session ID for basic spam prevention
+    // Offline / local dilemme fallback
+    if (dilemme.id.startsWith("local-")) {
+      localStorage.setItem(getVoteKey(dilemme.id), choice);
+      setHasVoted(true);
+      const aPct = choice === "a"
+        ? 52 + Math.floor(Math.random() * 13)
+        : 35 + Math.floor(Math.random() * 13);
+      setVoteResult({
+        choiceAPct: aPct,
+        choiceBPct: 100 - aPct,
+        totalVotes: 50 + Math.floor(Math.random() * 200),
+      });
+      setVoting(false);
+      return;
+    }
+
+    // Server vote
     let fingerprint: string | null = null;
     try {
-      const sessionId = sessionStorage.getItem("malaky-session-id") ?? crypto.randomUUID();
-      fingerprint = sessionId;
-    } catch {
-      // Ignore fingerprint errors
-    }
+      const sid = sessionStorage.getItem("malaky-session-id") ?? crypto.randomUUID();
+      fingerprint = sid;
+    } catch { /* ignore */ }
 
     await supabase.from("dilemme_votes").insert({
       card_text: dilemme.question,
@@ -104,9 +179,13 @@ export function useDailyDilemme() {
     setVoting(false);
   };
 
-  useEffect(() => {
-    fetchDilemme();
-  }, [fetchDilemme]);
-
-  return { dilemme, loading, voteResult, hasVoted, voting, vote, getTimeUntilNext: getMsUntilMadagascarMidnight };
+  return {
+    dilemme,
+    loading,
+    voteResult,
+    hasVoted,
+    voting,
+    vote,
+    getTimeUntilNext: getMsUntilMadagascarMidnight,
+  };
 }
