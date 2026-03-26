@@ -1286,9 +1286,6 @@ export const madaCardsMg: string[] = [
   'Tohano ny fehezanteny hoe: "Ny Malagasy dia..."',
 ];
 
-// Tsimoa (fin d'année) card content
-export const tsimoaTruths: string[] = [
-  'avoue ta résolution de l\'année dernière que tu n\'as pas tenue.',
   'dis le moment le plus marquant de ton année.',
   'raconte ta plus grosse honte de l\'année.',
   'avoue la personne que tu aurais aimé mieux connaître cette année.',
