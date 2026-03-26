@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import {
   ArrowLeft, Volume2, VolumeX, Vibrate, Shield, FileText,
   Trash2, Mail, ChevronRight, AlertTriangle, Smartphone,
