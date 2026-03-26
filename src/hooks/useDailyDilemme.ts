@@ -52,9 +52,7 @@ export function useDailyDilemme() {
   const [loading, setLoading] = useState(false);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
   const [hasVoted, setHasVoted] = useState(() => {
-    try {
-      return !!localStorage.getItem(`dilemme-voted-${initialDilemme.id}`);
-    } catch { return false; }
+    return storageGet<string | null>(`dilemme-voted-${initialDilemme.id}`, null) !== null;
   });
   const [voting, setVoting] = useState(false);
   const fetchedRef = useRef(false);
