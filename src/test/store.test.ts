@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { GAME_LIMITS } from "@/data/constants";
 import { initPlayerData } from "@/lib/deckLoader";
 import { hashToScreen, isHashNavigable } from "@/lib/hashUtils";
@@ -226,5 +226,152 @@ describe("store persistence strategy", () => {
     expect(state.deck).toEqual([]);
     expect(state.selectedMode).toBeNull();
     expect(state.selectedVibe).toBeNull();
+  });
+});
+
+// ─── Flow-level tests ───
+
+describe("gameStore — addPlayer validation", () => {
+  let store: typeof import("@/store/gameStore").useGameStore;
+
+  beforeEach(async () => {
+    store = (await import("@/store/gameStore")).useGameStore;
+    store.getState().resetGame();
+  });
+
+  it("rejects empty names", () => {
+    store.getState().addPlayer("");
+    store.getState().addPlayer("   ");
+    expect(store.getState().players).toHaveLength(0);
+  });
+
+  it("rejects duplicate names (case-insensitive)", () => {
+    store.getState().addPlayer("Alice");
+    store.getState().addPlayer("alice");
+    expect(store.getState().players).toHaveLength(1);
+  });
+
+  it("enforces MAX_PLAYERS limit", () => {
+    for (let i = 0; i < GAME_LIMITS.MAX_PLAYERS + 3; i++) {
+      store.getState().addPlayer(`Player${i}`);
+    }
+    expect(store.getState().players).toHaveLength(GAME_LIMITS.MAX_PLAYERS);
+  });
+});
+
+describe("gameStore — nextCard transitions", () => {
+  let store: typeof import("@/store/gameStore").useGameStore;
+
+  beforeEach(async () => {
+    store = (await import("@/store/gameStore")).useGameStore;
+    store.getState().resetGame();
+  });
+
+  it("does nothing when deck is empty", () => {
+    store.getState().addPlayer("A");
+    store.getState().addPlayer("B");
+    // deck is empty, nextCard should be safe
+    store.getState().nextCard("done");
+    expect(store.getState().currentScreen).toBe("home");
+  });
+
+  it("transitions to end when last card is played", () => {
+    store.getState().addPlayer("A");
+    store.getState().addPlayer("B");
+    // Manually set a 2-card deck
+    store.setState({
+      deck: [makeCard("c1", "1"), makeCard("c2", "2")],
+      currentScreen: "game",
+      currentCardIndex: 0,
+      currentPlayerIndex: 0,
+      stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats: { A: { played: 0, refused: 0 }, B: { played: 0, refused: 0 } } },
+      passesRemaining: { A: 2, B: 2 },
+    });
+    store.getState().nextCard("done"); // card 0 → card 1
+    expect(store.getState().currentScreen).toBe("game");
+    store.getState().nextCard("done"); // card 1 → end
+    expect(store.getState().currentScreen).toBe("end");
+  });
+
+  it("tracks refusals correctly", () => {
+    store.getState().addPlayer("A");
+    store.getState().addPlayer("B");
+    store.setState({
+      deck: [makeCard("c1", "1"), makeCard("c2", "2")],
+      currentScreen: "game",
+      currentCardIndex: 0,
+      currentPlayerIndex: 0,
+      stats: { cardsPlayed: 0, refusals: 0, quizScore: 0, playerStats: { A: { played: 0, refused: 0 }, B: { played: 0, refused: 0 } } },
+      passesRemaining: { A: 2, B: 2 },
+    });
+    store.getState().nextCard("refuse");
+    expect(store.getState().stats.refusals).toBe(1);
+    expect(store.getState().stats.playerStats["A"].refused).toBe(1);
+  });
+});
+
+describe("gameStore — startGame validation", () => {
+  let store: typeof import("@/store/gameStore").useGameStore;
+
+  beforeEach(async () => {
+    store = (await import("@/store/gameStore")).useGameStore;
+    store.getState().resetGame();
+  });
+
+  it("refuses to start with fewer than MIN_PLAYERS", async () => {
+    store.getState().addPlayer("Solo");
+    store.getState().setMode("truth_dare");
+    store.getState().setVibe("soft");
+    await store.getState().startGame();
+    // Should NOT transition to game
+    expect(store.getState().currentScreen).toBe("home");
+  });
+
+  it("refuses to start without mode or vibe", async () => {
+    store.getState().addPlayer("A");
+    store.getState().addPlayer("B");
+    await store.getState().startGame();
+    expect(store.getState().currentScreen).toBe("home");
+  });
+
+  it("redirects to packs if vibe is locked", async () => {
+    store.getState().addPlayer("A");
+    store.getState().addPlayer("B");
+    store.getState().setMode("truth_dare");
+    store.getState().setVibe("vip"); // locked by default
+    await store.getState().startGame();
+    expect(store.getState().currentScreen).toBe("packs");
+  });
+
+  it("starts game successfully with valid setup", async () => {
+    store.getState().addPlayer("A");
+    store.getState().addPlayer("B");
+    store.getState().setMode("truth_dare");
+    store.getState().setVibe("soft");
+    await store.getState().startGame();
+    expect(store.getState().currentScreen).toBe("game");
+    expect(store.getState().deck.length).toBeGreaterThan(0);
+    expect(store.getState().deck.length).toBeLessThanOrEqual(GAME_LIMITS.CARDS_PER_GAME);
+  });
+});
+
+describe("gameStore — resetGame", () => {
+  it("clears all game state but preserves unlocked vibes", async () => {
+    const store = (await import("@/store/gameStore")).useGameStore;
+    store.getState().addPlayer("A");
+    store.getState().addPlayer("B");
+    store.getState().setMode("truth_dare");
+    store.getState().setVibe("soft");
+    store.getState().unlockVibe("hot");
+
+    store.getState().resetGame();
+
+    const s = store.getState();
+    expect(s.players).toHaveLength(0);
+    expect(s.selectedMode).toBeNull();
+    expect(s.selectedVibe).toBeNull();
+    expect(s.currentScreen).toBe("home");
+    expect(s.deck).toEqual([]);
+    expect(s.unlockedVibes.hot).toBe(true); // preserved
   });
 });

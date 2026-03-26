@@ -11,7 +11,9 @@ export function useAmbientMusic(active: boolean, vibe: Vibe | null) {
   const soundVolume = useGameStore((s) => s.soundVolume);
   const [isPlaying, setIsPlaying] = useState(false);
   const activeRef = useRef(false);
-  const vol = soundVolume / 100;
+  // Stable ref for volume so the start/stop effect doesn't re-run on volume changes
+  const volRef = useRef(soundVolume / 100);
+  volRef.current = soundVolume / 100;
 
   // Sync engine state → React state
   useEffect(() => {
@@ -22,7 +24,7 @@ export function useAmbientMusic(active: boolean, vibe: Vibe | null) {
   // Start/stop based on active + soundEnabled
   useEffect(() => {
     if (active && soundEnabled && vibe) {
-      ambientEngine.start(vibe, vol);
+      ambientEngine.start(vibe, volRef.current);
       activeRef.current = true;
     } else if (activeRef.current) {
       ambientEngine.stop();
@@ -34,10 +36,10 @@ export function useAmbientMusic(active: boolean, vibe: Vibe | null) {
         activeRef.current = false;
       }
     };
-    // vol intentionally excluded — handled by separate effect
-  }, [active, soundEnabled, vibe]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [active, soundEnabled, vibe]);
 
-  // Volume sync
+  // Volume sync (separate from start/stop lifecycle)
+  const vol = soundVolume / 100;
   useEffect(() => {
     if (activeRef.current) ambientEngine.setVolume(vol);
   }, [vol]);
@@ -47,10 +49,10 @@ export function useAmbientMusic(active: boolean, vibe: Vibe | null) {
       ambientEngine.stop();
       activeRef.current = false;
     } else if (vibe && soundEnabled) {
-      ambientEngine.start(vibe, vol);
+      ambientEngine.start(vibe, volRef.current);
       activeRef.current = true;
     }
-  }, [vibe, soundEnabled, vol]);
+  }, [vibe, soundEnabled]);
 
   return { isPlaying, toggleMusic };
 }

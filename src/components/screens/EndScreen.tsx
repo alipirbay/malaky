@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { GAME_MODES } from "@/data/config";
@@ -58,9 +58,12 @@ const EndScreen = () => {
     };
   }, [stats, players]);
 
-  // Record game once via useMemo (runs once at mount)
-  const sessionData = useMemo(() => {
-    return recordGame({
+  // Record game once via ref guard (stable across React 18 strict mode double-mount)
+  const hasRecorded = useRef(false);
+  const sessionDataRef = useRef<ReturnType<typeof recordGame>>(undefined);
+  if (!hasRecorded.current) {
+    hasRecorded.current = true;
+    sessionDataRef.current = recordGame({
       players: players.map((p) => p.name),
       mode: selectedMode ?? "",
       vibe: selectedVibe ?? "",
@@ -70,18 +73,19 @@ const EndScreen = () => {
       bravest,
       quizScore: isCultureG ? stats.quizScore : undefined,
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }
+  const sessionData = sessionDataRef.current;
 
   const bestSession = useMemo(() => getBestSession(), [getBestSession]);
   const isNewRecord = sessionData?.id === bestSession?.id && sessionScore > 0;
   const ending = useMemo(() => endings[Math.floor(Math.random() * endings.length)], []);
 
-  // Check achievements
-  const newAchievements = useMemo(() => {
-    return checkNewAchievements(sessions, sessionData);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Check achievements (also once)
+  const newAchievementsRef = useRef<ReturnType<typeof checkNewAchievements> | null>(null);
+  if (newAchievementsRef.current === null) {
+    newAchievementsRef.current = checkNewAchievements(sessions, sessionData);
+  }
+  const newAchievements = newAchievementsRef.current;
 
   const handleReplay = useCallback(async () => {
     if (isRestarting) return;
