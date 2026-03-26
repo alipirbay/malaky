@@ -4,21 +4,16 @@ import type { Vibe } from "@/data/types";
 
 /**
  * Procedural ambient music engine — Web Audio API
- * Each vibe has a unique mood. "mada" vibe includes a salegy-inspired
- * rhythmic easter egg 🇲🇬
+ * Each vibe has a unique mood. "mada" vibe includes a salegy-inspired rhythm 🇲🇬
  */
-
-// ── Musical scales ──
 
 const NOTE_FREQ: Record<string, number> = {
   C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.0, A3: 220.0, B3: 246.94,
   C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.0, A4: 440.0, B4: 493.88,
   C5: 523.25, D5: 587.33, E5: 659.26, F5: 698.46, G5: 784.0, A5: 880.0,
   Eb3: 155.56, Bb3: 233.08, Eb4: 311.13, Bb4: 466.16,
-  Ab3: 207.65, Ab4: 415.30, Db4: 277.18, Gb4: 369.99,
+  Ab3: 207.65, Ab4: 415.30,
 };
-
-// ── Vibe mood configurations ──
 
 interface VibeMood {
   scale: number[];
@@ -108,13 +103,8 @@ const VIBE_MOODS: Record<string, VibeMood> = {
 };
 
 const DIFFICULTY_MOOD_MAP: Record<string, string> = {
-  facile: "soft",
-  intermediaire: "fun",
-  difficile: "chaos",
-  expert: "afterdark",
+  facile: "soft", intermediaire: "fun", difficile: "chaos", expert: "afterdark",
 };
-
-// ── Audio engine with proper lifecycle ──
 
 type OnChangeCallback = (playing: boolean) => void;
 
@@ -131,58 +121,46 @@ class AmbientMusicEngine {
   private noiseBuffer: AudioBuffer | null = null;
   private activeNodes: (OscillatorNode | AudioBufferSourceNode)[] = [];
   private onChange: OnChangeCallback | null = null;
-  private stopInProgress = false;
+  private stopping = false;
 
-  setOnChange(cb: OnChangeCallback | null) {
-    this.onChange = cb;
-  }
-
-  private setPlaying(val: boolean) {
-    this._isPlaying = val;
-    this.onChange?.(val);
-  }
-
+  setOnChange(cb: OnChangeCallback | null) { this.onChange = cb; }
+  private setPlaying(val: boolean) { this._isPlaying = val; this.onChange?.(val); }
   get playing() { return this._isPlaying; }
 
   async start(vibe: string, volume: number) {
-    // Prevent race conditions
-    if (this.stopInProgress) {
-      await new Promise(r => setTimeout(r, 150));
+    // Prevent race conditions during stop
+    if (this.stopping) {
+      await new Promise(r => setTimeout(r, 200));
     }
-    if (this._isPlaying) {
-      this.stopSync();
-    }
+    if (this._isPlaying) this.cleanup();
 
     const moodKey = DIFFICULTY_MOOD_MAP[vibe] ?? vibe;
     this.mood = VIBE_MOODS[moodKey] ?? VIBE_MOODS.soft;
 
+    // Create AudioContext — handle browser restrictions gracefully
     try {
       this.ctx = new AudioContext();
-      // Handle suspended state (browser autoplay policy)
       if (this.ctx.state === "suspended") {
+        // Need user gesture — try resume, fail silently
         await this.ctx.resume().catch(() => {});
       }
-      // If still not running after resume attempt, bail gracefully
       if (this.ctx.state !== "running") {
-        try { this.ctx.close(); } catch { /* ignore */ }
-        this.ctx = null;
+        this.safeCloseCtx();
         return;
       }
     } catch {
       this.ctx = null;
-      return; // AudioContext not available
+      return;
     }
 
     try {
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
-      // Fade in over 1 second
       this.masterGain.gain.linearRampToValueAtTime(
         Math.min(volume * 0.4, 0.35),
         this.ctx.currentTime + 1
       );
 
-      // Reverb chain
       this.dryGain = this.ctx.createGain();
       this.reverbGain = this.ctx.createGain();
       this.convolver = this.ctx.createConvolver();
@@ -190,7 +168,6 @@ class AmbientMusicEngine {
       const reverbAmount = this.mood.reverb;
       this.dryGain.gain.setValueAtTime(1 - reverbAmount * 0.5, this.ctx.currentTime);
       this.reverbGain.gain.setValueAtTime(reverbAmount * 0.5, this.ctx.currentTime);
-
       this.convolver.buffer = this.createReverbImpulse(1.5, 2.5);
 
       this.dryGain.connect(this.masterGain);
@@ -205,12 +182,12 @@ class AmbientMusicEngine {
       this.scheduleBeat();
     } catch (e) {
       console.debug("[AmbientMusic] Start failed:", e);
-      this.stopSync();
+      this.cleanup();
     }
   }
 
-  private stopSync() {
-    this.stopInProgress = true;
+  private cleanup() {
+    this.stopping = true;
     this.setPlaying(false);
 
     if (this.schedulerTimer) {
@@ -218,52 +195,51 @@ class AmbientMusicEngine {
       this.schedulerTimer = null;
     }
 
-    // Stop all tracked nodes immediately
     for (const node of this.activeNodes) {
       try { node.stop(0); } catch { /* already stopped */ }
     }
     this.activeNodes = [];
-
-    if (this.ctx) {
-      try { this.ctx.close(); } catch { /* ignore */ }
-    }
-
-    this.ctx = null;
+    this.safeCloseCtx();
     this.masterGain = null;
     this.convolver = null;
     this.reverbGain = null;
     this.dryGain = null;
     this.mood = null;
     this.noiseBuffer = null;
-    this.stopInProgress = false;
+    this.stopping = false;
+  }
+
+  private safeCloseCtx() {
+    if (this.ctx) {
+      try { this.ctx.close(); } catch { /* ignore */ }
+      this.ctx = null;
+    }
   }
 
   stop() {
     if (!this._isPlaying && !this.ctx) return;
 
-    // Graceful fade if possible
-    if (this.masterGain && this.ctx && this.ctx.state !== "closed") {
+    // Fade out gracefully when possible
+    if (this.masterGain && this.ctx && this.ctx.state === "running") {
       try {
-        this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
-        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.ctx.currentTime);
-        this.masterGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
+        const t = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(t);
+        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, t);
+        this.masterGain.gain.linearRampToValueAtTime(0, t + 0.3);
       } catch { /* ignore */ }
-
-      // Cleanup after fade
-      setTimeout(() => this.stopSync(), 350);
-      // Immediately mark as not playing for UI
       this.setPlaying(false);
       if (this.schedulerTimer) {
         clearTimeout(this.schedulerTimer);
         this.schedulerTimer = null;
       }
+      setTimeout(() => this.cleanup(), 350);
     } else {
-      this.stopSync();
+      this.cleanup();
     }
   }
 
   setVolume(vol: number) {
-    if (this.masterGain && this.ctx && this.ctx.state !== "closed") {
+    if (this.masterGain && this.ctx && this.ctx.state === "running") {
       try {
         this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
         this.masterGain.gain.linearRampToValueAtTime(
@@ -281,8 +257,9 @@ class AmbientMusicEngine {
     const padNotes = m.scale.slice(0, 3);
     const t = this.ctx.currentTime;
 
-    padNotes.forEach((freq, i) => {
+    for (let i = 0; i < padNotes.length; i++) {
       if (!this.ctx || !this.dryGain || !this.convolver) return;
+      const freq = padNotes[i];
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       const filter = this.ctx.createBiquadFilter();
@@ -290,11 +267,9 @@ class AmbientMusicEngine {
       osc.type = m.padType;
       osc.frequency.setValueAtTime(freq * 0.5, t);
       osc.detune.setValueAtTime(m.padDetune * (i - 1), t);
-
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(m.filterFreq, t);
       filter.Q.setValueAtTime(m.filterQ, t);
-
       gain.gain.setValueAtTime(0, t);
       gain.gain.linearRampToValueAtTime(m.padVolume, t + 2);
 
@@ -302,10 +277,9 @@ class AmbientMusicEngine {
       gain.connect(this.dryGain);
       gain.connect(this.convolver);
       osc.start(t);
-
       this.activeNodes.push(osc);
 
-      // LFO
+      // LFO for subtle movement
       const lfo = this.ctx.createOscillator();
       const lfoGain = this.ctx.createGain();
       lfo.frequency.setValueAtTime(0.3 + i * 0.1, t);
@@ -313,43 +287,27 @@ class AmbientMusicEngine {
       lfo.connect(lfoGain).connect(osc.detune);
       lfo.start(t);
       this.activeNodes.push(lfo);
-    });
+    }
   }
 
   // ── Beat scheduler ──
   private scheduleBeat() {
-    if (!this._isPlaying || !this.ctx || !this.mood || this.ctx.state === "closed") return;
+    if (!this._isPlaying || !this.ctx || !this.mood || this.ctx.state !== "running") return;
 
     const m = this.mood;
     const beatDuration = 60 / m.tempo;
     const swing = this.currentBeat % 2 === 1 ? m.swing * beatDuration : 0;
 
-    // Melody — every 2-4 beats
-    if (this.currentBeat % (Math.random() < 0.4 ? 2 : 4) === 0) {
-      this.playMelodyNote(swing);
-    }
-
-    // Bass — every 4 beats
-    if (this.currentBeat % 4 === 0) {
-      this.playBass(swing);
-    }
-
-    // Drums
+    if (this.currentBeat % (Math.random() < 0.4 ? 2 : 4) === 0) this.playMelodyNote(swing);
+    if (this.currentBeat % 4 === 0) this.playBass(swing);
     if (m.hasDrums && m.drumPattern) {
       const patIdx = this.currentBeat % m.drumPattern.length;
-      if (m.drumPattern[patIdx]) {
-        this.playDrum(swing);
-      }
-      if (this.currentBeat % 2 === 1) {
-        this.playHiHat(swing);
-      }
+      if (m.drumPattern[patIdx]) this.playDrum(swing);
+      if (this.currentBeat % 2 === 1) this.playHiHat(swing);
     }
 
     this.currentBeat++;
-
-    this.schedulerTimer = window.setTimeout(() => {
-      this.scheduleBeat();
-    }, beatDuration * 1000);
+    this.schedulerTimer = window.setTimeout(() => this.scheduleBeat(), beatDuration * 1000);
   }
 
   private playMelodyNote(delay: number) {
@@ -362,22 +320,18 @@ class AmbientMusicEngine {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
-
     osc.type = "sine";
     osc.frequency.setValueAtTime(freq, t);
     filter.type = "lowpass";
     filter.frequency.setValueAtTime(m.filterFreq * 1.5, t);
-
     gain.gain.setValueAtTime(0, t);
     gain.gain.linearRampToValueAtTime(m.melodyVolume, t + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-
     osc.connect(filter).connect(gain);
     gain.connect(this.dryGain);
     gain.connect(this.convolver);
     osc.start(t);
     osc.stop(t + duration + 0.05);
-    // Short-lived nodes self-cleanup, no need to track
   }
 
   private playBass(delay: number) {
@@ -388,13 +342,10 @@ class AmbientMusicEngine {
 
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-
     osc.type = "sine";
-    const bassVariation = Math.random() < 0.3 ? m.bassFreq * 1.5 : m.bassFreq;
-    osc.frequency.setValueAtTime(bassVariation, t);
+    osc.frequency.setValueAtTime(Math.random() < 0.3 ? m.bassFreq * 1.5 : m.bassFreq, t);
     gain.gain.setValueAtTime(m.bassVolume, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-
     osc.connect(gain).connect(this.dryGain);
     osc.start(t);
     osc.stop(t + duration + 0.05);
@@ -403,7 +354,6 @@ class AmbientMusicEngine {
   private playDrum(delay: number) {
     if (!this.ctx || !this.dryGain) return;
     const t = this.ctx.currentTime + delay;
-
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = "sine";
@@ -419,23 +369,19 @@ class AmbientMusicEngine {
   private playHiHat(delay: number) {
     if (!this.ctx || !this.dryGain || !this.noiseBuffer) return;
     const t = this.ctx.currentTime + delay;
-
     const source = this.ctx.createBufferSource();
     source.buffer = this.noiseBuffer;
     const gain = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
-
     filter.type = "highpass";
     filter.frequency.setValueAtTime(8000, t);
     gain.gain.setValueAtTime(0.025, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-
     source.connect(filter).connect(gain).connect(this.dryGain);
     source.start(t);
     source.stop(t + 0.08);
   }
 
-  // ── Utilities ──
   private createReverbImpulse(duration: number, decay: number): AudioBuffer {
     const length = this.ctx!.sampleRate * duration;
     const buffer = this.ctx!.createBuffer(2, length, this.ctx!.sampleRate);
@@ -452,25 +398,19 @@ class AmbientMusicEngine {
     const length = this.ctx!.sampleRate * 0.1;
     const buffer = this.ctx!.createBuffer(1, length, this.ctx!.sampleRate);
     const data = buffer.getChannelData(0);
-    for (let i = 0; i < length; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
+    for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
     return buffer;
   }
 }
 
-// Singleton
+// Singleton — created once, reused across component mounts
 const engine = new AmbientMusicEngine();
 
-/**
- * Hook to manage ambient music during gameplay.
- */
 export function useAmbientMusic(active: boolean, vibe: Vibe | null) {
   const soundEnabled = useGameStore((s) => s.soundEnabled);
   const soundVolume = useGameStore((s) => s.soundVolume);
   const [isPlaying, setIsPlaying] = useState(false);
   const activeRef = useRef(false);
-
   const vol = soundVolume / 100;
 
   // Sync engine state → React state
@@ -488,7 +428,6 @@ export function useAmbientMusic(active: boolean, vibe: Vibe | null) {
       engine.stop();
       activeRef.current = false;
     }
-
     return () => {
       if (activeRef.current) {
         engine.stop();
@@ -497,11 +436,9 @@ export function useAmbientMusic(active: boolean, vibe: Vibe | null) {
     };
   }, [active, soundEnabled, vibe]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Volume changes
+  // Volume sync
   useEffect(() => {
-    if (activeRef.current) {
-      engine.setVolume(vol);
-    }
+    if (activeRef.current) engine.setVolume(vol);
   }, [vol]);
 
   const toggleMusic = useCallback(() => {

@@ -23,14 +23,12 @@ function extractDuration(text: string): number {
   const minuteMatch = text.match(/(\d+)\s*(?:minute|minutes)/i);
   if (minuteMatch) return parseInt(minuteMatch[1], 10) * 60;
   if (/une?\s+minute/i.test(text)) return 60;
-
   const secondMatch = text.match(/(\d+)\s*(?:s|sec|secondes?)/i);
   if (secondMatch) return parseInt(secondMatch[1], 10);
-
   return 15;
 }
 
-// --- Memoized sub-components to reduce rerenders ---
+// --- Memoized sub-components ---
 
 interface CardTextDisplayProps {
   cardText: string;
@@ -40,11 +38,10 @@ interface CardTextDisplayProps {
   onReport: () => void;
   showAnswer: boolean;
   onRevealAnswer: () => void;
-  selectedMode: string | null;
 }
 
 const CardTextDisplay = memo(function CardTextDisplay({
-  cardText, cardMeta, card, reported, onReport, showAnswer, onRevealAnswer, selectedMode,
+  cardText, cardMeta, card, reported, onReport, showAnswer, onRevealAnswer,
 }: CardTextDisplayProps) {
   const isQuizCard = card.card_type === "quiz";
   return (
@@ -55,9 +52,7 @@ const CardTextDisplay = memo(function CardTextDisplay({
       >
         {cardMeta.label}
       </span>
-
       <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
-
       {!reported ? (
         <button
           onClick={onReport}
@@ -69,7 +64,6 @@ const CardTextDisplay = memo(function CardTextDisplay({
       ) : (
         <span className="absolute bottom-3 right-3 text-[10px] text-muted-foreground/40">✓ signalé</span>
       )}
-
       {isQuizCard && (
         <div className="mt-4 w-full px-4">
           {showAnswer ? (
@@ -128,7 +122,6 @@ const TimerDisplay = memo(function TimerDisplay({
           {timeLeft}s
         </span>
       </div>
-
       <div className="flex items-center gap-2">
         {isTimerCard && !timerRunning && !timerDone && (
           <button
@@ -155,6 +148,7 @@ const TimerDisplay = memo(function TimerDisplay({
             <button
               onClick={onReset}
               className="rounded-lg bg-secondary p-2 text-muted-foreground transition-transform active:scale-95"
+              aria-label="Relancer le chrono"
             >
               <RotateCcw size={14} />
             </button>
@@ -165,10 +159,69 @@ const TimerDisplay = memo(function TimerDisplay({
   );
 });
 
+// --- Pause Menu (extracted) ---
+
+interface PauseMenuProps {
+  onResume: () => void;
+  onReplay: () => void;
+  onChangeVibe: () => void;
+  onQuit: () => void;
+}
+
+const PauseMenu = memo(function PauseMenu({ onResume, onReplay, onChangeVibe, onQuit }: PauseMenuProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-6 backdrop-blur-sm"
+      onClick={onResume}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 12 }}
+        className="w-full max-w-sm rounded-3xl bg-card p-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-lg font-bold text-foreground">Partie en pause</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Tu peux reprendre, changer d'ambiance ou revenir à l'accueil.
+        </p>
+        <div className="mt-5 space-y-3">
+          <button
+            onClick={onResume}
+            className="gradient-primary w-full rounded-2xl px-4 py-3 font-semibold text-primary-foreground transition-transform active:scale-95"
+          >
+            Reprendre
+          </button>
+          <button
+            onClick={onReplay}
+            className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
+          >
+            Rejouer ce mode
+          </button>
+          <button
+            onClick={onChangeVibe}
+            className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
+          >
+            Changer d'ambiance
+          </button>
+          <button
+            onClick={onQuit}
+            className="w-full rounded-2xl bg-card px-4 py-3 font-semibold text-muted-foreground transition-transform active:scale-95"
+          >
+            Quitter vers l'accueil
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+});
+
 // --- Main component ---
 
 const GameScreen = () => {
-  // Targeted selectors to avoid unnecessary rerenders
   const players = useGameStore((s) => s.players);
   const currentPlayerIndex = useGameStore((s) => s.currentPlayerIndex);
   const currentCardIndex = useGameStore((s) => s.currentCardIndex);
@@ -205,7 +258,6 @@ const GameScreen = () => {
     [selectedMode]
   );
 
-  // Stable card text: deterministic player2 via cardIndex
   const cardText = useMemo(() => {
     if (!card || !currentPlayer) return "";
     return fillCardTemplate(card.text, currentPlayer.name, players.map((p) => p.name), currentCardIndex);
@@ -224,31 +276,30 @@ const GameScreen = () => {
   const isCultureG = selectedMode === "culture_generale";
   const progressPct = deck.length > 0 ? ((currentCardIndex + 1) / deck.length) * 100 : 0;
 
+  // Cleanup timer helper
+  const clearTimer = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     setTimerRunning(false);
     setTimerDone(false);
     setTimeLeft(totalDuration);
     setShowAnswer(false);
     setReported(false);
-
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    if (isAutoTimer) {
-      setTimerRunning(true);
-    }
-  }, [currentCardIndex, totalDuration, isAutoTimer]);
+    clearTimer();
+    if (isAutoTimer) setTimerRunning(true);
+  }, [currentCardIndex, totalDuration, isAutoTimer, clearTimer]);
 
   useEffect(() => {
     if (!timerRunning) {
       stopTickLoop();
       return;
     }
-
     startTickLoop(1000);
-
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -256,24 +307,17 @@ const GameScreen = () => {
           setTimerDone(true);
           stopTickLoop();
           playBuzzer();
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
+          clearTimer();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-
     return () => {
       stopTickLoop();
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      clearTimer();
     };
-  }, [timerRunning, startTickLoop, stopTickLoop, playBuzzer]);
+  }, [timerRunning, startTickLoop, stopTickLoop, playBuzzer, clearTimer]);
 
   const startTimer = useCallback(() => {
     setTimeLeft(totalDuration);
@@ -286,11 +330,8 @@ const GameScreen = () => {
     setTimerRunning(false);
     setTimerDone(false);
     setTimeLeft(totalDuration);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, [totalDuration]);
+    clearTimer();
+  }, [totalDuration, clearTimer]);
 
   const handleNext = useCallback(() => {
     if (isAnimating) return;
@@ -298,18 +339,13 @@ const GameScreen = () => {
     setDirection(1);
     playWhoosh();
     vibrate(30);
-
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    clearTimer();
     stopTickLoop();
-
     setTimeout(() => {
       nextCard("done");
       setIsAnimating(false);
     }, 350);
-  }, [isAnimating, nextCard, playWhoosh, vibrate, stopTickLoop]);
+  }, [isAnimating, nextCard, playWhoosh, vibrate, stopTickLoop, clearTimer]);
 
   const handleQuizAnswer = useCallback((wasCorrect: boolean) => {
     if (isAnimating) return;
@@ -317,7 +353,6 @@ const GameScreen = () => {
     setDirection(1);
     playWhoosh();
     vibrate(wasCorrect ? 30 : 20);
-
     setTimeout(() => {
       nextCard("done", wasCorrect);
       setIsAnimating(false);
@@ -329,24 +364,19 @@ const GameScreen = () => {
     setIsAnimating(true);
     setDirection(1);
     vibrate(20);
-
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    clearTimer();
     stopTickLoop();
-
     setTimeout(() => {
       nextCard(action);
       setIsAnimating(false);
     }, 350);
-  }, [isAnimating, nextCard, vibrate, stopTickLoop]);
+  }, [isAnimating, nextCard, vibrate, stopTickLoop, clearTimer]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     setTouchStart(e.touches[0].clientX);
-  };
+  }, []);
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (touchStart === null) return;
     const diff = touchStart - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 80 && diff > 0) {
@@ -357,7 +387,7 @@ const GameScreen = () => {
       handleNext();
     }
     setTouchStart(null);
-  };
+  }, [touchStart, isQuizCard, showAnswer, handleNext]);
 
   const handleReport = useCallback(async () => {
     if (!card) return;
@@ -368,8 +398,22 @@ const GameScreen = () => {
     }
   }, [card, selectedMode, selectedVibe]);
 
+  // Pause menu handlers
+  const handlePauseResume = useCallback(() => setShowPauseMenu(false), []);
+  const handlePauseReplay = useCallback(async () => {
+    setShowPauseMenu(false);
+    try {
+      await useGameStore.getState().startGame();
+    } catch {
+      useGameStore.getState().setScreen("vibe");
+    }
+  }, []);
+  const handlePauseChangeVibe = useCallback(() => setScreen("vibe"), [setScreen]);
+  const handlePauseQuit = useCallback(() => setScreen("home"), [setScreen]);
+
   const currentPasses = passesRemaining[currentPlayer?.name] ?? 0;
 
+  // Safe fallback — no card or player → spinner then redirect
   if (!card || !currentPlayer) {
     return (
       <div className="gradient-surface flex min-h-screen items-center justify-center safe-top safe-bottom">
@@ -380,6 +424,7 @@ const GameScreen = () => {
 
   return (
     <div className="gradient-surface flex min-h-screen flex-col safe-top">
+      {/* Header */}
       <div className="flex items-center justify-between px-6 pb-2 pt-6">
         <div className="flex items-center gap-3">
           <button onClick={() => setShowPauseMenu(true)} className="rounded-lg bg-card p-2 text-muted-foreground" aria-label="Mettre en pause">
@@ -395,7 +440,6 @@ const GameScreen = () => {
             <span className="font-bold text-foreground">{currentPlayer.name}</span>
           </div>
         </div>
-
         <div className="flex items-center gap-2">
           {isCultureG && (
             <span className="text-xs font-bold text-accent">{stats.quizScore ?? 0} pts</span>
@@ -431,6 +475,7 @@ const GameScreen = () => {
         </div>
       </div>
 
+      {/* Card */}
       <div className="flex flex-1 flex-col items-center justify-center px-6">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
@@ -452,9 +497,7 @@ const GameScreen = () => {
               onReport={handleReport}
               showAnswer={showAnswer}
               onRevealAnswer={() => setShowAnswer(true)}
-              selectedMode={selectedMode}
             />
-
             {showTimer && (
               <TimerDisplay
                 timeLeft={timeLeft}
@@ -471,6 +514,7 @@ const GameScreen = () => {
         </AnimatePresence>
       </div>
 
+      {/* Action buttons */}
       <div className="px-6 pb-8 pt-4 space-y-3">
         {isQuizCard && showAnswer ? (
           <div className="flex gap-3">
@@ -524,60 +568,15 @@ const GameScreen = () => {
         )}
       </div>
 
+      {/* Pause Menu */}
       <AnimatePresence>
         {showPauseMenu && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-6 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              className="w-full max-w-sm rounded-3xl bg-card p-5 shadow-2xl"
-            >
-              <h3 className="text-lg font-bold text-foreground">Partie en pause</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Tu peux reprendre, changer d'ambiance ou revenir à l'accueil.
-              </p>
-              <div className="mt-5 space-y-3">
-                <button
-                  onClick={() => setShowPauseMenu(false)}
-                  className="gradient-primary w-full rounded-2xl px-4 py-3 font-semibold text-primary-foreground transition-transform active:scale-95"
-                >
-                  Reprendre
-                </button>
-                <button
-                  onClick={async () => {
-                    setShowPauseMenu(false);
-                    try {
-                      await useGameStore.getState().startGame();
-                    } catch (err) {
-                      console.error("Restart failed:", err);
-                      useGameStore.getState().setScreen("vibe");
-                    }
-                  }}
-                  className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
-                >
-                  Rejouer ce mode
-                </button>
-                <button
-                  onClick={() => setScreen("vibe")}
-                  className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
-                >
-                  Changer d'ambiance
-                </button>
-                <button
-                  onClick={() => setScreen("home")}
-                  className="w-full rounded-2xl bg-card px-4 py-3 font-semibold text-muted-foreground transition-transform active:scale-95"
-                >
-                  Quitter vers l'accueil
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+          <PauseMenu
+            onResume={handlePauseResume}
+            onReplay={handlePauseReplay}
+            onChangeVibe={handlePauseChangeVibe}
+            onQuit={handlePauseQuit}
+          />
         )}
       </AnimatePresence>
     </div>
