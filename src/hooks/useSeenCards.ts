@@ -1,26 +1,22 @@
-const STORAGE_KEY = "malaky-seen-cards";
+import { storageGet, storageSet, storageRemove } from "@/lib/storage";
+
+const STORAGE_KEY = "seen-cards";
 const MAX_SEEN = 2000;
 
 export function getSeenCardIds(): string[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    console.warn("Failed to read seen cards:", e);
-    return [];
-  }
+  return storageGet<string[]>(STORAGE_KEY, []);
 }
 
 export function markCardsSeen(ids: string[]): void {
   try {
     const existing = getSeenCardIds();
     const updated = [...new Set([...existing, ...ids])].slice(-MAX_SEEN);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    storageSet(STORAGE_KEY, updated);
   } catch (e) {
     console.warn("Failed to save seen cards:", e);
   }
 }
 
 export function clearSeenCards(): void {
-  localStorage.removeItem(STORAGE_KEY);
+  storageRemove(STORAGE_KEY);
 }
