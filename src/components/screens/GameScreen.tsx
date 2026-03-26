@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { GAME_MODES } from "@/data/config";
 import { fillCardTemplate } from "@/lib/cardUtils";
-import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward, Flag } from "lucide-react";
+import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward, Flag, Music, Music2 } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 import { reportCard } from "@/hooks/useCardReport";
+import { useAmbientMusic } from "@/hooks/useAmbientMusic";
 import { toast } from "sonner";
 
 const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
@@ -183,6 +184,7 @@ const GameScreen = () => {
   const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
 
   const { playClick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
+  const { isPlaying: musicPlaying, toggleMusic } = useAmbientMusic(true, selectedVibe);
 
   const [showPauseMenu, setShowPauseMenu] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -401,6 +403,9 @@ const GameScreen = () => {
           <span className="text-xs text-muted-foreground">
             {currentCardIndex + 1}/{deck.length}
           </span>
+          <button onClick={toggleMusic} className={`rounded-lg p-2 transition-colors ${musicPlaying ? "bg-primary/20 text-primary" : "bg-card text-muted-foreground"}`} aria-label={musicPlaying ? "Couper la musique" : "Activer la musique"}>
+            {musicPlaying ? <Music size={16} /> : <Music2 size={16} />}
+          </button>
           <button onClick={toggleSound} className="rounded-lg bg-card p-2 text-muted-foreground" aria-label={soundEnabled ? "Couper le son" : "Activer le son"}>
             {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
