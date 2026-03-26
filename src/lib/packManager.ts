@@ -11,6 +11,16 @@ interface PackMeta {
   version: number;
 }
 
+interface RawPackCard {
+  id?: string;
+  mode?: string;
+  vibe?: string;
+  card_type?: string;
+  template?: string;
+  answer?: string;
+  lang?: string;
+}
+
 /**
  * Vérifie si un pack est téléchargé localement.
  */
@@ -24,7 +34,6 @@ export function isPackDownloaded(vibe: Vibe): boolean {
 
 /**
  * Télécharge un pack depuis la DB et le stocke localement.
- * Appelé UNE SEULE FOIS après l'achat. Ensuite c'est offline forever.
  */
 export async function downloadPack(vibe: Vibe): Promise<boolean> {
   try {
@@ -42,7 +51,12 @@ export async function downloadPack(vibe: Vibe): Promise<boolean> {
     localStorage.setItem(`${PACK_STORAGE_PREFIX}${vibe}`, JSON.stringify(data));
 
     // Update metadata
-    const meta: PackMeta[] = JSON.parse(localStorage.getItem(PACK_META_KEY) || "[]");
+    let meta: PackMeta[] = [];
+    try {
+      meta = JSON.parse(localStorage.getItem(PACK_META_KEY) || "[]");
+      if (!Array.isArray(meta)) meta = [];
+    } catch { meta = []; }
+
     const existing = meta.findIndex(m => m.vibe === vibe);
     const newMeta: PackMeta = {
       vibe,
@@ -68,13 +82,15 @@ export function getDownloadedPackCards(vibe: Vibe): GameCard[] {
   try {
     const raw = localStorage.getItem(`${PACK_STORAGE_PREFIX}${vibe}`);
     if (!raw) return [];
-    return JSON.parse(raw).map((c: any, i: number) => ({
+    const parsed: RawPackCard[] = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((c, i) => ({
       id: c.id ?? `pack-${vibe}-${i}`,
-      mode: c.mode,
-      vibe: c.vibe ?? vibe,
+      mode: (c.mode ?? "truth_dare") as GameCard["mode"],
+      vibe: (c.vibe ?? vibe) as Vibe,
       lang: (c.lang ?? "fr") as "fr" | "mg",
-      card_type: c.card_type,
-      text: c.template,
+      card_type: (c.card_type ?? "truth") as GameCard["card_type"],
+      text: c.template ?? "",
       answer: c.answer ?? undefined,
       requires_prop: "none" as const,
       player_min: 2,

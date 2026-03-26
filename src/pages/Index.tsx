@@ -2,17 +2,17 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import HomeScreen from "@/components/screens/HomeScreen";
+import PlayersScreen from "@/components/screens/PlayersScreen";
+import ModeScreen from "@/components/screens/ModeScreen";
+import VibeScreen from "@/components/screens/VibeScreen";
+import PacksScreen from "@/components/screens/PacksScreen";
+import SettingsScreen from "@/components/screens/SettingsScreen";
 import FirstLaunchModal from "@/components/FirstLaunchModal";
 import PrivacyModal from "@/components/PrivacyModal";
 
-// Lazy-load non-home screens for better initial bundle size
-const PlayersScreen = lazy(() => import("@/components/screens/PlayersScreen"));
-const ModeScreen = lazy(() => import("@/components/screens/ModeScreen"));
-const VibeScreen = lazy(() => import("@/components/screens/VibeScreen"));
+// Only lazy-load screens that truly need heavy deps or are rarely hit
 const GameScreen = lazy(() => import("@/components/screens/GameScreen"));
 const EndScreen = lazy(() => import("@/components/screens/EndScreen"));
-const PacksScreen = lazy(() => import("@/components/screens/PacksScreen"));
-const SettingsScreen = lazy(() => import("@/components/screens/SettingsScreen"));
 const PaymentReturnScreen = lazy(() => import("@/components/screens/PaymentReturnScreen"));
 
 const SCREENS = {
@@ -50,10 +50,19 @@ const Index = () => {
   const [showFirstLaunch, setShowFirstLaunch] = useState(false);
   const [legalModal, setLegalModal] = useState<"privacy" | "cgu" | null>(null);
 
+  // First-launch + deck rebuild on mount
   useEffect(() => {
     if (!localStorage.getItem("malaky-terms-accepted")) {
       setShowFirstLaunch(true);
     }
+
+    // Sync initial hash → screen (e.g. user bookmarked #players)
+    const initialHash = window.location.hash.replace("#", "");
+    const initialScreen = hashToScreen(initialHash);
+    if (initialScreen && initialScreen !== useGameStore.getState().currentScreen) {
+      setScreen(initialScreen as typeof currentScreen);
+    }
+
     // Deck is excluded from persist — rebuild on refresh if needed
     const state = useGameStore.getState();
     if (state.currentScreen === "game" && state.deck.length === 0) {
@@ -63,6 +72,7 @@ const Index = () => {
         state.setScreen("home");
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAcceptTerms = () => {
@@ -103,7 +113,7 @@ const Index = () => {
     };
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
-  }, [setScreen]);
+  }, [setScreen, currentScreen]);
 
   if (showFirstLaunch) {
     return (

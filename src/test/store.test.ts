@@ -6,7 +6,7 @@ describe("GAME_LIMITS", () => {
   it("has expected values", () => {
     expect(GAME_LIMITS.MIN_PLAYERS).toBe(2);
     expect(GAME_LIMITS.MAX_PLAYERS).toBe(12);
-    expect(GAME_LIMITS.CARDS_PER_GAME).toBe(150);
+    expect(GAME_LIMITS.CARDS_PER_GAME).toBe(20);
     expect(GAME_LIMITS.MAX_PASSES_PER_PLAYER).toBe(2);
   });
 });
