@@ -174,7 +174,7 @@ export function useDailyDilemme() {
     } catch (e) {
       console.warn("[vote] Error:", e);
       // Still mark as voted locally to avoid stuck state
-      localStorage.setItem(getVoteKey(dilemme.id), choice);
+      storageSet(getVoteKey(dilemme.id), choice);
       setHasVoted(true);
     } finally {
       setVoting(false);
