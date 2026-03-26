@@ -65,7 +65,7 @@ const PlayersScreen = () => {
       </div>
 
       {/* Players list */}
-      <div className="flex-1 space-y-2 mb-6 overflow-y-auto">
+      <div className="flex-1 space-y-2 mb-6 overflow-y-auto" role="list">
         <AnimatePresence>
           {players.map((player, i) => (
             <motion.div
