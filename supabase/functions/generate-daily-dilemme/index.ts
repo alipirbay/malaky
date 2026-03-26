@@ -151,15 +151,16 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
       dilemmeData = FALLBACK_DILEMMES[dayOfYear % FALLBACK_DILEMMES.length];
     }
 
+    // Use upsert with active_date to handle race condition (UNIQUE index)
     const { data: newDilemme, error: insertError } = await supabase
       .from("daily_dilemmes")
-      .insert({
+      .upsert({
         question: dilemmeData.question,
         option_a: dilemmeData.option_a,
         option_b: dilemmeData.option_b,
         topic: dilemmeData.topic,
         active_date: today,
-      })
+      }, { onConflict: "active_date" })
       .select()
       .single();
 
