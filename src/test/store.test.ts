@@ -219,11 +219,8 @@ describe("ambientMoods", () => {
 });
 
 describe("store persistence strategy", () => {
-  it("selectedMode and selectedVibe are not persisted (clean start on refresh)", () => {
-    // This is a design validation test — the partialize function
-    // should NOT include selectedMode, selectedVibe, currentScreen, deck, etc.
-    // We verify by checking the store default values
-    const { useGameStore } = require("@/store/gameStore");
+  it("selectedMode and selectedVibe are not persisted (clean start on refresh)", async () => {
+    const { useGameStore } = await import("@/store/gameStore");
     const state = useGameStore.getState();
     expect(state.currentScreen).toBe("home");
     expect(state.deck).toEqual([]);
