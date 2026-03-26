@@ -30,7 +30,7 @@ const ModeScreen = () => {
         </div>
       </div>
 
-      <div className="flex-1 space-y-3">
+      <div className="flex-1 space-y-3" role="radiogroup" aria-label="Choix du mode de jeu">
         {GAME_MODES.map((mode, i) => (
           <motion.button
             key={mode.id}
