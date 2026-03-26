@@ -1286,7 +1286,7 @@ export const madaCardsMg: string[] = [
   'Tohano ny fehezanteny hoe: "Ny Malagasy dia..."',
 ];
 
-  'dis le moment le plus marquant de ton année.',
+
   'raconte ta plus grosse honte de l\'année.',
   'avoue la personne que tu aurais aimé mieux connaître cette année.',
   'dis le meilleur conseil que tu as reçu cette année.',
