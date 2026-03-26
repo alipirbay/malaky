@@ -163,7 +163,7 @@ const VibeScreen = () => {
         </div>
       )}
 
-      <div className="flex-1 space-y-3 pb-4 overflow-y-auto">
+      <div className="flex-1 space-y-3 pb-4 overflow-y-auto" role="radiogroup" aria-label="Choix de l'ambiance">
         {items.map((item, i) => {
           const isUnlocked = item.free || unlockedVibes[item.id];
           const isOfflineReady = item.free || isPackDownloaded(item.id);
