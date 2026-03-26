@@ -3,8 +3,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   truthPrompts, dareActions, neverBase, likelyBase,
   ratherA, ratherB, challengeActions, madaCardsMg,
-  tsimoaTruths, tsimoaDares, tsimoaNever, tsimoaLikely,
-  tsimoaRatherA, tsimoaRatherB,
 } from "../src/data/card_content.ts";
 import { cultureQuestions } from "../src/data/culture_questions.ts";
 
