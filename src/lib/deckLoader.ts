@@ -31,7 +31,7 @@ export async function loadDeckInstant(params: LoadDeckParams): Promise<GameCard[
  */
 export function enrichDeckInBackground(params: LoadDeckParams): void {
   // Skip if offline
-  if (typeof navigator !== "undefined" && !navigator.onLine) return;
+  if (!getNetworkStatus()) return;
 
   (async () => {
     try {
