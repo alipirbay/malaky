@@ -1,11 +1,13 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import { VIBES, DIFFICULTIES } from "@/data/config";
 import { ArrowLeft, Lock, Loader2 } from "lucide-react";
 import type { Vibe } from "@/data/types";
 import AgeGateModal from "@/components/AgeGateModal";
 import { isPackDownloaded } from "@/lib/packManager";
+import { storageGet, storageSet } from "@/lib/storage";
 import { toast } from "sonner";
 
 const vibeStyles: Partial<Record<Vibe, string>> = {
