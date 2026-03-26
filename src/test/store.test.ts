@@ -39,7 +39,7 @@ describe("initPlayerData", () => {
   });
 
   it("handles duplicate player names gracefully", () => {
-    const players = [{ name: "Alice" }, { name: "Alice" }];
+    const players = [{ name: "Alice", color: "0 0% 0%" }, { name: "Alice", color: "0 0% 0%" }];
     const { passes } = initPlayerData(players);
     expect(passes["Alice"]).toBe(GAME_LIMITS.MAX_PASSES_PER_PLAYER);
   });

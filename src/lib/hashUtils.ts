@@ -5,7 +5,7 @@
  */
 
 /** Screens that can be navigated to via hash (excludes game/end which require state) */
-const HASH_NAVIGABLE = new Set(["home", "players", "mode", "vibe", "packs", "settings"]);
+const HASH_NAVIGABLE = new Set(["home", "players", "mode", "vibe", "packs", "settings", "history"]);
 
 /** Maps a hash string to a valid screen name, or null */
 export function hashToScreen(hash: string): string | null {

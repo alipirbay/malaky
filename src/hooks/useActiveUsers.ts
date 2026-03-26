@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const SESSION_KEY = "malaky-session-id";
+const HEARTBEAT_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 function getSessionId() {
   let id = sessionStorage.getItem(SESSION_KEY);
@@ -15,14 +16,14 @@ function getSessionId() {
 export function useActiveUsers() {
   const [count, setCount] = useState<number>(0);
   const sessionId = useRef(getSessionId());
+  const cleanedUp = useRef(false);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
-
     let cancelled = false;
 
     const heartbeat = async () => {
-      if (cancelled) return;
+      if (cancelled || document.hidden) return;
       try {
         await supabase.from("active_sessions").upsert(
           { session_id: sessionId.current, last_seen: new Date().toISOString() },
@@ -32,8 +33,9 @@ export function useActiveUsers() {
         const { data } = await supabase.rpc("get_active_users_count");
         if (!cancelled && typeof data === "number") setCount(data);
 
-        // Probabilistic cleanup (~1% chance)
-        if (Math.random() < 0.01) {
+        // Cleanup once per session
+        if (!cleanedUp.current) {
+          cleanedUp.current = true;
           void supabase.rpc("cleanup_old_sessions");
         }
       } catch (e) {
@@ -43,7 +45,7 @@ export function useActiveUsers() {
 
     const start = () => {
       heartbeat();
-      interval = setInterval(heartbeat, 60_000); // 60s instead of 30s
+      interval = setInterval(heartbeat, HEARTBEAT_INTERVAL);
     };
 
     const handleVisibility = () => {
