@@ -34,11 +34,15 @@ const hasConfirmedAge = (vibe: Vibe) =>
   storageGet<boolean>(`age-confirmed-${vibe}`, false);
 
 const VibeScreen = () => {
-  const setScreen = useGameStore((s) => s.setScreen);
-  const unlockedVibes = useGameStore((s) => s.unlockedVibes);
-  const selectedMode = useGameStore((s) => s.selectedMode);
-  const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
-  const setQuickChallengeDuration = useGameStore((s) => s.setQuickChallengeDuration);
+  const {
+    setScreen, unlockedVibes, selectedMode, quickChallengeDuration, setQuickChallengeDuration,
+  } = useGameStore(useShallow((s) => ({
+    setScreen: s.setScreen,
+    unlockedVibes: s.unlockedVibes,
+    selectedMode: s.selectedMode,
+    quickChallengeDuration: s.quickChallengeDuration,
+    setQuickChallengeDuration: s.setQuickChallengeDuration,
+  })));
   const [pendingAdultVibe, setPendingAdultVibe] = useState<Vibe | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const launchingRef = useRef(false);
