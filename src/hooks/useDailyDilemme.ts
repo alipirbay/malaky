@@ -168,7 +168,7 @@ export function useDailyDilemme() {
         console.warn("[vote] Insert failed:", error.message);
       }
 
-      localStorage.setItem(getVoteKey(dilemme.id), choice);
+      storageSet(getVoteKey(dilemme.id), choice);
       setHasVoted(true);
       await fetchVotes(dilemme.id);
     } catch (e) {
