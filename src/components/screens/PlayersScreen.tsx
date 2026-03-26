@@ -6,7 +6,11 @@ import { ArrowLeft, Shuffle, Plus, X } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 
 const PlayersScreen = () => {
-  const { players, addPlayer, removePlayer, shufflePlayers, setScreen } = useGameStore();
+  const players = useGameStore((s) => s.players);
+  const addPlayer = useGameStore((s) => s.addPlayer);
+  const removePlayer = useGameStore((s) => s.removePlayer);
+  const shufflePlayers = useGameStore((s) => s.shufflePlayers);
+  const setScreen = useGameStore((s) => s.setScreen);
   const [name, setName] = useState("");
   const { vibrate } = useSounds();
 

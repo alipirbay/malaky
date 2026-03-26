@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Shield } from "lucide-react";
-import malakyLogo from "@/assets/malaky-logo.png";
+import malakyLogo from "@/assets/malaky-logo.webp";
 
 interface FirstLaunchModalProps {
   onAccept: () => void;

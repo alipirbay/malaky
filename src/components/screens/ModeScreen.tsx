@@ -4,9 +4,10 @@ import { GAME_MODES } from "@/data/config";
 import { ArrowLeft } from "lucide-react";
 
 const ModeScreen = () => {
-  const { setMode, setScreen } = useGameStore();
+  const setMode = useGameStore((s) => s.setMode);
+  const setScreen = useGameStore((s) => s.setScreen);
 
-    const handleSelectMode = (modeId: typeof GAME_MODES[number]["id"]) => {
+  const handleSelectMode = (modeId: typeof GAME_MODES[number]["id"]) => {
     setMode(modeId);
     setScreen("vibe");
   };
@@ -20,7 +21,7 @@ const ModeScreen = () => {
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => setScreen("players")} className="rounded-xl bg-card p-2.5 text-foreground">
+        <button onClick={() => setScreen("players")} className="rounded-xl bg-card p-2.5 text-foreground" aria-label="Retour aux joueurs">
           <ArrowLeft size={20} />
         </button>
         <div>
