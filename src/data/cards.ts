@@ -6,7 +6,7 @@ import {
 } from "./card_content";
 import { cultureQuestions } from "./culture_questions";
 
-const MINIMUM_CARDS_PER_COMBO = 150;
+const MINIMUM_CARDS_PER_COMBO = 40;
 const MAX_PLAYERS = 12;
 
 type CardType = GameCard["card_type"];
@@ -42,15 +42,15 @@ function elide(prefix: string, text: string): string {
   return prefix + text;
 }
 
-/** Strip trailing '?' and whitespace from card entries (entries sometimes include their own '?'). */
+/** Strip trailing '?' and whitespace from card entries. */
 function clean(entry: string): string {
   return entry.replace(/\s*\?\s*$/, "").trim();
 }
 
-// Re-export from shuffleUtils to keep backward compat without duplicating code
+// Re-export from shuffleUtils to keep backward compat
 export { deduplicateShuffle } from "@/lib/shuffleUtils";
 
-// === DECK BUILDERS ===
+// === DECK BUILDERS (no artificial padding) ===
 
 const buildTruthDareDeck = (vibe: Vibe): GameCard[] => {
   const prompts = truthPrompts[vibe] || [];
@@ -66,24 +66,11 @@ const buildTruthDareDeck = (vibe: Vibe): GameCard[] => {
     cards.push(createCard("truth_dare", vibe, idx++, "dare", `{player}, ${dares[i]}`, i % 5 === 0 ? "phone" : "none"));
   }
 
-  // For mada vibe, add bilingual cards (30% of deck)
+  // For mada vibe, add bilingual cards
   if (vibe === "mada") {
     for (const mgCard of madaCardsMg) {
       cards.push(createCard("truth_dare", vibe, idx++, "truth", `{player}, ${mgCard}`));
     }
-  }
-
-  const allBase = [...prompts, ...dares];
-  let fillIdx = 0;
-  while (cards.length < MINIMUM_CARDS_PER_COMBO) {
-    const base = allBase[fillIdx % allBase.length];
-    const isAction = fillIdx % allBase.length >= prompts.length;
-    if (isAction) {
-      cards.push(createCard("truth_dare", vibe, idx++, "dare", `{player2}, ${base}`));
-    } else {
-      cards.push(createCard("truth_dare", vibe, idx++, "truth", `{player2}, ${base}`));
-    }
-    fillIdx++;
   }
 
   return cards;
@@ -94,32 +81,8 @@ const buildNeverDeck = (vibe: Vibe): GameCard[] => {
   const cards: GameCard[] = [];
   let idx = 1;
 
-  // Primary cards
   for (const entry of base) {
     cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `Je n'ai jamais ${entry}`));
-  }
-
-  // Fill with variant formulations (not exact copies)
-  const altPrefixes = [
-    "Levez la main si vous avez déjà ",
-    "{player}, as-tu déjà ",
-    "Qui ici a déjà ",
-  ];
-  let fillIdx = 0;
-  while (cards.length < MINIMUM_CARDS_PER_COMBO && fillIdx < base.length * altPrefixes.length) {
-    const entry = base[fillIdx % base.length];
-    const prefix = altPrefixes[Math.floor(fillIdx / base.length) % altPrefixes.length];
-    cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `${prefix}${entry}`));
-    fillIdx++;
-  }
-
-  // If still not enough, pull from adjacent vibes
-  const bonusVibes: Vibe[] = vibe === "soft" ? ["fun"] : vibe === "fun" ? ["soft", "chaos"] : ["soft", "fun"];
-  for (const bv of bonusVibes) {
-    const bonus = neverBase[bv] || [];
-    for (let i = 0; i < bonus.length && cards.length < MINIMUM_CARDS_PER_COMBO; i++) {
-      cards.push(createCard("never_have_i_ever", vibe, idx++, "vote", `Je n'ai jamais ${bonus[i]}`));
-    }
   }
 
   return cards;
@@ -130,37 +93,9 @@ const buildMostLikelyDeck = (vibe: Vibe): GameCard[] => {
   const cards: GameCard[] = [];
   let idx = 1;
 
-  // Variant 1: Group vote — "Qui est le plus susceptible de [action] ?"
   for (const entry of base) {
     const prefix = "Qui est le plus susceptible de ";
     cards.push(createCard("most_likely", vibe, idx++, "vote", `${elide(prefix, clean(entry))} ?`));
-  }
-
-  // Variant 2: Duel — "Entre {player} et {player2}, qui [action] ?" (uses DIFFERENT entries)
-  for (let i = 0; i < base.length && cards.length < MINIMUM_CARDS_PER_COMBO; i++) {
-    const prefix = "Entre {player} et {player2}, qui est le plus susceptible de ";
-    cards.push(createCard("most_likely", vibe, idx++, "vote", `${elide(prefix, clean(base[i]))} ?`));
-  }
-
-  // Variant 3: Player asks — "{player}, d'après toi qui va [action] ?" (even MORE different framing)
-  const altPrefixes = [
-    "{player}, devine qui dans le groupe va ",
-    "{player}, d'après toi qui va ",
-    "Selon {player}, qui ici pourrait ",
-  ];
-  for (let i = 0; i < base.length && cards.length < MINIMUM_CARDS_PER_COMBO; i++) {
-    const prefix = altPrefixes[i % altPrefixes.length];
-    cards.push(createCard("most_likely", vibe, idx++, "vote", `${prefix}${clean(base[i])} ?`));
-  }
-
-  // Variant 4: Cross-vibe bonus entries to reach 150 without repeating
-  const bonusVibes: Vibe[] = vibe === "soft" ? ["fun", "mada"] : vibe === "fun" ? ["soft", "chaos"] : vibe === "hot" ? ["fun", "chaos"] : vibe === "chaos" ? ["fun", "hot"] : vibe === "couple" ? ["soft", "fun", "hot"] : vibe === "apero" ? ["fun", "chaos"] : vibe === "mada" ? ["fun", "soft"] : vibe === "confessions" ? ["soft", "couple"] : vibe === "vip" ? ["fun", "chaos"] : vibe === "afterdark" ? ["hot", "chaos"] : ["soft", "fun"];
-  for (const bv of bonusVibes) {
-    const bonus = likelyBase[bv] || [];
-    for (let i = 0; i < bonus.length && cards.length < MINIMUM_CARDS_PER_COMBO; i++) {
-      const prefix = "Qui est le plus susceptible de ";
-      cards.push(createCard("most_likely", vibe, idx++, "vote", `${elide(prefix, clean(bonus[i]))} ?`));
-    }
   }
 
   return cards;
@@ -177,13 +112,6 @@ const buildWouldYouRatherDeck = (vibe: Vibe): GameCard[] => {
     cards.push(createCard("would_you_rather", vibe, idx++, "truth", `{player}, tu préfères ${aList[i]} ou ${bList[i]} ?`));
   }
 
-  for (let offset = 1; cards.length < MINIMUM_CARDS_PER_COMBO && offset < len; offset++) {
-    for (let i = 0; i < len && cards.length < MINIMUM_CARDS_PER_COMBO; i++) {
-      const j = (i + offset) % len;
-      cards.push(createCard("would_you_rather", vibe, idx++, "truth", `{player}, tu préfères ${aList[i]} ou ${bList[j]} ?`));
-    }
-  }
-
   return cards;
 };
 
@@ -191,10 +119,10 @@ const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] => {
   const cards: GameCard[] = [];
   let idx = 1;
 
-  const truths = (truthPrompts[vibe] || []).slice(0, 10);
+  const truths = (truthPrompts[vibe] || []).slice(0, 15);
   const dares = challengeActions[vibe] || [];
-  const nevers = (neverBase[vibe] || []).slice(0, 10);
-  const likelys = (likelyBase[vibe] || []).slice(0, 10);
+  const nevers = (neverBase[vibe] || []).slice(0, 15);
+  const likelys = (likelyBase[vibe] || []).slice(0, 15);
   const rathersA = (ratherA[vibe] || []).slice(0, 10);
   const rathersB = (ratherB[vibe] || []).slice(0, 10);
 
@@ -290,27 +218,6 @@ export function getAllCards(): GameCard[] {
 
 /** @deprecated Use getAllCards() or getFilteredCards() instead */
 export const CARDS = getAllCards;
-
-export function validateCardCoverage() {
-  const allCards = getAllCards();
-  for (const mode of GAME_MODES) {
-    if (mode.id === "culture_generale") {
-      for (const diff of DIFFICULTIES) {
-        const total = allCards.filter(c => c.mode === mode.id && c.vibe === diff.id).length;
-        if (total < 10) {
-          // Low card count detected
-        }
-      }
-    } else {
-      for (const vibe of VIBES) {
-        const total = allCards.filter(c => c.mode === mode.id && c.vibe === vibe.id).length;
-        if (total < MINIMUM_CARDS_PER_COMBO) {
-          // Low card count detected
-        }
-      }
-    }
-  }
-}
 
 export function getFilteredCards(mode: GameMode, vibe: Vibe, playerCount: number): GameCard[] {
   const deck = getDeck(mode, vibe);

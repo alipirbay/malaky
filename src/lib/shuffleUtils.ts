@@ -1,4 +1,5 @@
 import type { GameCard } from "@/data/types";
+import { getCardContentHash } from "@/lib/cardUtils";
 
 /**
  * Pure Fisher-Yates shuffle — returns a new array.
@@ -13,29 +14,23 @@ export function fisherYatesShuffle<T>(arr: T[]): T[] {
 }
 
 /**
- * Fisher-Yates shuffle + deduplicate by text + space similar cards apart.
+ * Fisher-Yates shuffle + deduplicate by content hash + space similar cards apart.
  */
 export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
-  // 1. Deduplicate
+  // 1. Deduplicate by content hash (catches semantic duplicates)
   const seen = new Set<string>();
   const unique = cards.filter((c) => {
-    const key = c.text.toLowerCase().trim();
-    if (seen.has(key)) return false;
-    seen.add(key);
+    const hash = getCardContentHash(c.text);
+    if (seen.has(hash)) return false;
+    seen.add(hash);
     return true;
   });
 
   // 2. Fisher-Yates shuffle
   const shuffled = fisherYatesShuffle(unique);
 
-  // 3. Space cards with similar bases apart
-  const getBase = (text: string) =>
-    text
-      .replace(/^(Je n'ai jamais )/i, "")
-      .split(".")[0]
-      .trim();
-
-  const MIN_GAP = 8;
+  // 3. Space cards with similar content apart
+  const MIN_GAP = 5;
   const result: GameCard[] = [];
   const recentSet = new Set<string>();
   const recentQueue: string[] = [];
@@ -44,8 +39,8 @@ export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
 
   while (remaining.length > 0 && stuckCount < remaining.length * 2) {
     const idx = remaining.findIndex((c) => {
-      const base = getBase(c.text);
-      return !recentSet.has(base);
+      const hash = getCardContentHash(c.text);
+      return !recentSet.has(hash);
     });
 
     if (idx === -1) {
@@ -54,9 +49,9 @@ export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
     } else {
       const card = remaining.splice(idx, 1)[0];
       result.push(card);
-      const base = getBase(card.text);
-      recentSet.add(base);
-      recentQueue.push(base);
+      const hash = getCardContentHash(card.text);
+      recentSet.add(hash);
+      recentQueue.push(hash);
       if (recentQueue.length > MIN_GAP) {
         const oldest = recentQueue.shift()!;
         recentSet.delete(oldest);

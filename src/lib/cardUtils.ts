@@ -7,6 +7,30 @@
  */
 
 /**
+ * Extracts the "semantic core" of a card text for anti-duplicate comparison.
+ * Strips player placeholders, common prefixes, and normalizes.
+ */
+export function getCardContentHash(text: string): string {
+  let normalized = text
+    // Remove player placeholders
+    .replace(/\{player\d?\}/gi, "")
+    .replace(/\{player\}/gi, "")
+    .replace(/\{player2\}/gi, "")
+    // Remove common prefixes that don't change meaning
+    .replace(/^(Je n'ai jamais |Levez la main si vous avez déjà |Qui ici a déjà |As-tu déjà )/i, "")
+    .replace(/^(Qui est le plus susceptible de |Entre .+ et .+, qui est le plus susceptible de )/i, "")
+    .replace(/^(Selon .+, qui ici pourrait |.+, d'après toi qui va |.+, devine qui dans le groupe va )/i, "")
+    .replace(/^(Tu préfères |.+, tu préfères )/i, "")
+    // Normalize
+    .replace(/[.,!?;:\s]+$/g, "")
+    .replace(/^[,\s]+/, "")
+    .trim()
+    .toLowerCase();
+
+  return normalized;
+}
+
+/**
  * Simple deterministic hash for seeding player2 selection.
  * Uses card index to ensure different cards pick different player2.
  */
