@@ -97,6 +97,7 @@ const PrivacyModal = forwardRef<HTMLDivElement, PrivacyModalProps>(function Priv
     <AnimatePresence>
       {open && (
         <motion.div
+          ref={ref}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
