@@ -318,7 +318,7 @@ class AmbientMusicEngine {
 
   // ── Beat scheduler ──
   private scheduleBeat() {
-    if (!this._isPlaying || !this.ctx || !this.mood) return;
+    if (!this._isPlaying || !this.ctx || !this.mood || this.ctx.state === "closed") return;
 
     const m = this.mood;
     const beatDuration = 60 / m.tempo;
