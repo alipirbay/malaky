@@ -184,6 +184,7 @@ const GameScreen = () => {
   const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
 
   const { playClick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
+  const { isPlaying: musicPlaying, toggleMusic } = useAmbientMusic(true, selectedVibe);
 
   const [showPauseMenu, setShowPauseMenu] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
