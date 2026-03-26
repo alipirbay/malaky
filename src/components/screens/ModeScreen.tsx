@@ -8,11 +8,7 @@ const ModeScreen = () => {
 
     const handleSelectMode = (modeId: typeof GAME_MODES[number]["id"]) => {
     setMode(modeId);
-    if (modeId === "culture_generale") {
-      setScreen("vibe");
-    } else {
-      setScreen("vibe");
-    }
+    setScreen("vibe");
   };
 
   const colorMap = {
