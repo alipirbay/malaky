@@ -11,7 +11,6 @@ import SettingsScreen from "@/components/screens/SettingsScreen";
 import FirstLaunchModal from "@/components/FirstLaunchModal";
 import PrivacyModal from "@/components/PrivacyModal";
 
-// Only lazy-load screens that truly need heavy deps or are rarely hit
 const GameScreen = lazy(() => import("@/components/screens/GameScreen"));
 const EndScreen = lazy(() => import("@/components/screens/EndScreen"));
 const PaymentReturnScreen = lazy(() => import("@/components/screens/PaymentReturnScreen"));
@@ -42,27 +41,27 @@ const Index = () => {
   const [showFirstLaunch, setShowFirstLaunch] = useState(false);
   const [legalModal, setLegalModal] = useState<"privacy" | "cgu" | null>(null);
 
-  // First-launch + deck rebuild on mount
+  // Bootstrap: first-launch check + deck rebuild on refresh
   useEffect(() => {
     if (!localStorage.getItem("malaky-terms-accepted")) {
       setShowFirstLaunch(true);
     }
 
-    // Sync initial hash → screen (e.g. user bookmarked #players)
+    // Sync initial hash → screen
     const initialHash = window.location.hash.replace("#", "");
     const initialScreen = hashToScreen(initialHash);
     if (initialScreen && initialScreen !== useGameStore.getState().currentScreen) {
       setScreen(initialScreen as typeof currentScreen);
     }
 
-    // Deck is excluded from persist — rebuild on refresh if needed
+    // If refreshed during game with empty deck → go home safely
     const state = useGameStore.getState();
     if (state.currentScreen === "game" && state.deck.length === 0) {
-      if (state.selectedMode && state.selectedVibe && state.players.length >= 2) {
-        state.startGame(state.selectedVibe);
-      } else {
-        state.setScreen("home");
-      }
+      state.setScreen("home");
+    }
+    // Also redirect from "end" with no stats
+    if (state.currentScreen === "end" && state.stats.cardsPlayed === 0) {
+      state.setScreen("home");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -92,7 +91,7 @@ const Index = () => {
     }
   }, [currentScreen]);
 
-  // Sync hash → screen (on back/forward navigation)
+  // Sync hash → screen (back/forward)
   useEffect(() => {
     const handler = () => {
       const hash = window.location.hash.replace("#", "");
