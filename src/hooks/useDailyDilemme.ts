@@ -111,7 +111,7 @@ export function useDailyDilemme() {
           const d = data.dilemme as DailyDilemme;
           setDilemme(d);
           cacheDilemme(d);
-          const voted = localStorage.getItem(getVoteKey(d.id));
+          const voted = storageGet<string | null>(getVoteKey(d.id), null);
           if (voted) {
             setHasVoted(true);
             fetchVotes(d.id);
