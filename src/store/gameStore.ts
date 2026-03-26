@@ -130,14 +130,10 @@ export const useGameStore = create<GameState>()(
         if (vibeOverride) set({ selectedVibe: vibeOverride });
         if (!selectedMode || !selectedVibe || players.length < GAME_LIMITS.MIN_PLAYERS) return;
 
-        const isTsimoa = selectedMode === "tsimoa";
-
-        if (!isTsimoa) {
-          const merged = { ...defaultUnlockedVibes, ...unlockedVibes };
-          if (!merged[selectedVibe]) {
-            set({ currentScreen: "packs" });
-            return;
-          }
+        const merged = { ...defaultUnlockedVibes, ...unlockedVibes };
+        if (!merged[selectedVibe]) {
+          set({ currentScreen: "packs" });
+          return;
         }
 
         // Dynamic import — lightweight, no card_content pulled in at top level

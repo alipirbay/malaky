@@ -6,11 +6,10 @@ import { ArrowLeft } from "lucide-react";
 const ModeScreen = () => {
   const { setMode, setScreen } = useGameStore();
 
-  const handleSelectMode = (modeId: typeof GAME_MODES[number]["id"]) => {
+    const handleSelectMode = (modeId: typeof GAME_MODES[number]["id"]) => {
     setMode(modeId);
-    if (modeId === "tsimoa") {
-      useGameStore.getState().setVibe("fun");
-      useGameStore.getState().startGame();
+    if (modeId === "culture_generale") {
+      setScreen("vibe");
     } else {
       setScreen("vibe");
     }

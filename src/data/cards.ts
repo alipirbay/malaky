@@ -254,8 +254,6 @@ function getDeck(mode: GameMode, vibe: Vibe): GameCard[] {
 
   if (mode === "culture_generale") {
     cards = buildCultureDeck(vibe as Difficulty);
-  } else if (mode === "tsimoa") {
-    cards = buildTsimoaDeck();
   } else {
     const builderMap: Record<string, (v: Vibe) => GameCard[]> = {
       truth_dare: buildTruthDareDeck,
