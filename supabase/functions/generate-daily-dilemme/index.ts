@@ -1,20 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ALLOWED_ORIGINS = [
-  "https://id-preview--34120b7e-54be-4ea1-86b8-6edf122c8b82.lovable.app",
-  "https://malaky.app",
-  "https://www.malaky.app",
-];
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("origin") ?? "";
-  const allowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o)) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  };
-}
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
 
 const MADAGASCAR_TZ = "Indian/Antananarivo";
 
@@ -22,20 +12,32 @@ function getMadagascarDateString(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: MADAGASCAR_TZ });
 }
 
-// Fallback dilemmes in case AI generation fails
+// Fallback pool — questions d'opinion croustillantes sur Madagascar
 const FALLBACK_DILEMMES = [
-  { question: "Taxi-be bondé ou marcher 5km sous la pluie ?", option_a: "Taxi-be bondé", option_b: "Marcher sous la pluie", topic: "société" },
-  { question: "Jirama stable pendant 1 an ou WiFi gratuit pendant 1 an ?", option_a: "Jirama stable", option_b: "WiFi gratuit", topic: "technologie" },
-  { question: "Vivre à Tana toute ta vie ou ne jamais y retourner ?", option_a: "Tana pour toujours", option_b: "Jamais y retourner", topic: "société" },
-  { question: "Manger que du riz pendant 1 mois ou jamais de riz pendant 1 mois ?", option_a: "Que du riz", option_b: "Zéro riz", topic: "culture" },
-  { question: "Avoir le pouvoir de parler toutes les langues ou de jouer tous les instruments ?", option_a: "Toutes les langues", option_b: "Tous les instruments", topic: "culture" },
-  { question: "Être célèbre à Madagascar ou riche à l'étranger ?", option_a: "Célèbre à Mada", option_b: "Riche à l'étranger", topic: "société" },
-  { question: "Revivre ton enfance ou avancer de 10 ans ?", option_a: "Revivre l'enfance", option_b: "Avancer de 10 ans", topic: "société" },
-  { question: "Supprimer Instagram ou supprimer TikTok ?", option_a: "Supprimer Insta", option_b: "Supprimer TikTok", topic: "technologie" },
+  { question: "Êtes-vous satisfait de la gouvernance actuelle de Madagascar ?", option_a: "Oui, ça avance", option_b: "Non, c'est pire", topic: "politique" },
+  { question: "Pour ou contre le changement de l'Ariary en nouvelle monnaie ?", option_a: "Pour, il faut changer", option_b: "Contre, inutile", topic: "économie" },
+  { question: "Voyez-vous un avenir positif pour Madagascar ?", option_a: "Oui, optimiste", option_b: "Non, mal parti", topic: "société" },
+  { question: "Les jeunes ont-ils raison de vouloir quitter Madagascar ?", option_a: "Oui, zéro opportunité", option_b: "Non, il faut rester", topic: "société" },
+  { question: "Faut-il nationaliser les mines de Madagascar ?", option_a: "Oui, nos richesses", option_b: "Non, besoin d'investisseurs", topic: "économie" },
+  { question: "Le Fihavanana est-il encore une réalité ?", option_a: "Oui, notre force", option_b: "Non, chacun pour soi", topic: "société" },
+  { question: "L'Ariary va-t-il continuer à perdre de la valeur ?", option_a: "Oui, inévitable", option_b: "Non, ça va se stabiliser", topic: "économie" },
+  { question: "Le système éducatif prépare-t-il bien les jeunes ?", option_a: "Oui, correct", option_b: "Non, obsolète", topic: "société" },
+  { question: "Internet à Madagascar est-il trop cher ?", option_a: "Oui, beaucoup trop", option_b: "Non, raisonnable", topic: "technologie" },
+  { question: "Les Barea peuvent-ils se qualifier pour la prochaine CAN ?", option_a: "Oui, on y croit !", option_b: "Non, soyons réalistes", topic: "sport" },
+  { question: "Le prix du riz devrait-il être fixé par l'État ?", option_a: "Oui, c'est vital", option_b: "Non, marché libre", topic: "économie" },
+  { question: "La déforestation peut-elle être stoppée ?", option_a: "Oui, si on agit", option_b: "Non, c'est trop tard", topic: "environnement" },
+  { question: "Les coupures de Jirama sont-elles acceptables en 2026 ?", option_a: "Non, inacceptable", option_b: "Normal, on s'y fait", topic: "société" },
+  { question: "Madagascar devrait-elle se rapprocher de la Chine ou de la France ?", option_a: "La Chine", option_b: "La France", topic: "politique" },
+  { question: "Faut-il limiter le mandat présidentiel à un seul mandat ?", option_a: "Oui, un seul", option_b: "Non, garder 2", topic: "politique" },
+  { question: "Les zones franches profitent-elles aux Malgaches ?", option_a: "Oui, emplois", option_b: "Non, exploitation", topic: "économie" },
+  { question: "TikTok influence-t-il trop la jeunesse malgache ?", option_a: "Oui, c'est toxique", option_b: "Non, c'est fun", topic: "société" },
+  { question: "Le Sénat malgache est-il utile ?", option_a: "Oui, nécessaire", option_b: "Non, à supprimer", topic: "politique" },
+  { question: "Faut-il augmenter le SMIG à 300 000 Ar ?", option_a: "Oui, trop bas", option_b: "Non, entreprises ferment", topic: "économie" },
+  { question: "Tana est-elle une ville vivable ?", option_a: "Oui, malgré tout", option_b: "Non, invivable", topic: "société" },
 ];
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: getCorsHeaders(req) });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -46,6 +48,8 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const today = getMadagascarDateString();
+
+    // Check if already exists
     const { data: existing } = await supabase
       .from("daily_dilemmes")
       .select("*")
@@ -54,7 +58,7 @@ serve(async (req) => {
 
     if (existing) {
       return new Response(JSON.stringify({ dilemme: existing, cached: true }), {
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -72,31 +76,36 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: `Tu es un générateur de dilemmes quotidiens pour Malaky, le jeu préféré des Malgaches.
-Génère UN dilemme ancré dans la réalité malgache ou dans des sujets qui parlent aux Malgaches.
+              content: `Tu es un générateur de sondages/questions d'opinion quotidiennes pour Malaky, le jeu des Malgaches.
 
-SUJETS PRIORITAIRES (alterne chaque jour) :
-- Vie quotidienne à Mada : taxi-be, Jirama, Tana, mora mora, heure gasy
-- Culture gasy : fady, famadihana, fihavanana, hira gasy, kabary
-- Nourriture : riz vs pain, romazava, brochettes, mofo baolina, trembo
-- Société : vazaha vs gasy, exode rural, jeunesse, réseaux sociaux
-- Rivalités régionales et inter-ethniques (traiter avec humour)
-- Actualité Madagascar et Afrique
-- Questions universelles mais formulées à la sauce malgache
+OBJECTIF : Générer UNE question d'OPINION sur l'actualité malgache qui divise vraiment les gens.
 
-RÈGLES :
-- Options ultra courtes : 3 à 6 mots max
-- Ton fun et accessible, pas académique
-- Doit diviser vraiment les gens (ni trop évident, ni trop clivant)
-- Pas de politique partisane, pas de religion
-- Peut alterner français et quelques mots malgaches courants
+SUJETS (alterne chaque jour, priorise politique et économie) :
+- POLITIQUE : gouvernance, élections, institutions, relations diplomatiques, décentralisation
+- ÉCONOMIE : Ariary, inflation, mines, emploi, SMIG, prix du riz, zones franches, vanille
+- SOCIÉTÉ : éducation, insécurité, exode des jeunes, réseaux sociaux, Fihavanana, Jirama
+- SPORT : Barea, football malgache, investissement sportif
+- TECH : Internet, opérateurs, IA, startups malgaches
+- ENVIRONNEMENT : déforestation, charbon de bois, tourisme
+
+STYLE :
+- Question directe type sondage : "Pour ou contre...", "Êtes-vous satisfait de...", "Faut-il..."
+- Options COURTES (3-6 mots max), claires et opposées
+- Ton accessible, pas académique
+- Les questions politiques et économiques sont ENCOURAGÉES
+- Doit créer un vrai débat (50/50 idéalement)
+
+INTERDIT :
+- Questions hypothétiques fantaisistes
+- Insultes ou propos haineux
+- Fausses informations
 
 Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
             },
             {
               role: "user",
-              content: `Génère le dilemme du jour (${today}). Options courtes sans parenthèses. Format JSON :
-{"question": "La question du dilemme", "option_a": "Choix A court", "option_b": "Choix B court", "topic": "catégorie"}`,
+              content: `Génère LA question d'opinion du jour (${today}) sur Madagascar. Format JSON :
+{"question": "La question", "option_a": "Choix A court", "option_b": "Choix B court", "topic": "catégorie"}`,
             },
           ],
           tools: [
@@ -104,14 +113,17 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
               type: "function",
               function: {
                 name: "create_dilemme",
-                description: "Create a daily dilemme question with two options",
+                description: "Create a daily opinion poll for Madagascar",
                 parameters: {
                   type: "object",
                   properties: {
-                    question: { type: "string", description: "The dilemme question" },
-                    option_a: { type: "string", description: "First choice" },
-                    option_b: { type: "string", description: "Second choice" },
-                    topic: { type: "string", enum: ["politique", "économie", "société", "culture", "sport", "technologie", "environnement"] },
+                    question: { type: "string", description: "The opinion question" },
+                    option_a: { type: "string", description: "First choice (3-6 words)" },
+                    option_b: { type: "string", description: "Second choice (3-6 words)" },
+                    topic: {
+                      type: "string",
+                      enum: ["politique", "économie", "société", "culture", "sport", "technologie", "environnement"],
+                    },
                   },
                   required: ["question", "option_a", "option_b", "topic"],
                   additionalProperties: false,
@@ -128,13 +140,15 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
         console.error("AI error:", response.status, errText);
 
         if (response.status === 429) {
-          return new Response(JSON.stringify({ error: "Rate limited, please try again later." }), {
-            status: 429, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+          return new Response(JSON.stringify({ error: "Rate limited" }), {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
         if (response.status === 402) {
-          return new Response(JSON.stringify({ error: "Credits exhausted." }), {
-            status: 402, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+          return new Response(JSON.stringify({ error: "Credits exhausted" }), {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
         throw new Error(`AI gateway error: ${response.status}`);
@@ -156,12 +170,12 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
       }
     } catch (aiErr) {
       console.warn("AI generation failed, using fallback:", aiErr);
-      // Deterministic fallback based on day of year
-      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      const dayOfYear = Math.floor(
+        (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+      );
       dilemmeData = FALLBACK_DILEMMES[dayOfYear % FALLBACK_DILEMMES.length];
     }
 
-    // Use upsert with active_date to handle race condition (UNIQUE index)
     const { data: newDilemme, error: insertError } = await supabase
       .from("daily_dilemmes")
       .upsert({
@@ -180,12 +194,13 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
     }
 
     return new Response(JSON.stringify({ dilemme: newDilemme, cached: false }), {
-      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("Error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
