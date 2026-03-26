@@ -284,12 +284,6 @@ export const useGameStore = create<GameState>()(
         players: state.players,
         selectedMode: state.selectedMode,
         selectedVibe: state.selectedVibe,
-        currentScreen: state.currentScreen,
-        currentCardIndex: state.currentCardIndex,
-        currentPlayerIndex: state.currentPlayerIndex,
-        stats: state.stats,
-        passesRemaining: state.passesRemaining,
-        // deck is intentionally EXCLUDED — rebuilt via startGame() on refresh
       }),
     }
   )
