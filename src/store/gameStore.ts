@@ -131,8 +131,10 @@ export const useGameStore = create<GameState>()(
         const {
           loadDeckInstant, enrichDeckInBackground, getCachedServerCards,
           initPlayerData, deduplicateShuffle, fisherYatesShuffle,
-          getSeenCardIds, markCardsSeen, clearSeenCards,
+          getSeenCardHashes, markCardsSeen, clearSeenCards,
         } = await import("@/lib/gameInit");
+        const { getCardContentHash } = await import("@/lib/cardUtils");
+        const { storageGet, storageSet } = await import("@/lib/storage");
 
         const { passes, playerStats } = initPlayerData(players);
         const params = { mode: selectedMode, vibe: selectedVibe, players };
@@ -152,18 +154,27 @@ export const useGameStore = create<GameState>()(
           return;
         }
 
-        // STEP 2: Filter out recently seen cards, then pick CARDS_PER_GAME
-        const seenIds = new Set(getSeenCardIds());
-        let unseen = pool.filter(c => !seenIds.has(c.id));
+        // STEP 2: Filter out recently seen cards by content hash
+        const seenHashes = getSeenCardHashes();
+        let unseen = pool.filter(c => !seenHashes.has(getCardContentHash(c.text)));
+
         if (unseen.length < GAME_LIMITS.CARDS_PER_GAME) {
-          clearSeenCards();
-          unseen = pool;
+          // Partial reset: keep 50% most recent hashes
+          const existing = storageGet<string[]>("seen-cards", []);
+          const halfPoint = Math.floor(existing.length / 2);
+          storageSet("seen-cards", existing.slice(halfPoint));
+          const refreshedHashes = new Set(existing.slice(halfPoint));
+          unseen = pool.filter(c => !refreshedHashes.has(getCardContentHash(c.text)));
+          if (unseen.length < GAME_LIMITS.CARDS_PER_GAME) {
+            clearSeenCards();
+            unseen = pool;
+          }
         }
 
         const shuffledUnseen = fisherYatesShuffle(unseen);
         const deck = shuffledUnseen.slice(0, GAME_LIMITS.CARDS_PER_GAME);
 
-        markCardsSeen(deck.map(c => c.id));
+        markCardsSeen(deck.map(c => c.text));
 
         // STEP 3: Show game IMMEDIATELY
         set({
