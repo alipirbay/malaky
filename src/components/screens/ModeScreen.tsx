@@ -6,14 +6,9 @@ import { ArrowLeft } from "lucide-react";
 const ModeScreen = () => {
   const { setMode, setScreen } = useGameStore();
 
-  const handleSelectMode = (modeId: typeof GAME_MODES[number]["id"]) => {
+    const handleSelectMode = (modeId: typeof GAME_MODES[number]["id"]) => {
     setMode(modeId);
-    if (modeId === "tsimoa") {
-      useGameStore.getState().setVibe("fun");
-      useGameStore.getState().startGame();
-    } else {
-      setScreen("vibe");
-    }
+    setScreen("vibe");
   };
 
   const colorMap = {
@@ -53,11 +48,6 @@ const ModeScreen = () => {
               <span className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-foreground/80">
                 {mode.badge}
               </span>
-              {mode.id === "tsimoa" && (
-                <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">
-                  Gratuit
-                </span>
-              )}
             </div>
           </motion.button>
         ))}

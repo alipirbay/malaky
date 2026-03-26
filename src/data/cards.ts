@@ -3,8 +3,6 @@ import { GAME_MODES, VIBES, DIFFICULTIES } from "./config";
 import {
   truthPrompts, dareActions, neverBase, likelyBase,
   ratherA, ratherB, challengeActions, madaCardsMg,
-  tsimoaTruths, tsimoaDares, tsimoaNever, tsimoaLikely,
-  tsimoaRatherA, tsimoaRatherB,
 } from "./card_content";
 import { cultureQuestions } from "./culture_questions";
 
@@ -244,42 +242,6 @@ const buildCultureDeck = (difficulty: Difficulty): GameCard[] => {
   return cards;
 };
 
-// === Tsimoa deck builder ===
-
-const buildTsimoaDeck = (): GameCard[] => {
-  const cards: GameCard[] = [];
-  let idx = 1;
-  const vibe: Vibe = "fun"; // Tsimoa uses fun vibe styling
-
-  for (const t of tsimoaTruths) {
-    cards.push(createCard("tsimoa", vibe, idx++, "truth", `{player}, ${t}`));
-  }
-  for (const d of tsimoaDares) {
-    cards.push(createCard("tsimoa", vibe, idx++, "dare", `{player}, ${d}`));
-  }
-  for (const n of tsimoaNever) {
-    cards.push(createCard("tsimoa", vibe, idx++, "vote", `Je n'ai jamais ${n}`));
-  }
-  for (const l of tsimoaLikely) {
-    const prefix = "Qui est le plus susceptible de ";
-    cards.push(createCard("tsimoa", vibe, idx++, "vote", `${elide(prefix, clean(l))} ?`));
-  }
-  const rLen = Math.min(tsimoaRatherA.length, tsimoaRatherB.length);
-  for (let i = 0; i < rLen; i++) {
-    cards.push(createCard("tsimoa", vibe, idx++, "truth", `{player}, tu préfères ${tsimoaRatherA[i]} ou ${tsimoaRatherB[i]} ?`));
-  }
-
-  // Fill to minimum
-  const allBase = [...tsimoaTruths, ...tsimoaDares];
-  let fillIdx = 0;
-  while (cards.length < MINIMUM_CARDS_PER_COMBO) {
-    const base = allBase[fillIdx % allBase.length];
-    cards.push(createCard("tsimoa", vibe, idx++, fillIdx % 2 === 0 ? "truth" : "dare", `{player2}, ${base}`));
-    fillIdx++;
-  }
-
-  return cards;
-};
 
 // === Lazy deck cache ===
 const deckCache = new Map<string, GameCard[]>();
@@ -292,8 +254,6 @@ function getDeck(mode: GameMode, vibe: Vibe): GameCard[] {
 
   if (mode === "culture_generale") {
     cards = buildCultureDeck(vibe as Difficulty);
-  } else if (mode === "tsimoa") {
-    cards = buildTsimoaDeck();
   } else {
     const builderMap: Record<string, (v: Vibe) => GameCard[]> = {
       truth_dare: buildTruthDareDeck,

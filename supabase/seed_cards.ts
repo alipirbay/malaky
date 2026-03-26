@@ -3,8 +3,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   truthPrompts, dareActions, neverBase, likelyBase,
   ratherA, ratherB, challengeActions, madaCardsMg,
-  tsimoaTruths, tsimoaDares, tsimoaNever, tsimoaLikely,
-  tsimoaRatherA, tsimoaRatherB,
 } from "../src/data/card_content.ts";
 import { cultureQuestions } from "../src/data/culture_questions.ts";
 
@@ -68,15 +66,6 @@ vibes.forEach(vibe => {
   });
 });
 
-// tsimoa
-tsimoaTruths.forEach(p => records.push({ mode: "tsimoa", vibe: "fun", card_type: "truth", template: `{player}, ${p}`, lang: "fr", source: "human" }));
-tsimoaDares.forEach(p => records.push({ mode: "tsimoa", vibe: "fun", card_type: "dare", template: `{player}, ${p}`, lang: "fr", source: "human" }));
-tsimoaNever.forEach(p => records.push({ mode: "tsimoa", vibe: "fun", card_type: "vote", template: `Je n'ai jamais ${p}`, lang: "fr", source: "human" }));
-tsimoaLikely.forEach(p => records.push({ mode: "tsimoa", vibe: "fun", card_type: "vote", template: `Qui est le plus susceptible de ${p}`, lang: "fr", source: "human" }));
-const tLen = Math.min(tsimoaRatherA.length, tsimoaRatherB.length);
-for (let i = 0; i < tLen; i++) {
-  records.push({ mode: "tsimoa", vibe: "fun", card_type: "truth", template: `{player}, tu préfères ${tsimoaRatherA[i]} ou ${tsimoaRatherB[i]} ?`, lang: "fr", source: "human" });
-}
 
 // mada bilingual
 madaCardsMg.forEach(p => {

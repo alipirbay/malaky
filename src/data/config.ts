@@ -49,14 +49,6 @@ export const GAME_MODES = [
     badge: "Quiz",
     color: "primary" as const,
   },
-  {
-    id: "tsimoa" as GameMode,
-    name: "Mode Tsimoa",
-    subtitle: "Bilan d'année entre amis",
-    emoji: "🎊",
-    badge: "Spécial Fêtes",
-    color: "mango" as const,
-  },
 ];
 
 export const VIBES = [
