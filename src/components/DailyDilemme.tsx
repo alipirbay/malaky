@@ -32,7 +32,7 @@ const DailyDilemme = () => {
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, []); // getTimeUntilNext is a stable module-level function
+  }, [getTimeUntilNext]);
 
   if (!dilemme) return null;
 

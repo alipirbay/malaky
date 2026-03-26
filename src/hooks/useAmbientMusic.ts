@@ -147,7 +147,7 @@ class AmbientMusicEngine {
   async start(vibe: string, volume: number) {
     // Prevent race conditions
     if (this.stopInProgress) {
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise(r => setTimeout(r, 150));
     }
     if (this._isPlaying) {
       this.stopSync();
@@ -158,43 +158,55 @@ class AmbientMusicEngine {
 
     try {
       this.ctx = new AudioContext();
-      // Handle suspended state (browser policy)
+      // Handle suspended state (browser autoplay policy)
       if (this.ctx.state === "suspended") {
-        await this.ctx.resume();
+        await this.ctx.resume().catch(() => {});
+      }
+      // If still not running after resume attempt, bail gracefully
+      if (this.ctx.state !== "running") {
+        try { this.ctx.close(); } catch { /* ignore */ }
+        this.ctx = null;
+        return;
       }
     } catch {
+      this.ctx = null;
       return; // AudioContext not available
     }
 
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
-    // Fade in over 1 second
-    this.masterGain.gain.linearRampToValueAtTime(
-      Math.min(volume * 0.4, 0.35),
-      this.ctx.currentTime + 1
-    );
+    try {
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
+      // Fade in over 1 second
+      this.masterGain.gain.linearRampToValueAtTime(
+        Math.min(volume * 0.4, 0.35),
+        this.ctx.currentTime + 1
+      );
 
-    // Reverb chain
-    this.dryGain = this.ctx.createGain();
-    this.reverbGain = this.ctx.createGain();
-    this.convolver = this.ctx.createConvolver();
+      // Reverb chain
+      this.dryGain = this.ctx.createGain();
+      this.reverbGain = this.ctx.createGain();
+      this.convolver = this.ctx.createConvolver();
 
-    const reverbAmount = this.mood.reverb;
-    this.dryGain.gain.setValueAtTime(1 - reverbAmount * 0.5, this.ctx.currentTime);
-    this.reverbGain.gain.setValueAtTime(reverbAmount * 0.5, this.ctx.currentTime);
+      const reverbAmount = this.mood.reverb;
+      this.dryGain.gain.setValueAtTime(1 - reverbAmount * 0.5, this.ctx.currentTime);
+      this.reverbGain.gain.setValueAtTime(reverbAmount * 0.5, this.ctx.currentTime);
 
-    this.convolver.buffer = this.createReverbImpulse(1.5, 2.5);
+      this.convolver.buffer = this.createReverbImpulse(1.5, 2.5);
 
-    this.dryGain.connect(this.masterGain);
-    this.convolver.connect(this.reverbGain).connect(this.masterGain);
-    this.masterGain.connect(this.ctx.destination);
+      this.dryGain.connect(this.masterGain);
+      this.convolver.connect(this.reverbGain).connect(this.masterGain);
+      this.masterGain.connect(this.ctx.destination);
 
-    this.noiseBuffer = this.createNoiseBuffer();
-    this.activeNodes = [];
-    this.currentBeat = 0;
-    this.setPlaying(true);
-    this.startPad();
-    this.scheduleBeat();
+      this.noiseBuffer = this.createNoiseBuffer();
+      this.activeNodes = [];
+      this.currentBeat = 0;
+      this.setPlaying(true);
+      this.startPad();
+      this.scheduleBeat();
+    } catch (e) {
+      console.debug("[AmbientMusic] Start failed:", e);
+      this.stopSync();
+    }
   }
 
   private stopSync() {
@@ -306,7 +318,7 @@ class AmbientMusicEngine {
 
   // ── Beat scheduler ──
   private scheduleBeat() {
-    if (!this._isPlaying || !this.ctx || !this.mood) return;
+    if (!this._isPlaying || !this.ctx || !this.mood || this.ctx.state === "closed") return;
 
     const m = this.mood;
     const beatDuration = 60 / m.tempo;

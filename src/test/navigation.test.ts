@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { hashToScreen } from "@/pages/Index";
+import { hashToScreen } from "@/lib/hashUtils";
 
 describe("hashToScreen", () => {
   it("maps valid hash to screen name", () => {

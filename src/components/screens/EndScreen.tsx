@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { GAME_MODES } from "@/data/config";
@@ -24,6 +24,8 @@ const EndScreen = () => {
   const selectedVibe = useGameStore((s) => s.selectedVibe);
   const { recordGame, getBestSession } = usePlayerStats();
 
+  const [isRestarting, setIsRestarting] = useState(false);
+
   const isCultureG = selectedMode === "culture_generale";
   const modeName = useMemo(
     () => GAME_MODES.find(m => m.id === selectedMode)?.name ?? "",
@@ -46,7 +48,7 @@ const EndScreen = () => {
     return { bravest: _bravest, laziest: _laziest, sessionScore: stats.cardsPlayed - stats.refusals };
   }, [stats, players]);
 
-  // Record game in useEffect (side effect), with guard against double-fire in StrictMode
+  // Record game once via ref guard (StrictMode safe)
   const hasRecorded = useRef(false);
   const sessionRef = useRef<ReturnType<typeof recordGame> | null>(null);
   const bestSessionRef = useRef<ReturnType<typeof getBestSession>>(null);
@@ -66,13 +68,24 @@ const EndScreen = () => {
       });
       bestSessionRef.current = getBestSession();
     }
-  }, []); // runs once via ref guard
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const thisSession = sessionRef.current;
   const bestSession = bestSessionRef.current ?? getBestSession();
 
   const isNewRecord = thisSession?.id === bestSession?.id && sessionScore > 0;
   const ending = useMemo(() => endings[Math.floor(Math.random() * endings.length)], []);
+
+  const handleReplay = useCallback(async () => {
+    if (isRestarting) return;
+    setIsRestarting(true);
+    try {
+      await useGameStore.getState().startGame();
+    } catch (err) {
+      console.error("Replay failed:", err);
+      setIsRestarting(false);
+    }
+  }, [isRestarting]);
 
   const handleShare = async () => {
     const blob = await generateShareImage({
@@ -200,12 +213,11 @@ const EndScreen = () => {
         className="w-full max-w-sm space-y-3"
       >
         <button
-          onClick={() => {
-            useGameStore.getState().startGame();
-          }}
-          className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary flex items-center justify-center gap-2 transition-transform active:scale-95"
+          onClick={handleReplay}
+          disabled={isRestarting}
+          className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary flex items-center justify-center gap-2 transition-transform active:scale-95 disabled:opacity-50"
         >
-          <RotateCcw size={20} /> Encore 20 cartes !
+          <RotateCcw size={20} /> {isRestarting ? "Préparation..." : "Encore 20 cartes !"}
         </button>
         <button
           onClick={() => setScreen("vibe")}

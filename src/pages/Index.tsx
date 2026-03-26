@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { hashToScreen, isHashNavigable } from "@/lib/hashUtils";
 import HomeScreen from "@/components/screens/HomeScreen";
 import PlayersScreen from "@/components/screens/PlayersScreen";
 import ModeScreen from "@/components/screens/ModeScreen";
@@ -25,15 +26,6 @@ const SCREENS = {
   packs: PacksScreen,
   settings: SettingsScreen,
 } as const;
-
-/** Screens that can be navigated to via hash (excludes game/end which require state) */
-const HASH_NAVIGABLE = new Set(["home", "players", "mode", "vibe", "packs", "settings"]);
-
-/** Maps a hash string to a valid screen name, or null */
-export function hashToScreen(hash: string): string | null {
-  const screen = hash.replace("#", "");
-  return HASH_NAVIGABLE.has(screen) ? screen : null;
-}
 
 const ScreenFallback = () => (
   <div className="flex min-h-screen items-center justify-center gradient-surface">
@@ -94,7 +86,7 @@ const Index = () => {
     const targetHash = currentScreen === "home" ? "" : currentScreen;
     const currentHash = window.location.hash.replace("#", "");
     if (targetHash !== currentHash) {
-      if (HASH_NAVIGABLE.has(currentScreen)) {
+      if (isHashNavigable(currentScreen)) {
         window.history.pushState(null, "", currentScreen === "home" ? window.location.pathname : `#${currentScreen}`);
       }
     }
