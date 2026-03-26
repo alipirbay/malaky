@@ -146,23 +146,47 @@ export const useGameStore = create<GameState>()(
         const { passes, playerStats } = initPlayerData(players);
         const params = { mode: selectedMode, vibe: selectedVibe, players };
 
-        // STEP 1: Build deck LOCAL instantly
-        let deck = await loadDeckInstant(params);
+        // STEP 1: Build full card pool from local data
+        let pool = await loadDeckInstant(params);
 
-        // Bonus: merge with cached server cards from previous sessions
+        // Merge with cached server cards from previous sessions
         const cachedCards = getCachedServerCards(selectedMode, selectedVibe);
         if (cachedCards.length > 0) {
           const { deduplicateShuffle } = await import("@/lib/shuffleUtils");
-          deck = deduplicateShuffle([...deck, ...cachedCards]);
+          pool = deduplicateShuffle([...pool, ...cachedCards]);
         }
 
-        if (deck.length === 0) {
+        if (pool.length === 0) {
           console.error("No cards available for", selectedMode, selectedVibe);
           set({ currentScreen: "vibe" });
           return;
         }
 
-        // STEP 2: Show game IMMEDIATELY
+        // STEP 2: Filter out recently seen cards, then pick CARDS_PER_GAME
+        const { getSeenCardIds, markCardsSeen } = await import("@/hooks/useSeenCards");
+        const seenIds = new Set(getSeenCardIds());
+
+        let unseen = pool.filter(c => !seenIds.has(c.id));
+        if (unseen.length < GAME_LIMITS.CARDS_PER_GAME) {
+          // Not enough unseen → reset seen cards and use full pool
+          const { clearSeenCards } = await import("@/hooks/useSeenCards");
+          clearSeenCards();
+          unseen = pool;
+        }
+
+        // Fisher-Yates shuffle
+        for (let i = unseen.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [unseen[i], unseen[j]] = [unseen[j], unseen[i]];
+        }
+
+        // Take only CARDS_PER_GAME cards
+        const deck = unseen.slice(0, GAME_LIMITS.CARDS_PER_GAME);
+
+        // Mark these cards as seen for future games
+        markCardsSeen(deck.map(c => c.id));
+
+        // STEP 3: Show game IMMEDIATELY
         set({
           deck,
           currentPlayerIndex: 0,
@@ -172,7 +196,7 @@ export const useGameStore = create<GameState>()(
           currentScreen: "game",
         });
 
-        // STEP 3: Enrich in background for future sessions (NON-BLOCKING)
+        // STEP 4: Enrich in background for future sessions (NON-BLOCKING)
         enrichDeckInBackground(params);
       },
 
@@ -260,12 +284,6 @@ export const useGameStore = create<GameState>()(
         players: state.players,
         selectedMode: state.selectedMode,
         selectedVibe: state.selectedVibe,
-        currentScreen: state.currentScreen,
-        currentCardIndex: state.currentCardIndex,
-        currentPlayerIndex: state.currentPlayerIndex,
-        stats: state.stats,
-        passesRemaining: state.passesRemaining,
-        // deck is intentionally EXCLUDED — rebuilt via startGame() on refresh
       }),
     }
   )
