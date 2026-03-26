@@ -1,25 +1,16 @@
 import { useState, useCallback } from "react";
+import { storageGet, storageSet, storageRemove } from "@/lib/storage";
 import type { GameSession } from "@/data/types";
 
-const STORAGE_KEY = "malaky-sessions";
+const STORAGE_KEY = "sessions";
 const MAX_SESSIONS = 20;
 
 function loadSessions(): GameSession[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    console.warn("Failed to load sessions:", e);
-    return [];
-  }
+  return storageGet<GameSession[]>(STORAGE_KEY, []);
 }
 
 function saveSessions(sessions: GameSession[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-  } catch (e) {
-    console.warn("Failed to save sessions:", e);
-  }
+  storageSet(STORAGE_KEY, sessions);
 }
 
 export function usePlayerStats() {
@@ -38,7 +29,7 @@ export function usePlayerStats() {
   }, []);
 
   const clearStats = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    storageRemove(STORAGE_KEY);
     setSessions([]);
   }, []);
 

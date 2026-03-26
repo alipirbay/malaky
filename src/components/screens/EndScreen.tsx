@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { GAME_MODES } from "@/data/config";
@@ -6,6 +6,8 @@ import { Trophy, RotateCcw, Share2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
 import { generateShareImage } from "@/hooks/useShareImage";
+import { checkNewAchievements } from "@/lib/achievements";
+import { useShallow } from "zustand/react/shallow";
 
 const endings = [
   "Ity no fialam-boly gasy tena izy! 🇲🇬",
@@ -16,19 +18,23 @@ const endings = [
 ];
 
 const EndScreen = () => {
-  const stats = useGameStore((s) => s.stats);
-  const players = useGameStore((s) => s.players);
-  const resetGame = useGameStore((s) => s.resetGame);
-  const setScreen = useGameStore((s) => s.setScreen);
-  const selectedMode = useGameStore((s) => s.selectedMode);
-  const selectedVibe = useGameStore((s) => s.selectedVibe);
-  const { recordGame, getBestSession } = usePlayerStats();
+  const { stats, players, selectedMode, selectedVibe, resetGame, setScreen } = useGameStore(
+    useShallow((s) => ({
+      stats: s.stats,
+      players: s.players,
+      selectedMode: s.selectedMode,
+      selectedVibe: s.selectedVibe,
+      resetGame: s.resetGame,
+      setScreen: s.setScreen,
+    }))
+  );
 
+  const { sessions, recordGame, getBestSession } = usePlayerStats();
   const [isRestarting, setIsRestarting] = useState(false);
 
   const isCultureG = selectedMode === "culture_generale";
   const modeName = useMemo(
-    () => GAME_MODES.find(m => m.id === selectedMode)?.name ?? "",
+    () => GAME_MODES.find((m) => m.id === selectedMode)?.name ?? "",
     [selectedMode]
   );
 
@@ -45,36 +51,37 @@ const EndScreen = () => {
       if (wscore > worstScore) { worstScore = wscore; _laziest = name; }
     });
 
-    return { bravest: _bravest, laziest: _laziest, sessionScore: stats.cardsPlayed - stats.refusals };
+    return {
+      bravest: _bravest,
+      laziest: _laziest,
+      sessionScore: stats.cardsPlayed - stats.refusals,
+    };
   }, [stats, players]);
 
-  // Record game once via ref guard (StrictMode safe)
-  const hasRecorded = useRef(false);
-  const sessionRef = useRef<ReturnType<typeof recordGame> | null>(null);
-  const bestSessionRef = useRef<ReturnType<typeof getBestSession>>(null);
+  // Record game once via useMemo (runs once at mount)
+  const sessionData = useMemo(() => {
+    return recordGame({
+      players: players.map((p) => p.name),
+      mode: selectedMode ?? "",
+      vibe: selectedVibe ?? "",
+      cardsPlayed: stats.cardsPlayed,
+      refusals: stats.refusals,
+      score: sessionScore,
+      bravest,
+      quizScore: isCultureG ? stats.quizScore : undefined,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  useEffect(() => {
-    if (!hasRecorded.current) {
-      hasRecorded.current = true;
-      sessionRef.current = recordGame({
-        players: players.map(p => p.name),
-        mode: selectedMode ?? "",
-        vibe: selectedVibe ?? "",
-        cardsPlayed: stats.cardsPlayed,
-        refusals: stats.refusals,
-        score: sessionScore,
-        bravest,
-        quizScore: isCultureG ? stats.quizScore : undefined,
-      });
-      bestSessionRef.current = getBestSession();
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const thisSession = sessionRef.current;
-  const bestSession = bestSessionRef.current ?? getBestSession();
-
-  const isNewRecord = thisSession?.id === bestSession?.id && sessionScore > 0;
+  const bestSession = useMemo(() => getBestSession(), [getBestSession]);
+  const isNewRecord = sessionData?.id === bestSession?.id && sessionScore > 0;
   const ending = useMemo(() => endings[Math.floor(Math.random() * endings.length)], []);
+
+  // Check achievements
+  const newAchievements = useMemo(() => {
+    return checkNewAchievements(sessions, sessionData);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleReplay = useCallback(async () => {
     if (isRestarting) return;
@@ -108,7 +115,9 @@ const EndScreen = () => {
     if (blob) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = "malaky-score.png"; a.click();
+      a.href = url;
+      a.download = "malaky-score.png";
+      a.click();
       URL.revokeObjectURL(url);
       toast.success("Image téléchargée !");
       return;
@@ -162,6 +171,27 @@ const EndScreen = () => {
             <p className="text-2xl font-black text-accent">{stats.quizScore}</p>
             <p className="text-xs text-muted-foreground">bonnes réponses</p>
           </div>
+        )}
+
+        {/* New achievements */}
+        {newAchievements.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="card-game space-y-2"
+          >
+            <p className="text-sm font-bold text-foreground">🎖️ Nouveau badge !</p>
+            {newAchievements.map((a) => (
+              <div key={a.id} className="flex items-center gap-3">
+                <span className="text-2xl">{a.emoji}</span>
+                <div>
+                  <p className="text-sm font-bold text-foreground">{a.name}</p>
+                  <p className="text-xs text-muted-foreground">{a.description}</p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
         )}
 
         <div className="card-game space-y-2">

@@ -1,13 +1,24 @@
 import type { GameCard } from "@/data/types";
 
 /**
+ * Pure Fisher-Yates shuffle — returns a new array.
+ */
+export function fisherYatesShuffle<T>(arr: T[]): T[] {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+/**
  * Fisher-Yates shuffle + deduplicate by text + space similar cards apart.
- * This is a pure utility — no card data dependency.
  */
 export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
   // 1. Deduplicate
   const seen = new Set<string>();
-  const unique = cards.filter(c => {
+  const unique = cards.filter((c) => {
     const key = c.text.toLowerCase().trim();
     if (seen.has(key)) return false;
     seen.add(key);
@@ -15,26 +26,24 @@ export function deduplicateShuffle(cards: GameCard[]): GameCard[] {
   });
 
   // 2. Fisher-Yates shuffle
-  for (let i = unique.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [unique[i], unique[j]] = [unique[j], unique[i]];
-  }
+  const shuffled = fisherYatesShuffle(unique);
 
   // 3. Space cards with similar bases apart
-  const getBase = (text: string) => text
-    .replace(/^(Je n'ai jamais )/i, "")
-    .split('.')[0]
-    .trim();
+  const getBase = (text: string) =>
+    text
+      .replace(/^(Je n'ai jamais )/i, "")
+      .split(".")[0]
+      .trim();
 
   const MIN_GAP = 8;
   const result: GameCard[] = [];
   const recentSet = new Set<string>();
   const recentQueue: string[] = [];
-  const remaining = [...unique];
+  const remaining = [...shuffled];
   let stuckCount = 0;
 
   while (remaining.length > 0 && stuckCount < remaining.length * 2) {
-    const idx = remaining.findIndex(c => {
+    const idx = remaining.findIndex((c) => {
       const base = getBase(c.text);
       return !recentSet.has(base);
     });

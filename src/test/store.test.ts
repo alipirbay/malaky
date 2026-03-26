@@ -25,7 +25,7 @@ describe("GAME_LIMITS", () => {
 
 describe("initPlayerData", () => {
   it("creates passes and stats for all players", () => {
-    const players = [{ name: "Alice" }, { name: "Bob" }, { name: "Charlie" }];
+    const players = [{ name: "Alice", color: "0 0% 0%" }, { name: "Bob", color: "0 0% 0%" }, { name: "Charlie", color: "0 0% 0%" }];
     const { passes, playerStats } = initPlayerData(players);
     expect(Object.keys(passes)).toHaveLength(3);
     expect(passes["Alice"]).toBe(GAME_LIMITS.MAX_PASSES_PER_PLAYER);
@@ -39,7 +39,7 @@ describe("initPlayerData", () => {
   });
 
   it("handles duplicate player names gracefully", () => {
-    const players = [{ name: "Alice" }, { name: "Alice" }];
+    const players = [{ name: "Alice", color: "0 0% 0%" }, { name: "Alice", color: "0 0% 0%" }];
     const { passes } = initPlayerData(players);
     expect(passes["Alice"]).toBe(GAME_LIMITS.MAX_PASSES_PER_PLAYER);
   });

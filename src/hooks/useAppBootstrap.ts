@@ -1,20 +1,19 @@
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { hashToScreen, isHashNavigable } from "@/lib/hashUtils";
+import { storageGet, storageSet } from "@/lib/storage";
 
 /**
  * App bootstrap hook — handles:
  * - First launch modal check
  * - Hash → screen sync on mount
  * - Safe redirect if refresh left app in broken state
- * - Hash ↔ screen sync (popstate + pushState)
  */
 export function useAppBootstrap() {
   const [showFirstLaunch, setShowFirstLaunch] = useState(false);
 
-  // Bootstrap once on mount
   useEffect(() => {
-    if (!localStorage.getItem("malaky-terms-accepted")) {
+    if (!storageGet<boolean>("terms-accepted", false)) {
       setShowFirstLaunch(true);
     }
 
@@ -37,7 +36,7 @@ export function useAppBootstrap() {
   }, []);
 
   const acceptTerms = () => {
-    localStorage.setItem("malaky-terms-accepted", "true");
+    storageSet("terms-accepted", true);
     setShowFirstLaunch(false);
   };
 

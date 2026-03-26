@@ -1,12 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { GameMode, Vibe, GameCard } from "@/data/types";
+import type { GameMode, Vibe, GameCard, Player } from "@/data/types";
 import { GAME_LIMITS } from "@/data/constants";
-
-interface Player {
-  name: string;
-  color: string;
-}
 
 interface GameStats {
   cardsPlayed: number;
@@ -20,7 +15,7 @@ interface GameState {
   selectedMode: GameMode | null;
   selectedVibe: Vibe | null;
   unlockedVibes: Record<Vibe, boolean>;
-  currentScreen: "home" | "players" | "mode" | "vibe" | "game" | "end" | "packs" | "settings" | "payment_return";
+  currentScreen: "home" | "players" | "mode" | "vibe" | "game" | "end" | "packs" | "settings" | "history" | "payment_return";
   pendingTransactionId: string | null;
   currentPlayerIndex: number;
   currentCardIndex: number;
@@ -95,13 +90,9 @@ export const useGameStore = create<GameState>()(
       },
 
       shufflePlayers: () => {
-        set((state) => {
-          const shuffled = [...state.players];
-          for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-          }
-          return { players: shuffled };
+        // Dynamic import to avoid pulling shuffleUtils into main chunk
+        import("@/lib/shuffleUtils").then(({ fisherYatesShuffle }) => {
+          set((state) => ({ players: fisherYatesShuffle(state.players) }));
         });
       },
 
@@ -136,9 +127,13 @@ export const useGameStore = create<GameState>()(
           return;
         }
 
-        // Dynamic import — lightweight, no card_content pulled in at top level
-        const { loadDeckInstant, enrichDeckInBackground, getCachedServerCards, initPlayerData } =
-          await import("@/lib/deckLoader");
+        // Single barrel import
+        const {
+          loadDeckInstant, enrichDeckInBackground, getCachedServerCards,
+          initPlayerData, deduplicateShuffle, fisherYatesShuffle,
+          getSeenCardIds, markCardsSeen, clearSeenCards,
+        } = await import("@/lib/gameInit");
+
         const { passes, playerStats } = initPlayerData(players);
         const params = { mode: selectedMode, vibe: selectedVibe, players };
 
@@ -148,7 +143,6 @@ export const useGameStore = create<GameState>()(
         // Merge with cached server cards from previous sessions
         const cachedCards = getCachedServerCards(selectedMode, selectedVibe);
         if (cachedCards.length > 0) {
-          const { deduplicateShuffle } = await import("@/lib/shuffleUtils");
           pool = deduplicateShuffle([...pool, ...cachedCards]);
         }
 
@@ -159,27 +153,16 @@ export const useGameStore = create<GameState>()(
         }
 
         // STEP 2: Filter out recently seen cards, then pick CARDS_PER_GAME
-        const { getSeenCardIds, markCardsSeen } = await import("@/hooks/useSeenCards");
         const seenIds = new Set(getSeenCardIds());
-
         let unseen = pool.filter(c => !seenIds.has(c.id));
         if (unseen.length < GAME_LIMITS.CARDS_PER_GAME) {
-          // Not enough unseen → reset seen cards and use full pool
-          const { clearSeenCards } = await import("@/hooks/useSeenCards");
           clearSeenCards();
           unseen = pool;
         }
 
-        // Fisher-Yates shuffle
-        for (let i = unseen.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [unseen[i], unseen[j]] = [unseen[j], unseen[i]];
-        }
+        const shuffledUnseen = fisherYatesShuffle(unseen);
+        const deck = shuffledUnseen.slice(0, GAME_LIMITS.CARDS_PER_GAME);
 
-        // Take only CARDS_PER_GAME cards
-        const deck = unseen.slice(0, GAME_LIMITS.CARDS_PER_GAME);
-
-        // Mark these cards as seen for future games
         markCardsSeen(deck.map(c => c.id));
 
         // STEP 3: Show game IMMEDIATELY
@@ -271,7 +254,6 @@ export const useGameStore = create<GameState>()(
     {
       name: "malaky-store",
       partialize: (state) => ({
-        // Structural data — persisted across sessions
         unlockedVibes: state.unlockedVibes,
         soundEnabled: state.soundEnabled,
         soundVolume: state.soundVolume,
@@ -279,8 +261,6 @@ export const useGameStore = create<GameState>()(
         pendingTransactionId: state.pendingTransactionId,
         quickChallengeDuration: state.quickChallengeDuration,
         players: state.players,
-        // NOTE: currentScreen, deck, currentCardIndex, stats are NOT persisted.
-        // On refresh, the app always starts at "home". This is intentional.
       }),
     }
   )

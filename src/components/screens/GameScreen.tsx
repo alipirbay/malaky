@@ -1,12 +1,16 @@
-import { useState, useCallback, useEffect, useRef, useMemo, memo } from "react";
+import { useState, useCallback, useEffect, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import { GAME_MODES } from "@/data/config";
 import { fillCardTemplate } from "@/lib/cardUtils";
 import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward, Flag, Music, Music2 } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 import { reportCard } from "@/hooks/useCardReport";
 import { useAmbientMusic } from "@/hooks/useAmbientMusic";
+import { useGameTimer } from "@/hooks/useGameTimer";
+import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
+import { getNetworkStatus, onNetworkChange } from "@/lib/networkStatus";
 import { toast } from "sonner";
 
 const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
@@ -52,7 +56,7 @@ const CardTextDisplay = memo(function CardTextDisplay({
       >
         {cardMeta.label}
       </span>
-      <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground">{cardText}</p>
+      <p className="mt-4 px-2 text-xl font-bold leading-relaxed text-foreground" aria-live="polite">{cardText}</p>
       {!reported ? (
         <button
           onClick={onReport}
@@ -159,7 +163,7 @@ const TimerDisplay = memo(function TimerDisplay({
   );
 });
 
-// --- Pause Menu (extracted) ---
+// --- Pause Menu ---
 
 interface PauseMenuProps {
   onResume: () => void;
@@ -189,28 +193,16 @@ const PauseMenu = memo(function PauseMenu({ onResume, onReplay, onChangeVibe, on
           Tu peux reprendre, changer d'ambiance ou revenir à l'accueil.
         </p>
         <div className="mt-5 space-y-3">
-          <button
-            onClick={onResume}
-            className="gradient-primary w-full rounded-2xl px-4 py-3 font-semibold text-primary-foreground transition-transform active:scale-95"
-          >
+          <button onClick={onResume} className="gradient-primary w-full rounded-2xl px-4 py-3 font-semibold text-primary-foreground transition-transform active:scale-95">
             Reprendre
           </button>
-          <button
-            onClick={onReplay}
-            className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
-          >
+          <button onClick={onReplay} className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95">
             Rejouer ce mode
           </button>
-          <button
-            onClick={onChangeVibe}
-            className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
-          >
+          <button onClick={onChangeVibe} className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95">
             Changer d'ambiance
           </button>
-          <button
-            onClick={onQuit}
-            className="w-full rounded-2xl bg-card px-4 py-3 font-semibold text-muted-foreground transition-transform active:scale-95"
-          >
+          <button onClick={onQuit} className="w-full rounded-2xl bg-card px-4 py-3 font-semibold text-muted-foreground transition-transform active:scale-95">
             Quitter vers l'accueil
           </button>
         </div>
@@ -222,19 +214,25 @@ const PauseMenu = memo(function PauseMenu({ onResume, onReplay, onChangeVibe, on
 // --- Main component ---
 
 const GameScreen = () => {
-  const players = useGameStore((s) => s.players);
-  const currentPlayerIndex = useGameStore((s) => s.currentPlayerIndex);
-  const currentCardIndex = useGameStore((s) => s.currentCardIndex);
-  const deck = useGameStore((s) => s.deck);
-  const selectedMode = useGameStore((s) => s.selectedMode);
-  const selectedVibe = useGameStore((s) => s.selectedVibe);
-  const nextCard = useGameStore((s) => s.nextCard);
-  const setScreen = useGameStore((s) => s.setScreen);
-  const soundEnabled = useGameStore((s) => s.soundEnabled);
-  const toggleSound = useGameStore((s) => s.toggleSound);
-  const passesRemaining = useGameStore((s) => s.passesRemaining);
-  const stats = useGameStore((s) => s.stats);
-  const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
+  const {
+    players, currentPlayerIndex, currentCardIndex, deck,
+    selectedMode, selectedVibe, nextCard, setScreen,
+    soundEnabled, toggleSound, passesRemaining, stats, quickChallengeDuration,
+  } = useGameStore(useShallow((s) => ({
+    players: s.players,
+    currentPlayerIndex: s.currentPlayerIndex,
+    currentCardIndex: s.currentCardIndex,
+    deck: s.deck,
+    selectedMode: s.selectedMode,
+    selectedVibe: s.selectedVibe,
+    nextCard: s.nextCard,
+    setScreen: s.setScreen,
+    soundEnabled: s.soundEnabled,
+    toggleSound: s.toggleSound,
+    passesRemaining: s.passesRemaining,
+    stats: s.stats,
+    quickChallengeDuration: s.quickChallengeDuration,
+  })));
 
   const { playClick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
   const { isPlaying: musicPlaying, toggleMusic } = useAmbientMusic(true, selectedVibe);
@@ -242,13 +240,12 @@ const GameScreen = () => {
   const [showPauseMenu, setShowPauseMenu] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [direction, setDirection] = useState(1);
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [timerDone, setTimerDone] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
   const [reported, setReported] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Online status
+  const [isOnline, setIsOnline] = useState(getNetworkStatus());
+  useEffect(() => onNetworkChange(setIsOnline), []);
 
   const currentPlayer = players[currentPlayerIndex];
   const card = deck[currentCardIndex];
@@ -276,63 +273,42 @@ const GameScreen = () => {
   const isCultureG = selectedMode === "culture_generale";
   const progressPct = deck.length > 0 ? ((currentCardIndex + 1) / deck.length) * 100 : 0;
 
-  // Cleanup timer helper
-  const clearTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
+  // Timer hook
+  const onTimerDone = useCallback(() => {
+    stopTickLoop();
+    playBuzzer();
+  }, [stopTickLoop, playBuzzer]);
 
+  const { timeLeft, timerRunning, timerDone, startTimer: rawStartTimer, resetTimer, clearTimer } = useGameTimer({
+    totalDuration,
+    isAutoTimer,
+    currentCardIndex,
+    onTimerDone,
+  });
+
+  // Reset showAnswer/reported on card change
   useEffect(() => {
-    setTimerRunning(false);
-    setTimerDone(false);
-    setTimeLeft(totalDuration);
     setShowAnswer(false);
     setReported(false);
-    clearTimer();
-    if (isAutoTimer) setTimerRunning(true);
-  }, [currentCardIndex, totalDuration, isAutoTimer, clearTimer]);
+  }, [currentCardIndex]);
 
+  // Start/stop tick loop
   useEffect(() => {
-    if (!timerRunning) {
+    if (timerRunning) {
+      startTickLoop(1000);
+    } else {
       stopTickLoop();
-      return;
     }
-    startTickLoop(1000);
-    intervalRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          setTimerRunning(false);
-          setTimerDone(true);
-          stopTickLoop();
-          playBuzzer();
-          clearTimer();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => {
-      stopTickLoop();
-      clearTimer();
-    };
-  }, [timerRunning, startTickLoop, stopTickLoop, playBuzzer, clearTimer]);
+    return () => stopTickLoop();
+  }, [timerRunning, startTickLoop, stopTickLoop]);
 
   const startTimer = useCallback(() => {
-    setTimeLeft(totalDuration);
-    setTimerDone(false);
-    setTimerRunning(true);
+    rawStartTimer();
     playClick();
-  }, [totalDuration, playClick]);
+  }, [rawStartTimer, playClick]);
 
-  const resetTimer = useCallback(() => {
-    setTimerRunning(false);
-    setTimerDone(false);
-    setTimeLeft(totalDuration);
-    clearTimer();
-  }, [totalDuration, clearTimer]);
-
+  // Swipe navigation
+  const canSwipe = !isQuizCard || showAnswer;
   const handleNext = useCallback(() => {
     if (isAnimating) return;
     setIsAnimating(true);
@@ -346,6 +322,11 @@ const GameScreen = () => {
       setIsAnimating(false);
     }, 350);
   }, [isAnimating, nextCard, playWhoosh, vibrate, stopTickLoop, clearTimer]);
+
+  const { handleTouchStart, handleTouchEnd } = useSwipeNavigation({
+    canNavigate: canSwipe && !isAnimating,
+    onSwipeLeft: handleNext,
+  });
 
   const handleQuizAnswer = useCallback((wasCorrect: boolean) => {
     if (isAnimating) return;
@@ -372,23 +353,6 @@ const GameScreen = () => {
     }, 350);
   }, [isAnimating, nextCard, vibrate, stopTickLoop, clearTimer]);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientX);
-  }, []);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (touchStart === null) return;
-    const diff = touchStart - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 80 && diff > 0) {
-      if (isQuizCard && !showAnswer) {
-        setTouchStart(null);
-        return;
-      }
-      handleNext();
-    }
-    setTouchStart(null);
-  }, [touchStart, isQuizCard, showAnswer, handleNext]);
-
   const handleReport = useCallback(async () => {
     if (!card) return;
     const ok = await reportCard(card.text, selectedMode, selectedVibe ?? null);
@@ -405,15 +369,18 @@ const GameScreen = () => {
     try {
       await useGameStore.getState().startGame();
     } catch {
+      clearTimer();
+      stopTickLoop();
+      setIsAnimating(false);
       useGameStore.getState().setScreen("vibe");
     }
-  }, []);
+  }, [clearTimer, stopTickLoop]);
   const handlePauseChangeVibe = useCallback(() => setScreen("vibe"), [setScreen]);
   const handlePauseQuit = useCallback(() => setScreen("home"), [setScreen]);
 
   const currentPasses = passesRemaining[currentPlayer?.name] ?? 0;
 
-  // Safe fallback — no card or player → spinner then redirect
+  // Safe fallback
   if (!card || !currentPlayer) {
     return (
       <div className="gradient-surface flex min-h-screen items-center justify-center safe-top safe-bottom">
@@ -441,6 +408,11 @@ const GameScreen = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {!isOnline && (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+              Hors-ligne
+            </span>
+          )}
           {isCultureG && (
             <span className="text-xs font-bold text-accent">{stats.quizScore ?? 0} pts</span>
           )}

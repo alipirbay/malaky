@@ -15,6 +15,21 @@ export type GameMode = "truth_dare" | "never_have_i_ever" | "most_likely" | "wou
 export type Vibe = "soft" | "fun" | "hot" | "chaos" | "couple" | "apero" | "mada" | "confessions" | "vip" | "afterdark" | "facile" | "intermediaire" | "difficile" | "expert";
 export type Difficulty = "facile" | "intermediaire" | "difficile" | "expert";
 
+export interface Player {
+  name: string;
+  color: string;
+}
+
+export interface StoredCard {
+  id?: string;
+  mode?: string;
+  vibe?: string;
+  card_type: string;
+  template: string;
+  answer?: string;
+  lang?: string;
+}
+
 export interface GameSession {
   id: string;
   date: string;

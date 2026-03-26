@@ -18,25 +18,18 @@ interface VoteResult {
   totalVotes: number;
 }
 
-const CACHE_KEY = "malaky-dilemme-cache";
+import { storageGet, storageSet, storageRemove } from "@/lib/storage";
+
 const FETCH_TIMEOUT_MS = 3000;
 
 function getCachedDilemme(today: string): DailyDilemme | null {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const cached = JSON.parse(raw) as DailyDilemme;
-    if (cached.active_date === today) return cached;
-    return null;
-  } catch {
-    return null;
-  }
+  const cached = storageGet<DailyDilemme | null>("dilemme-cache", null);
+  if (cached && cached.active_date === today) return cached;
+  return null;
 }
 
 function cacheDilemme(d: DailyDilemme): void {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(d));
-  } catch { /* ignore */ }
+  storageSet("dilemme-cache", d);
 }
 
 function buildLocalDilemme(today: string): DailyDilemme {
@@ -59,9 +52,7 @@ export function useDailyDilemme() {
   const [loading, setLoading] = useState(false);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
   const [hasVoted, setHasVoted] = useState(() => {
-    try {
-      return !!localStorage.getItem(`dilemme-voted-${initialDilemme.id}`);
-    } catch { return false; }
+    return storageGet<string | null>(`dilemme-voted-${initialDilemme.id}`, null) !== null;
   });
   const [voting, setVoting] = useState(false);
   const fetchedRef = useRef(false);
@@ -105,7 +96,7 @@ export function useDailyDilemme() {
           const d = existing as DailyDilemme;
           setDilemme(d);
           cacheDilemme(d);
-          const voted = localStorage.getItem(getVoteKey(d.id));
+          const voted = storageGet<string | null>(getVoteKey(d.id), null);
           if (voted) {
             setHasVoted(true);
             fetchVotes(d.id);
@@ -120,7 +111,7 @@ export function useDailyDilemme() {
           const d = data.dilemme as DailyDilemme;
           setDilemme(d);
           cacheDilemme(d);
-          const voted = localStorage.getItem(getVoteKey(d.id));
+          const voted = storageGet<string | null>(getVoteKey(d.id), null);
           if (voted) {
             setHasVoted(true);
             fetchVotes(d.id);
@@ -146,7 +137,7 @@ export function useDailyDilemme() {
     try {
       // Offline / local dilemme fallback
       if (dilemme.id.startsWith("local-")) {
-        localStorage.setItem(getVoteKey(dilemme.id), choice);
+        storageSet(getVoteKey(dilemme.id), choice);
         setHasVoted(true);
         const aPct = choice === "a"
           ? 52 + Math.floor(Math.random() * 13)
@@ -177,13 +168,13 @@ export function useDailyDilemme() {
         console.warn("[vote] Insert failed:", error.message);
       }
 
-      localStorage.setItem(getVoteKey(dilemme.id), choice);
+      storageSet(getVoteKey(dilemme.id), choice);
       setHasVoted(true);
       await fetchVotes(dilemme.id);
     } catch (e) {
       console.warn("[vote] Error:", e);
       // Still mark as voted locally to avoid stuck state
-      localStorage.setItem(getVoteKey(dilemme.id), choice);
+      storageSet(getVoteKey(dilemme.id), choice);
       setHasVoted(true);
     } finally {
       setVoting(false);

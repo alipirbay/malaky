@@ -1,8 +1,9 @@
-import type { GameCard, Vibe } from "@/data/types";
+import type { GameCard, Vibe, StoredCard } from "@/data/types";
 import { GAME_LIMITS } from "@/data/constants";
+import { storageGet, storageSet, storageKeys } from "@/lib/storage";
 
-const PACK_STORAGE_PREFIX = "malaky-pack-";
-const PACK_META_KEY = "malaky-packs-meta";
+const PACK_KEY_PREFIX = "pack-";
+const PACK_META_KEY = "packs-meta";
 
 interface PackMeta {
   vibe: Vibe;
@@ -11,25 +12,11 @@ interface PackMeta {
   version: number;
 }
 
-interface RawPackCard {
-  id?: string;
-  mode?: string;
-  vibe?: string;
-  card_type?: string;
-  template?: string;
-  answer?: string;
-  lang?: string;
-}
-
 /**
  * Vérifie si un pack est téléchargé localement.
  */
 export function isPackDownloaded(vibe: Vibe): boolean {
-  try {
-    return localStorage.getItem(`${PACK_STORAGE_PREFIX}${vibe}`) !== null;
-  } catch {
-    return false;
-  }
+  return storageGet<StoredCard[] | null>(`${PACK_KEY_PREFIX}${vibe}`, null) !== null;
 }
 
 /**
@@ -48,15 +35,10 @@ export async function downloadPack(vibe: Vibe): Promise<boolean> {
 
     if (error || !data?.length) return false;
 
-    localStorage.setItem(`${PACK_STORAGE_PREFIX}${vibe}`, JSON.stringify(data));
+    storageSet(`${PACK_KEY_PREFIX}${vibe}`, data);
 
     // Update metadata
-    let meta: PackMeta[] = [];
-    try {
-      meta = JSON.parse(localStorage.getItem(PACK_META_KEY) || "[]");
-      if (!Array.isArray(meta)) meta = [];
-    } catch { meta = []; }
-
+    const meta = storageGet<PackMeta[]>(PACK_META_KEY, []);
     const existing = meta.findIndex(m => m.vibe === vibe);
     const newMeta: PackMeta = {
       vibe,
@@ -66,7 +48,7 @@ export async function downloadPack(vibe: Vibe): Promise<boolean> {
     };
     if (existing >= 0) meta[existing] = newMeta;
     else meta.push(newMeta);
-    localStorage.setItem(PACK_META_KEY, JSON.stringify(meta));
+    storageSet(PACK_META_KEY, meta);
 
     return true;
   } catch (e) {
@@ -79,26 +61,19 @@ export async function downloadPack(vibe: Vibe): Promise<boolean> {
  * Récupérer les cartes d'un pack téléchargé.
  */
 export function getDownloadedPackCards(vibe: Vibe): GameCard[] {
-  try {
-    const raw = localStorage.getItem(`${PACK_STORAGE_PREFIX}${vibe}`);
-    if (!raw) return [];
-    const parsed: RawPackCard[] = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map((c, i) => ({
-      id: c.id ?? `pack-${vibe}-${i}`,
-      mode: (c.mode ?? "truth_dare") as GameCard["mode"],
-      vibe: (c.vibe ?? vibe) as Vibe,
-      lang: (c.lang ?? "fr") as "fr" | "mg",
-      card_type: (c.card_type ?? "truth") as GameCard["card_type"],
-      text: c.template ?? "",
-      answer: c.answer ?? undefined,
-      requires_prop: "none" as const,
-      player_min: 2,
-      player_max: GAME_LIMITS.MAX_PLAYERS,
-    }));
-  } catch {
-    return [];
-  }
+  const parsed = storageGet<StoredCard[]>(`${PACK_KEY_PREFIX}${vibe}`, []);
+  return parsed.map((c, i) => ({
+    id: c.id ?? `pack-${vibe}-${i}`,
+    mode: (c.mode ?? "truth_dare") as GameCard["mode"],
+    vibe: (c.vibe ?? vibe) as Vibe,
+    lang: (c.lang ?? "fr") as "fr" | "mg",
+    card_type: (c.card_type ?? "truth") as GameCard["card_type"],
+    text: c.template ?? "",
+    answer: c.answer ?? undefined,
+    requires_prop: "none" as const,
+    player_min: 2,
+    player_max: GAME_LIMITS.MAX_PLAYERS,
+  }));
 }
 
 /**
@@ -107,11 +82,10 @@ export function getDownloadedPackCards(vibe: Vibe): GameCard[] {
 export function getPacksStorageSize(): string {
   let total = 0;
   try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith(PACK_STORAGE_PREFIX)) {
-        total += (localStorage.getItem(key) || "").length;
-      }
+    const keys = storageKeys(PACK_KEY_PREFIX);
+    for (const key of keys) {
+      const raw = localStorage.getItem(`malaky-${key}`);
+      if (raw) total += raw.length;
     }
   } catch {
     return "0 B";

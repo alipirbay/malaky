@@ -1,17 +1,10 @@
 /**
  * Deck loading logic — LOCAL-FIRST architecture.
- * 
- * Strategy:
- * 1. Build deck INSTANTLY from local cards (< 100ms)
- * 2. Enrich in background for FUTURE sessions (non-blocking)
  */
-import type { GameCard, GameMode, Vibe } from "@/data/types";
+import type { GameCard, GameMode, Vibe, Player, StoredCard } from "@/data/types";
 import { GAME_LIMITS } from "@/data/constants";
 import { deduplicateShuffle } from "@/lib/shuffleUtils";
-
-interface Player {
-  name: string;
-}
+import { storageGet, storageSet } from "@/lib/storage";
 
 interface LoadDeckParams {
   mode: GameMode;
@@ -19,19 +12,8 @@ interface LoadDeckParams {
   players: Player[];
 }
 
-interface CachedCard {
-  id?: string;
-  mode?: string;
-  vibe?: string;
-  card_type: string;
-  template: string;
-  answer?: string;
-  lang?: string;
-}
-
 /**
  * Load deck INSTANTLY from local cards + downloaded packs.
- * No network call — always synchronous after dynamic import.
  */
 export async function loadDeckInstant(params: LoadDeckParams): Promise<GameCard[]> {
   const { getFilteredCards } = await import("@/data/cards");
@@ -46,9 +28,11 @@ export async function loadDeckInstant(params: LoadDeckParams): Promise<GameCard[
 
 /**
  * Enrich card catalogue in background for FUTURE sessions.
- * Calls Supabase to fetch new DB cards. NEVER blocking.
  */
 export function enrichDeckInBackground(params: LoadDeckParams): void {
+  // Skip if offline
+  if (typeof navigator !== "undefined" && !navigator.onLine) return;
+
   (async () => {
     try {
       const { supabase } = await import("@/integrations/supabase/client");
@@ -67,9 +51,9 @@ export function enrichDeckInBackground(params: LoadDeckParams): void {
       });
 
       if (data?.cards?.length) {
-        cacheCardsLocally(params.mode, params.vibe, data.cards as CachedCard[]);
+        cacheCardsLocally(params.mode, params.vibe, data.cards as StoredCard[]);
         markCardsSeen(
-          (data.cards as CachedCard[])
+          (data.cards as StoredCard[])
             .map(c => c.id)
             .filter((id): id is string => Boolean(id))
         );
@@ -83,23 +67,18 @@ export function enrichDeckInBackground(params: LoadDeckParams): void {
 /**
  * Cache server cards in localStorage for future sessions.
  */
-const CACHE_KEY_PREFIX = "malaky-cards-cache-";
+const CACHE_KEY_PREFIX = "cards-cache-";
 const MAX_CACHED_PER_COMBO = 200;
 
-function cacheCardsLocally(mode: GameMode, vibe: Vibe, cards: CachedCard[]): void {
+function cacheCardsLocally(mode: GameMode, vibe: Vibe, cards: StoredCard[]): void {
   try {
     const key = `${CACHE_KEY_PREFIX}${mode}-${vibe}`;
-    let existing: CachedCard[] = [];
-    try {
-      existing = JSON.parse(localStorage.getItem(key) || "[]");
-      if (!Array.isArray(existing)) existing = [];
-    } catch { existing = []; }
-
+    const existing = storageGet<StoredCard[]>(key, []);
     const merged = [...existing, ...cards];
     const unique = merged.filter((c, i, arr) =>
       arr.findIndex(x => x.template === c.template) === i
     );
-    localStorage.setItem(key, JSON.stringify(unique.slice(-MAX_CACHED_PER_COMBO)));
+    storageSet(key, unique.slice(-MAX_CACHED_PER_COMBO));
   } catch (e) {
     console.debug("[cacheCards] Storage full or error:", e);
   }
@@ -109,27 +88,20 @@ function cacheCardsLocally(mode: GameMode, vibe: Vibe, cards: CachedCard[]): voi
  * Get cached server cards from previous sessions.
  */
 export function getCachedServerCards(mode: GameMode, vibe: Vibe): GameCard[] {
-  try {
-    const key = `${CACHE_KEY_PREFIX}${mode}-${vibe}`;
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const cards: CachedCard[] = JSON.parse(raw);
-    if (!Array.isArray(cards)) return [];
-    return cards.map((c, i) => ({
-      id: c.id ?? `cached-${mode}-${vibe}-${i}`,
-      mode,
-      vibe,
-      lang: (c.lang ?? "fr") as "fr" | "mg",
-      card_type: c.card_type as GameCard["card_type"],
-      text: c.template,
-      answer: c.answer ?? undefined,
-      requires_prop: "none" as const,
-      player_min: 2,
-      player_max: GAME_LIMITS.MAX_PLAYERS,
-    }));
-  } catch {
-    return [];
-  }
+  const key = `${CACHE_KEY_PREFIX}${mode}-${vibe}`;
+  const cards = storageGet<StoredCard[]>(key, []);
+  return cards.map((c, i) => ({
+    id: c.id ?? `cached-${mode}-${vibe}-${i}`,
+    mode,
+    vibe,
+    lang: (c.lang ?? "fr") as "fr" | "mg",
+    card_type: c.card_type as GameCard["card_type"],
+    text: c.template,
+    answer: c.answer ?? undefined,
+    requires_prop: "none" as const,
+    player_min: 2,
+    player_max: GAME_LIMITS.MAX_PLAYERS,
+  }));
 }
 
 /**

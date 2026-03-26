@@ -288,18 +288,8 @@ export function getAllCards(): GameCard[] {
   return all;
 }
 
-// Keep CARDS export for compat — built lazily on first access
-let _cardsBuilt = false;
-let _cards: GameCard[] = [];
-export const CARDS: GameCard[] = new Proxy([] as GameCard[], {
-  get(target, prop, receiver) {
-    if (!_cardsBuilt) {
-      _cards = getAllCards();
-      _cardsBuilt = true;
-    }
-    return Reflect.get(_cards, prop, receiver);
-  },
-});
+/** @deprecated Use getAllCards() or getFilteredCards() instead */
+export const CARDS = getAllCards;
 
 export function validateCardCoverage() {
   const allCards = getAllCards();
