@@ -54,7 +54,7 @@ const Index = () => {
     if (!localStorage.getItem("malaky-terms-accepted")) {
       setShowFirstLaunch(true);
     }
-    // If reloaded on game screen with empty deck, rebuild or go home
+    // Deck is excluded from persist — rebuild on refresh if needed
     const state = useGameStore.getState();
     if (state.currentScreen === "game" && state.deck.length === 0) {
       if (state.selectedMode && state.selectedVibe && state.players.length >= 2) {

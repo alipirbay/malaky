@@ -30,7 +30,9 @@ const hasConfirmedAge = (vibe: Vibe) =>
   localStorage.getItem(`malaky-age-confirmed-${vibe}`) === "true";
 
 const VibeScreen = () => {
-  const { setScreen, unlockedVibes, selectedMode } = useGameStore();
+  const setScreen = useGameStore((s) => s.setScreen);
+  const unlockedVibes = useGameStore((s) => s.unlockedVibes);
+  const selectedMode = useGameStore((s) => s.selectedMode);
   const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
   const setQuickChallengeDuration = useGameStore((s) => s.setQuickChallengeDuration);
   const [pendingAdultVibe, setPendingAdultVibe] = useState<Vibe | null>(null);

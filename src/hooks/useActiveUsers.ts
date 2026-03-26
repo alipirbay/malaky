@@ -58,6 +58,7 @@ export function useActiveUsers() {
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
+      cancelled = true;
       clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
