@@ -35,7 +35,7 @@ const FALLBACK_DILEMMES = [
 ];
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: getCorsHeaders(req) });
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -54,7 +54,7 @@ serve(async (req) => {
 
     if (existing) {
       return new Response(JSON.stringify({ dilemme: existing, cached: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -129,12 +129,12 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
 
         if (response.status === 429) {
           return new Response(JSON.stringify({ error: "Rate limited, please try again later." }), {
-            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 429, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
           });
         }
         if (response.status === 402) {
           return new Response(JSON.stringify({ error: "Credits exhausted." }), {
-            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 402, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
           });
         }
         throw new Error(`AI gateway error: ${response.status}`);
@@ -180,12 +180,12 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
     }
 
     return new Response(JSON.stringify({ dilemme: newDilemme, cached: false }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("Error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

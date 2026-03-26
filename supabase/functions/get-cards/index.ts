@@ -39,14 +39,14 @@ FORMAT ATTENDU selon card_type :
 - timer: "{player}, [défi] pendant X secondes."`;
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: getCorsHeaders(req) });
 
   try {
     const { mode, vibe, players, seen_ids = [], count = 50, skip_ai = false } = await req.json();
 
     if (!mode || !vibe) {
       return new Response(JSON.stringify({ error: "mode and vibe required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -195,14 +195,14 @@ Varie les formulations, sois créatif, ancre dans la culture malgache pour le mo
 
     return new Response(
       JSON.stringify({ cards: allCards.slice(0, count), source_db: cardsFromDb.length, source_ai: aiCards.length }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
 
   } catch (e) {
     console.error("get-cards error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });
