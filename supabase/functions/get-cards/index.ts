@@ -1,10 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const ALLOWED_ORIGINS = [
+  "https://id-preview--34120b7e-54be-4ea1-86b8-6edf122c8b82.lovable.app",
+  "https://malaky.app",
+  "https://www.malaky.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") ?? "";
+  const allowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o)) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
 const SYSTEM_PROMPT = `Tu es un générateur de cartes pour Malaky, le jeu de soirée des Malgaches.
 Tu génères des cartes fun, authentiques, ancrées dans la culture malgache et la vie quotidienne.
@@ -29,14 +39,14 @@ FORMAT ATTENDU selon card_type :
 - timer: "{player}, [défi] pendant X secondes."`;
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: getCorsHeaders(req) });
 
   try {
     const { mode, vibe, players, seen_ids = [], count = 50, skip_ai = false } = await req.json();
 
     if (!mode || !vibe) {
       return new Response(JSON.stringify({ error: "mode and vibe required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -185,14 +195,14 @@ Varie les formulations, sois créatif, ancre dans la culture malgache pour le mo
 
     return new Response(
       JSON.stringify({ cards: allCards.slice(0, count), source_db: cardsFromDb.length, source_ai: aiCards.length }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
 
   } catch (e) {
     console.error("get-cards error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });

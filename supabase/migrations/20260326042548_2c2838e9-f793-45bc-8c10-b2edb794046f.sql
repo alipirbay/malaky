@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS unique_daily_dilemme_per_date ON public.daily_dilemmes (active_date);

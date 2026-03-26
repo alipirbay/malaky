@@ -265,7 +265,7 @@ export const useGameStore = create<GameState>()(
         currentPlayerIndex: state.currentPlayerIndex,
         stats: state.stats,
         passesRemaining: state.passesRemaining,
-        deck: state.deck,
+        // deck is intentionally EXCLUDED — rebuilt via startGame() on refresh
       }),
     }
   )

@@ -8,7 +8,10 @@ import type { Vibe } from "@/data/types";
 import PrivacyModal from "@/components/PrivacyModal";
 
 const PacksScreen = () => {
-  const { setScreen, unlockVibe, unlockBundle, unlockedVibes } = useGameStore();
+  const setScreen = useGameStore((s) => s.setScreen);
+  const unlockVibe = useGameStore((s) => s.unlockVibe);
+  const unlockBundle = useGameStore((s) => s.unlockBundle);
+  const unlockedVibes = useGameStore((s) => s.unlockedVibes);
   const [cguOpen, setCguOpen] = useState(false);
 
   const handleBuy = async (pack: (typeof STORE_PACKS)[number]) => {

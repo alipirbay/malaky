@@ -1,10 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const ALLOWED_ORIGINS = [
+  "https://id-preview--34120b7e-54be-4ea1-86b8-6edf122c8b82.lovable.app",
+  "https://malaky.app",
+  "https://www.malaky.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") ?? "";
+  const allowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o)) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
 const MADAGASCAR_TZ = "Indian/Antananarivo";
 
@@ -25,7 +35,7 @@ const FALLBACK_DILEMMES = [
 ];
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: getCorsHeaders(req) });
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -44,7 +54,7 @@ serve(async (req) => {
 
     if (existing) {
       return new Response(JSON.stringify({ dilemme: existing, cached: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -119,12 +129,12 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
 
         if (response.status === 429) {
           return new Response(JSON.stringify({ error: "Rate limited, please try again later." }), {
-            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 429, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
           });
         }
         if (response.status === 402) {
           return new Response(JSON.stringify({ error: "Credits exhausted." }), {
-            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 402, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
           });
         }
         throw new Error(`AI gateway error: ${response.status}`);
@@ -151,15 +161,16 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
       dilemmeData = FALLBACK_DILEMMES[dayOfYear % FALLBACK_DILEMMES.length];
     }
 
+    // Use upsert with active_date to handle race condition (UNIQUE index)
     const { data: newDilemme, error: insertError } = await supabase
       .from("daily_dilemmes")
-      .insert({
+      .upsert({
         question: dilemmeData.question,
         option_a: dilemmeData.option_a,
         option_b: dilemmeData.option_b,
         topic: dilemmeData.topic,
         active_date: today,
-      })
+      }, { onConflict: "active_date" })
       .select()
       .single();
 
@@ -169,12 +180,12 @@ Réponds UNIQUEMENT avec un JSON valide sans markdown.`,
     }
 
     return new Response(JSON.stringify({ dilemme: newDilemme, cached: false }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("Error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

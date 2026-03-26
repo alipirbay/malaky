@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useGameStore } from "@/store/gameStore";
 
 let audioCtx: AudioContext | null = null;
@@ -57,6 +57,16 @@ export function useSounds() {
   const soundVolume = useGameStore((s) => s.soundVolume);
   const vibrationEnabled = useGameStore((s) => s.vibrationEnabled);
   const tickRef = useRef<number | null>(null);
+
+  // Cleanup tick loop on unmount
+  useEffect(() => {
+    return () => {
+      if (tickRef.current) {
+        clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
+    };
+  }, []);
 
   const vol = soundVolume / 100;
 
