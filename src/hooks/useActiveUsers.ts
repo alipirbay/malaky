@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getNetworkStatus } from "@/lib/networkStatus";
 
 const SESSION_KEY = "malaky-session-id";
 const HEARTBEAT_INTERVAL = 5 * 60 * 1000; // 5 minutes
