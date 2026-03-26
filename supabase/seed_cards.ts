@@ -6,13 +6,23 @@ import {
 } from "../src/data/card_content.ts";
 import { cultureQuestions } from "../src/data/culture_questions.ts";
 
+interface SeedRecord {
+  mode: string;
+  vibe: string;
+  card_type: string;
+  template: string;
+  lang: string;
+  source: string;
+  answer?: string;
+}
+
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
 const vibes = ["soft","fun","hot","chaos","couple","apero","mada","confessions","vip","afterdark"] as const;
-const records: any[] = [];
+const records: SeedRecord[] = [];
 
 // truth_dare — vérités
 vibes.forEach(vibe => {

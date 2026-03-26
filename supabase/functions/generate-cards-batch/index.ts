@@ -6,6 +6,29 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+interface GeneratedCard {
+  card_type: string;
+  template: string;
+  answer?: string;
+}
+
+interface CardInsertRow {
+  mode: string;
+  vibe: string;
+  card_type: string;
+  template: string;
+  answer: string | null;
+  lang: string;
+  source: string;
+  quality_score: number;
+}
+
+interface BatchResult {
+  mode: string;
+  vibe: string;
+  generated: number;
+}
+
 const ALLOWED_ORIGINS = [
   "https://id-preview--34120b7e-54be-4ea1-86b8-6edf122c8b82.lovable.app",
   "https://malaky.app",
@@ -52,7 +75,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const results: { mode: string; vibe: string; generated: number }[] = [];
+    const results: BatchResult[] = [];
 
     for (const mode of MODES) {
       for (const vibe of VIBES) {
@@ -107,17 +130,25 @@ Renvoie UNIQUEMENT un tableau JSON: [{"card_type":"...","template":"..."}]`,
           const jsonMatch = content.match(/\[[\s\S]*\]/);
           if (!jsonMatch) continue;
 
-          const generated = JSON.parse(jsonMatch[0]);
-          const toInsert = generated.map((c: any) => ({
-            mode,
-            vibe,
-            card_type: c.card_type,
-            template: c.template,
-            answer: c.answer ?? null,
-            lang: "fr",
-            source: "ai",
-            quality_score: 0.8,
-          }));
+          const generated: unknown = JSON.parse(jsonMatch[0]);
+          if (!Array.isArray(generated)) continue;
+
+          const toInsert: CardInsertRow[] = generated
+            .filter((c): c is GeneratedCard =>
+              typeof c === "object" && c !== null &&
+              typeof (c as Record<string, unknown>).card_type === "string" &&
+              typeof (c as Record<string, unknown>).template === "string"
+            )
+            .map((c) => ({
+              mode,
+              vibe,
+              card_type: c.card_type,
+              template: c.template,
+              answer: c.answer ?? null,
+              lang: "fr",
+              source: "ai",
+              quality_score: 0.8,
+            }));
 
           const { error } = await supabase.from("cards").insert(toInsert);
           if (error) console.error(`Insert error ${mode}/${vibe}:`, error);

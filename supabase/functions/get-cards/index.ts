@@ -1,6 +1,38 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+interface GeneratedCard {
+  card_type: string;
+  template: string;
+  answer?: string;
+}
+
+interface CardRow {
+  id: string;
+  mode: string;
+  vibe: string;
+  card_type: string;
+  template: string;
+  answer: string | null;
+  lang: string;
+}
+
+interface AiCard extends GeneratedCard {
+  mode: string;
+  vibe: string;
+  lang: string;
+  source: string;
+}
+
+interface RequestBody {
+  mode: string;
+  vibe: string;
+  players?: string[];
+  seen_ids?: string[];
+  count?: number;
+  skip_ai?: boolean;
+}
+
 const ALLOWED_ORIGINS = [
   "https://id-preview--34120b7e-54be-4ea1-86b8-6edf122c8b82.lovable.app",
   "https://malaky.app",
@@ -42,7 +74,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: getCorsHeaders(req) });
 
   try {
-    const { mode, vibe, players, seen_ids = [], count = 50, skip_ai = false } = await req.json();
+    const { mode, vibe, players, seen_ids = [], count = 50, skip_ai = false } = await req.json() as RequestBody;
 
     if (!mode || !vibe) {
       return new Response(JSON.stringify({ error: "mode and vibe required" }), {
@@ -71,11 +103,11 @@ serve(async (req) => {
 
     if (dbError) throw dbError;
 
-    const cardsFromDb = dbCards ?? [];
+    const cardsFromDb: CardRow[] = (dbCards as CardRow[]) ?? [];
     const needed = count - cardsFromDb.length;
 
     // 2. If not enough unseen cards AND AI is allowed → generate with AI
-    let aiCards: any[] = [];
+    let aiCards: AiCard[] = [];
     if (needed > 0 && !skip_ai) {
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
@@ -128,31 +160,41 @@ Varie les formulations, sois créatif, ancre dans la culture malgache pour le mo
             const content = aiData.choices?.[0]?.message?.content ?? "";
             const jsonMatch = content.match(/\[[\s\S]*\]/);
             if (jsonMatch) {
-              const generated = JSON.parse(jsonMatch[0]);
-              aiCards = generated.map((c: any) => ({
-                ...c,
-                mode,
-                vibe,
-                lang: "fr",
-                source: "ai",
-              }));
-
-              // Save AI cards to DB for future use (fire and forget)
-              if (aiCards.length > 0) {
-                supabase.from("cards").insert(
-                  aiCards.map((c: any) => ({
-                    mode: c.mode,
-                    vibe: c.vibe,
+              const generated: unknown = JSON.parse(jsonMatch[0]);
+              if (Array.isArray(generated)) {
+                aiCards = generated
+                  .filter((c): c is GeneratedCard =>
+                    typeof c === "object" && c !== null &&
+                    typeof (c as Record<string, unknown>).card_type === "string" &&
+                    typeof (c as Record<string, unknown>).template === "string"
+                  )
+                  .map((c) => ({
                     card_type: c.card_type,
                     template: c.template,
-                    answer: c.answer ?? null,
-                    lang: c.lang,
+                    answer: c.answer,
+                    mode,
+                    vibe,
+                    lang: "fr",
                     source: "ai",
-                    quality_score: 0.8,
-                  }))
-                ).then(({ error }) => {
-                  if (error) console.error("Failed to save AI cards:", error);
-                });
+                  }));
+
+                // Save AI cards to DB for future use (fire and forget)
+                if (aiCards.length > 0) {
+                  supabase.from("cards").insert(
+                    aiCards.map((c) => ({
+                      mode: c.mode,
+                      vibe: c.vibe,
+                      card_type: c.card_type,
+                      template: c.template,
+                      answer: c.answer ?? null,
+                      lang: c.lang,
+                      source: "ai",
+                      quality_score: 0.8,
+                    }))
+                  ).then(({ error }) => {
+                    if (error) console.error("Failed to save AI cards:", error);
+                  });
+                }
               }
             }
           } else {
@@ -166,7 +208,7 @@ Varie les formulations, sois créatif, ancre dans la culture malgache pour le mo
     }
 
     // 3. Merge DB + AI cards, shuffle, return
-    const allCards = [...cardsFromDb, ...aiCards];
+    const allCards: Array<CardRow | AiCard> = [...cardsFromDb, ...aiCards];
 
     // Fisher-Yates shuffle
     for (let i = allCards.length - 1; i > 0; i--) {
@@ -183,11 +225,14 @@ Varie les formulations, sois créatif, ancre dans la culture malgache pour le mo
         .eq("vibe", vibe)
         .eq("active", true)
         .limit(count - allCards.length);
-      allCards.push(...(fallback ?? []));
+      allCards.push(...((fallback as CardRow[]) ?? []));
     }
 
     // Update play_count for served cards (fire and forget)
-    const servedIds = allCards.slice(0, count).map((c: any) => c.id).filter(Boolean);
+    const servedIds = allCards
+      .slice(0, count)
+      .map((c) => ("id" in c ? c.id : undefined))
+      .filter((id): id is string => typeof id === "string");
     if (servedIds.length > 0) {
       supabase.rpc("increment_play_count", { card_ids: servedIds }).then(() => {});
     }
