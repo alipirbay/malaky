@@ -30,7 +30,7 @@ const SCREENS = {
 const HASH_NAVIGABLE = new Set(["home", "players", "mode", "vibe", "packs", "settings"]);
 
 /** Maps a hash string to a valid screen name, or null */
-function hashToScreen(hash: string): string | null {
+export function hashToScreen(hash: string): string | null {
   const screen = hash.replace("#", "");
   return HASH_NAVIGABLE.has(screen) ? screen : null;
 }
