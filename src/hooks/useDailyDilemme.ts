@@ -18,7 +18,8 @@ interface VoteResult {
   totalVotes: number;
 }
 
-const CACHE_KEY = "malaky-dilemme-cache";
+import { storageGet, storageSet, storageRemove } from "@/lib/storage";
+
 const FETCH_TIMEOUT_MS = 3000;
 
 function getCachedDilemme(today: string): DailyDilemme | null {
