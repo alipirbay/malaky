@@ -30,13 +30,8 @@ const vibeStyles: Partial<Record<Vibe, string>> = {
 const ADULT_VIBES = ["afterdark", "hot"];
 const LAUNCH_TIMEOUT_MS = 8000;
 
-const hasConfirmedAge = (vibe: Vibe) => {
-  try {
-    return localStorage.getItem(`malaky-age-confirmed-${vibe}`) === "true";
-  } catch {
-    return false;
-  }
-};
+const hasConfirmedAge = (vibe: Vibe) =>
+  storageGet<boolean>(`age-confirmed-${vibe}`, false);
 
 const VibeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
