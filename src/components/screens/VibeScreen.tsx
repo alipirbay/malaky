@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { VIBES, DIFFICULTIES } from "@/data/config";
@@ -6,6 +6,7 @@ import { ArrowLeft, Lock, Loader2 } from "lucide-react";
 import type { Vibe } from "@/data/types";
 import AgeGateModal from "@/components/AgeGateModal";
 import { isPackDownloaded } from "@/lib/packManager";
+import { toast } from "sonner";
 
 const vibeStyles: Partial<Record<Vibe, string>> = {
   soft: "vibe-soft",
@@ -25,6 +26,7 @@ const vibeStyles: Partial<Record<Vibe, string>> = {
 };
 
 const ADULT_VIBES = ["afterdark", "hot"];
+const LAUNCH_TIMEOUT_MS = 8000;
 
 const hasConfirmedAge = (vibe: Vibe) =>
   localStorage.getItem(`malaky-age-confirmed-${vibe}`) === "true";
@@ -37,28 +39,50 @@ const VibeScreen = () => {
   const setQuickChallengeDuration = useGameStore((s) => s.setQuickChallengeDuration);
   const [pendingAdultVibe, setPendingAdultVibe] = useState<Vibe | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const launchingRef = useRef(false);
 
   const isCultureMode = selectedMode === "culture_generale";
   const items = isCultureMode
     ? DIFFICULTIES.map(d => ({ id: d.id as Vibe, name: d.name, emoji: d.emoji, description: d.description, free: d.free, priceLabel: d.priceLabel }))
     : VIBES;
 
-  const launchGame = async (vibe: Vibe) => {
-    if (isLoading) return;
+  const launchGame = useCallback(async (vibe: Vibe) => {
+    // Prevent double launch
+    if (launchingRef.current) return;
+    launchingRef.current = true;
     setIsLoading(true);
+
+    // Safety timeout — if game doesn't navigate within LAUNCH_TIMEOUT_MS, reset
+    const timeoutId = setTimeout(() => {
+      if (launchingRef.current) {
+        launchingRef.current = false;
+        setIsLoading(false);
+        toast.error("Impossible de charger les cartes. Réessaie.");
+      }
+    }, LAUNCH_TIMEOUT_MS);
+
     try {
       useGameStore.getState().setVibe(vibe);
       await useGameStore.getState().startGame(vibe);
+      // If we're still here (startGame redirected to packs or failed without navigating to game)
+      const currentScreen = useGameStore.getState().currentScreen;
+      if (currentScreen !== "game") {
+        launchingRef.current = false;
+        setIsLoading(false);
+      }
     } catch (err) {
       console.error("Failed to start game:", err);
+      toast.error("Erreur au lancement. Réessaie.");
+      launchingRef.current = false;
       setIsLoading(false);
+    } finally {
+      clearTimeout(timeoutId);
     }
-    // Don't setIsLoading(false) on success — we navigate away
-  };
+  }, []);
 
-  const handleSelect = (vibe: Vibe, free: boolean) => {
-    if (isLoading) return;
-    if (!free && !unlockedVibes[vibe]) {
+  const handleSelect = useCallback((vibe: Vibe, free: boolean) => {
+    if (launchingRef.current || isLoading) return;
+    if (!free && !useGameStore.getState().unlockedVibes[vibe]) {
       setScreen("packs");
       return;
     }
@@ -67,15 +91,15 @@ const VibeScreen = () => {
       return;
     }
     launchGame(vibe);
-  };
+  }, [isLoading, setScreen, launchGame]);
 
-  const handleAgeConfirmed = () => {
+  const handleAgeConfirmed = useCallback(() => {
     if (!pendingAdultVibe) return;
     localStorage.setItem(`malaky-age-confirmed-${pendingAdultVibe}`, "true");
     const vibe = pendingAdultVibe;
     setPendingAdultVibe(null);
     launchGame(vibe);
-  };
+  }, [pendingAdultVibe, launchGame]);
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
@@ -84,6 +108,7 @@ const VibeScreen = () => {
           onClick={() => !isLoading && setScreen("mode")}
           className="rounded-xl bg-card p-2.5 text-foreground"
           disabled={isLoading}
+          aria-label="Retour au choix du mode"
         >
           <ArrowLeft size={20} />
         </button>

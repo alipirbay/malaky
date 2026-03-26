@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
-import { hashToScreen, isHashNavigable } from "@/lib/hashUtils";
+import { useAppBootstrap, useHashSync } from "@/hooks/useAppBootstrap";
 import HomeScreen from "@/components/screens/HomeScreen";
 import PlayersScreen from "@/components/screens/PlayersScreen";
 import ModeScreen from "@/components/screens/ModeScreen";
@@ -38,38 +38,10 @@ const Index = () => {
   const setScreen = useGameStore((s) => s.setScreen);
   const setPendingTransaction = useGameStore((s) => s.setPendingTransaction);
 
-  const [showFirstLaunch, setShowFirstLaunch] = useState(false);
+  const { showFirstLaunch, acceptTerms } = useAppBootstrap();
+  useHashSync();
+
   const [legalModal, setLegalModal] = useState<"privacy" | "cgu" | null>(null);
-
-  // Bootstrap: first-launch check + deck rebuild on refresh
-  useEffect(() => {
-    if (!localStorage.getItem("malaky-terms-accepted")) {
-      setShowFirstLaunch(true);
-    }
-
-    // Sync initial hash → screen
-    const initialHash = window.location.hash.replace("#", "");
-    const initialScreen = hashToScreen(initialHash);
-    if (initialScreen && initialScreen !== useGameStore.getState().currentScreen) {
-      setScreen(initialScreen as typeof currentScreen);
-    }
-
-    // If refreshed during game with empty deck → go home safely
-    const state = useGameStore.getState();
-    if (state.currentScreen === "game" && state.deck.length === 0) {
-      state.setScreen("home");
-    }
-    // Also redirect from "end" with no stats
-    if (state.currentScreen === "end" && state.stats.cardsPlayed === 0) {
-      state.setScreen("home");
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleAcceptTerms = () => {
-    localStorage.setItem("malaky-terms-accepted", "true");
-    setShowFirstLaunch(false);
-  };
 
   // Handle redirect back from VPI payment
   useEffect(() => {
@@ -80,37 +52,11 @@ const Index = () => {
     }
   }, [pendingTransactionId, setScreen]);
 
-  // Sync screen → hash
-  useEffect(() => {
-    const targetHash = currentScreen === "home" ? "" : currentScreen;
-    const currentHash = window.location.hash.replace("#", "");
-    if (targetHash !== currentHash) {
-      if (isHashNavigable(currentScreen)) {
-        window.history.pushState(null, "", currentScreen === "home" ? window.location.pathname : `#${currentScreen}`);
-      }
-    }
-  }, [currentScreen]);
-
-  // Sync hash → screen (back/forward)
-  useEffect(() => {
-    const handler = () => {
-      const hash = window.location.hash.replace("#", "");
-      const screen = hashToScreen(hash);
-      if (screen && screen !== useGameStore.getState().currentScreen) {
-        setScreen(screen as typeof currentScreen);
-      } else if (!hash && useGameStore.getState().currentScreen !== "home") {
-        setScreen("home");
-      }
-    };
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
-  }, [setScreen, currentScreen]);
-
   if (showFirstLaunch) {
     return (
       <>
         <FirstLaunchModal
-          onAccept={handleAcceptTerms}
+          onAccept={acceptTerms}
           onShowPrivacy={() => setLegalModal("privacy")}
           onShowCGU={() => setLegalModal("cgu")}
         />
