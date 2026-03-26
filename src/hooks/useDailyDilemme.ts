@@ -137,7 +137,7 @@ export function useDailyDilemme() {
     try {
       // Offline / local dilemme fallback
       if (dilemme.id.startsWith("local-")) {
-        localStorage.setItem(getVoteKey(dilemme.id), choice);
+        storageSet(getVoteKey(dilemme.id), choice);
         setHasVoted(true);
         const aPct = choice === "a"
           ? 52 + Math.floor(Math.random() * 13)
