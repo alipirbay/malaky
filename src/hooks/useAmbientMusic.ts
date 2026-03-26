@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import type { Vibe } from "@/data/types";
 
@@ -8,218 +8,105 @@ import type { Vibe } from "@/data/types";
  * rhythmic easter egg 🇲🇬
  */
 
-// ── Musical scales (MIDI note numbers → frequencies) ──
+// ── Musical scales ──
 
 const NOTE_FREQ: Record<string, number> = {
   C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.0, A3: 220.0, B3: 246.94,
   C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.0, A4: 440.0, B4: 493.88,
   C5: 523.25, D5: 587.33, E5: 659.26, F5: 698.46, G5: 784.0, A5: 880.0,
-  "Eb3": 155.56, "Bb3": 233.08, "Eb4": 311.13, "Bb4": 466.16,
-  "Ab3": 207.65, "Ab4": 415.30, "Db4": 277.18, "Gb4": 369.99,
-  "F#3": 185.0, "F#4": 369.99,
+  Eb3: 155.56, Bb3: 233.08, Eb4: 311.13, Bb4: 466.16,
+  Ab3: 207.65, Ab4: 415.30, Db4: 277.18, Gb4: 369.99,
 };
 
 // ── Vibe mood configurations ──
 
 interface VibeMood {
-  scale: number[];       // frequencies
-  tempo: number;         // BPM
+  scale: number[];
+  tempo: number;
   bassFreq: number;
   padType: OscillatorType;
-  padDetune: number;     // cents
+  padDetune: number;
   filterFreq: number;
   filterQ: number;
   padVolume: number;
   bassVolume: number;
   melodyVolume: number;
-  swing: number;         // 0–0.3
+  swing: number;
   hasDrums: boolean;
   drumPattern?: number[];
-  reverb: number;        // 0–1 dry/wet
-  label: string;
+  reverb: number;
 }
 
 const VIBE_MOODS: Record<string, VibeMood> = {
-  // ── Chill / Lofi ──
   soft: {
     scale: [NOTE_FREQ.C4, NOTE_FREQ.E4, NOTE_FREQ.G4, NOTE_FREQ.A4, NOTE_FREQ.C5, NOTE_FREQ.E5],
-    tempo: 70,
-    bassFreq: NOTE_FREQ.C3,
-    padType: "sine",
-    padDetune: 8,
-    filterFreq: 800,
-    filterQ: 1,
-    padVolume: 0.12,
-    bassVolume: 0.08,
-    melodyVolume: 0.06,
-    swing: 0.1,
-    hasDrums: false,
-    reverb: 0.6,
-    label: "Chill Lofi",
+    tempo: 70, bassFreq: NOTE_FREQ.C3, padType: "sine", padDetune: 8,
+    filterFreq: 800, filterQ: 1, padVolume: 0.12, bassVolume: 0.08,
+    melodyVolume: 0.06, swing: 0.1, hasDrums: false, reverb: 0.6,
   },
-  // ── Fun / Playful ──
   fun: {
     scale: [NOTE_FREQ.C4, NOTE_FREQ.D4, NOTE_FREQ.E4, NOTE_FREQ.G4, NOTE_FREQ.A4, NOTE_FREQ.C5, NOTE_FREQ.D5],
-    tempo: 110,
-    bassFreq: NOTE_FREQ.C3,
-    padType: "triangle",
-    padDetune: 5,
-    filterFreq: 2000,
-    filterQ: 0.5,
-    padVolume: 0.08,
-    bassVolume: 0.07,
-    melodyVolume: 0.09,
-    swing: 0.05,
-    hasDrums: true,
-    drumPattern: [1, 0, 0, 1, 0, 0, 1, 0],
-    reverb: 0.3,
-    label: "Playful",
+    tempo: 110, bassFreq: NOTE_FREQ.C3, padType: "triangle", padDetune: 5,
+    filterFreq: 2000, filterQ: 0.5, padVolume: 0.08, bassVolume: 0.07,
+    melodyVolume: 0.09, swing: 0.05, hasDrums: true,
+    drumPattern: [1, 0, 0, 1, 0, 0, 1, 0], reverb: 0.3,
   },
-  // ── Hot / Sensual ──
   hot: {
     scale: [NOTE_FREQ.D4, NOTE_FREQ.F4, NOTE_FREQ.A4, NOTE_FREQ.C5, NOTE_FREQ.D5, NOTE_FREQ.F5],
-    tempo: 85,
-    bassFreq: NOTE_FREQ.D3,
-    padType: "sine",
-    padDetune: 12,
-    filterFreq: 600,
-    filterQ: 2,
-    padVolume: 0.14,
-    bassVolume: 0.1,
-    melodyVolume: 0.05,
-    swing: 0.15,
-    hasDrums: true,
-    drumPattern: [1, 0, 1, 0, 0, 1, 0, 0],
-    reverb: 0.5,
-    label: "Sensual R&B",
+    tempo: 85, bassFreq: NOTE_FREQ.D3, padType: "sine", padDetune: 12,
+    filterFreq: 600, filterQ: 2, padVolume: 0.14, bassVolume: 0.1,
+    melodyVolume: 0.05, swing: 0.15, hasDrums: true,
+    drumPattern: [1, 0, 1, 0, 0, 1, 0, 0], reverb: 0.5,
   },
-  // ── Chaos / Intense ──
   chaos: {
     scale: [NOTE_FREQ.E4, NOTE_FREQ.G4, NOTE_FREQ.A4, NOTE_FREQ.B4, NOTE_FREQ.D5, NOTE_FREQ.E5],
-    tempo: 130,
-    bassFreq: NOTE_FREQ.E3,
-    padType: "sawtooth",
-    padDetune: 15,
-    filterFreq: 3000,
-    filterQ: 1.5,
-    padVolume: 0.06,
-    bassVolume: 0.09,
-    melodyVolume: 0.07,
-    swing: 0,
-    hasDrums: true,
-    drumPattern: [1, 0, 1, 1, 0, 1, 1, 0],
-    reverb: 0.2,
-    label: "Intense",
+    tempo: 130, bassFreq: NOTE_FREQ.E3, padType: "sawtooth", padDetune: 15,
+    filterFreq: 3000, filterQ: 1.5, padVolume: 0.06, bassVolume: 0.09,
+    melodyVolume: 0.07, swing: 0, hasDrums: true,
+    drumPattern: [1, 0, 1, 1, 0, 1, 1, 0], reverb: 0.2,
   },
-  // ── Couple / Romantic ──
   couple: {
     scale: [NOTE_FREQ.G4, NOTE_FREQ.B4, NOTE_FREQ.D5, NOTE_FREQ.E5, NOTE_FREQ.G5],
-    tempo: 65,
-    bassFreq: NOTE_FREQ.G3,
-    padType: "sine",
-    padDetune: 6,
-    filterFreq: 700,
-    filterQ: 1.5,
-    padVolume: 0.15,
-    bassVolume: 0.06,
-    melodyVolume: 0.05,
-    swing: 0.2,
-    hasDrums: false,
-    reverb: 0.7,
-    label: "Romantic",
+    tempo: 65, bassFreq: NOTE_FREQ.G3, padType: "sine", padDetune: 6,
+    filterFreq: 700, filterQ: 1.5, padVolume: 0.15, bassVolume: 0.06,
+    melodyVolume: 0.05, swing: 0.2, hasDrums: false, reverb: 0.7,
   },
-  // ── Apéro / Jazzy ──
   apero: {
     scale: [NOTE_FREQ.C4, NOTE_FREQ.E4, NOTE_FREQ.G4, NOTE_FREQ.Bb4, NOTE_FREQ.D5],
-    tempo: 95,
-    bassFreq: NOTE_FREQ.C3,
-    padType: "triangle",
-    padDetune: 10,
-    filterFreq: 1200,
-    filterQ: 0.8,
-    padVolume: 0.1,
-    bassVolume: 0.08,
-    melodyVolume: 0.08,
-    swing: 0.2,
-    hasDrums: true,
-    drumPattern: [1, 0, 0, 1, 0, 1, 0, 0],
-    reverb: 0.4,
-    label: "Jazz Lounge",
+    tempo: 95, bassFreq: NOTE_FREQ.C3, padType: "triangle", padDetune: 10,
+    filterFreq: 1200, filterQ: 0.8, padVolume: 0.1, bassVolume: 0.08,
+    melodyVolume: 0.08, swing: 0.2, hasDrums: true,
+    drumPattern: [1, 0, 0, 1, 0, 1, 0, 0], reverb: 0.4,
   },
-  // ── 🇲🇬 Mada / Salegy-inspired Easter Egg ──
   mada: {
     scale: [NOTE_FREQ.G3, NOTE_FREQ.A3, NOTE_FREQ.C4, NOTE_FREQ.D4, NOTE_FREQ.E4, NOTE_FREQ.G4, NOTE_FREQ.A4],
-    tempo: 125,
-    bassFreq: NOTE_FREQ.G3,
-    padType: "triangle",
-    padDetune: 4,
-    filterFreq: 2500,
-    filterQ: 0.6,
-    padVolume: 0.07,
-    bassVolume: 0.1,
-    melodyVolume: 0.1,
-    swing: 0.08,
-    hasDrums: true,
-    drumPattern: [1, 0, 1, 0, 1, 1, 0, 1], // Salegy-like syncopation
-    reverb: 0.25,
-    label: "Salegy Vibes 🇲🇬",
+    tempo: 125, bassFreq: NOTE_FREQ.G3, padType: "triangle", padDetune: 4,
+    filterFreq: 2500, filterQ: 0.6, padVolume: 0.07, bassVolume: 0.1,
+    melodyVolume: 0.1, swing: 0.08, hasDrums: true,
+    drumPattern: [1, 0, 1, 0, 1, 1, 0, 1], reverb: 0.25,
   },
-  // ── Confessions / Dark ambient ──
   confessions: {
     scale: [NOTE_FREQ.A3, NOTE_FREQ.C4, NOTE_FREQ.D4, NOTE_FREQ.E4, NOTE_FREQ.G4],
-    tempo: 60,
-    bassFreq: NOTE_FREQ.A3,
-    padType: "sine",
-    padDetune: 18,
-    filterFreq: 500,
-    filterQ: 3,
-    padVolume: 0.16,
-    bassVolume: 0.05,
-    melodyVolume: 0.04,
-    swing: 0.25,
-    hasDrums: false,
-    reverb: 0.8,
-    label: "Dark Ambient",
+    tempo: 60, bassFreq: NOTE_FREQ.A3, padType: "sine", padDetune: 18,
+    filterFreq: 500, filterQ: 3, padVolume: 0.16, bassVolume: 0.05,
+    melodyVolume: 0.04, swing: 0.25, hasDrums: false, reverb: 0.8,
   },
-  // ── VIP / Luxury ──
   vip: {
     scale: [NOTE_FREQ.D4, NOTE_FREQ.F4, NOTE_FREQ.A4, NOTE_FREQ.C5, NOTE_FREQ.E5],
-    tempo: 100,
-    bassFreq: NOTE_FREQ.D3,
-    padType: "triangle",
-    padDetune: 7,
-    filterFreq: 1500,
-    filterQ: 1,
-    padVolume: 0.1,
-    bassVolume: 0.08,
-    melodyVolume: 0.07,
-    swing: 0.12,
-    hasDrums: true,
-    drumPattern: [1, 0, 0, 0, 1, 0, 0, 1],
-    reverb: 0.45,
-    label: "Luxury Beats",
+    tempo: 100, bassFreq: NOTE_FREQ.D3, padType: "triangle", padDetune: 7,
+    filterFreq: 1500, filterQ: 1, padVolume: 0.1, bassVolume: 0.08,
+    melodyVolume: 0.07, swing: 0.12, hasDrums: true,
+    drumPattern: [1, 0, 0, 0, 1, 0, 0, 1], reverb: 0.45,
   },
-  // ── After Dark / Deep ──
   afterdark: {
     scale: [NOTE_FREQ.Eb3, NOTE_FREQ.Bb3, NOTE_FREQ.Eb4, NOTE_FREQ.Ab4, NOTE_FREQ.Bb4],
-    tempo: 75,
-    bassFreq: NOTE_FREQ.Eb3,
-    padType: "sawtooth",
-    padDetune: 20,
-    filterFreq: 400,
-    filterQ: 4,
-    padVolume: 0.12,
-    bassVolume: 0.1,
-    melodyVolume: 0.04,
-    swing: 0.18,
-    hasDrums: true,
-    drumPattern: [1, 0, 0, 0, 0, 1, 0, 0],
-    reverb: 0.7,
-    label: "Deep Dark",
+    tempo: 75, bassFreq: NOTE_FREQ.Eb3, padType: "sawtooth", padDetune: 20,
+    filterFreq: 400, filterQ: 4, padVolume: 0.12, bassVolume: 0.1,
+    melodyVolume: 0.04, swing: 0.18, hasDrums: true,
+    drumPattern: [1, 0, 0, 0, 0, 1, 0, 0], reverb: 0.7,
   },
 };
 
-// Culture Générale difficulties → use soft-like moods
 const DIFFICULTY_MOOD_MAP: Record<string, string> = {
   facile: "soft",
   intermediaire: "fun",
@@ -227,12 +114,14 @@ const DIFFICULTY_MOOD_MAP: Record<string, string> = {
   expert: "afterdark",
 };
 
-// ── Audio engine ──
+// ── Audio engine with proper lifecycle ──
+
+type OnChangeCallback = (playing: boolean) => void;
 
 class AmbientMusicEngine {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
-  private isPlaying = false;
+  private _isPlaying = false;
   private schedulerTimer: number | null = null;
   private currentBeat = 0;
   private mood: VibeMood | null = null;
@@ -240,118 +129,190 @@ class AmbientMusicEngine {
   private reverbGain: GainNode | null = null;
   private dryGain: GainNode | null = null;
   private noiseBuffer: AudioBuffer | null = null;
+  private activeNodes: (OscillatorNode | AudioBufferSourceNode)[] = [];
+  private onChange: OnChangeCallback | null = null;
+  private stopInProgress = false;
 
-  start(vibe: string, volume: number) {
-    if (this.isPlaying) this.stop();
-    
+  setOnChange(cb: OnChangeCallback | null) {
+    this.onChange = cb;
+  }
+
+  private setPlaying(val: boolean) {
+    this._isPlaying = val;
+    this.onChange?.(val);
+  }
+
+  get playing() { return this._isPlaying; }
+
+  async start(vibe: string, volume: number) {
+    // Prevent race conditions
+    if (this.stopInProgress) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+    if (this._isPlaying) {
+      this.stopSync();
+    }
+
     const moodKey = DIFFICULTY_MOOD_MAP[vibe] ?? vibe;
     this.mood = VIBE_MOODS[moodKey] ?? VIBE_MOODS.soft;
-    
-    this.ctx = new AudioContext();
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(volume * 0.5, this.ctx.currentTime);
 
-    // Simple reverb via convolver
+    try {
+      this.ctx = new AudioContext();
+      // Handle suspended state (browser policy)
+      if (this.ctx.state === "suspended") {
+        await this.ctx.resume();
+      }
+    } catch {
+      return; // AudioContext not available
+    }
+
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
+    // Fade in over 1 second
+    this.masterGain.gain.linearRampToValueAtTime(
+      Math.min(volume * 0.4, 0.35),
+      this.ctx.currentTime + 1
+    );
+
+    // Reverb chain
     this.dryGain = this.ctx.createGain();
     this.reverbGain = this.ctx.createGain();
     this.convolver = this.ctx.createConvolver();
 
     const reverbAmount = this.mood.reverb;
     this.dryGain.gain.setValueAtTime(1 - reverbAmount * 0.5, this.ctx.currentTime);
-    this.reverbGain.gain.setValueAtTime(reverbAmount * 0.6, this.ctx.currentTime);
+    this.reverbGain.gain.setValueAtTime(reverbAmount * 0.5, this.ctx.currentTime);
 
-    // Generate impulse response
-    this.convolver.buffer = this.createReverbImpulse(2, 2);
+    this.convolver.buffer = this.createReverbImpulse(1.5, 2.5);
 
     this.dryGain.connect(this.masterGain);
     this.convolver.connect(this.reverbGain).connect(this.masterGain);
     this.masterGain.connect(this.ctx.destination);
 
-    // Create noise buffer for drums
     this.noiseBuffer = this.createNoiseBuffer();
-
-    // Start scheduling loop
-    this.isPlaying = true;
+    this.activeNodes = [];
     this.currentBeat = 0;
+    this.setPlaying(true);
     this.startPad();
     this.scheduleBeat();
   }
 
-  stop() {
-    this.isPlaying = false;
+  private stopSync() {
+    this.stopInProgress = true;
+    this.setPlaying(false);
+
     if (this.schedulerTimer) {
       clearTimeout(this.schedulerTimer);
       this.schedulerTimer = null;
     }
-    if (this.masterGain && this.ctx) {
-      // Fade out
-      this.masterGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
-      const ctx = this.ctx;
-      setTimeout(() => {
-        try { ctx.close(); } catch { /* ignore */ }
-      }, 600);
+
+    // Stop all tracked nodes immediately
+    for (const node of this.activeNodes) {
+      try { node.stop(0); } catch { /* already stopped */ }
     }
+    this.activeNodes = [];
+
+    if (this.ctx) {
+      try { this.ctx.close(); } catch { /* ignore */ }
+    }
+
     this.ctx = null;
     this.masterGain = null;
     this.convolver = null;
+    this.reverbGain = null;
+    this.dryGain = null;
     this.mood = null;
+    this.noiseBuffer = null;
+    this.stopInProgress = false;
   }
 
-  setVolume(vol: number) {
-    if (this.masterGain && this.ctx) {
-      this.masterGain.gain.linearRampToValueAtTime(vol * 0.5, this.ctx.currentTime + 0.1);
+  stop() {
+    if (!this._isPlaying && !this.ctx) return;
+
+    // Graceful fade if possible
+    if (this.masterGain && this.ctx && this.ctx.state !== "closed") {
+      try {
+        this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.ctx.currentTime);
+        this.masterGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
+      } catch { /* ignore */ }
+
+      // Cleanup after fade
+      setTimeout(() => this.stopSync(), 350);
+      // Immediately mark as not playing for UI
+      this.setPlaying(false);
+      if (this.schedulerTimer) {
+        clearTimeout(this.schedulerTimer);
+        this.schedulerTimer = null;
+      }
+    } else {
+      this.stopSync();
     }
   }
 
-  get playing() { return this.isPlaying; }
+  setVolume(vol: number) {
+    if (this.masterGain && this.ctx && this.ctx.state !== "closed") {
+      try {
+        this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.masterGain.gain.linearRampToValueAtTime(
+          Math.min(vol * 0.4, 0.35),
+          this.ctx.currentTime + 0.1
+        );
+      } catch { /* ignore */ }
+    }
+  }
 
-  // ── Pad (sustained chord) ──
+  // ── Pad ──
   private startPad() {
-    if (!this.ctx || !this.mood || !this.dryGain) return;
-
+    if (!this.ctx || !this.mood || !this.dryGain || !this.convolver) return;
     const m = this.mood;
-    // Play 2-3 notes as a pad chord
     const padNotes = m.scale.slice(0, 3);
-    
-    padNotes.forEach((freq, i) => {
-      const osc = this.ctx!.createOscillator();
-      const gain = this.ctx!.createGain();
-      osc.type = m.padType;
-      osc.frequency.setValueAtTime(freq * 0.5, this.ctx!.currentTime); // One octave lower
-      osc.detune.setValueAtTime(m.padDetune * (i - 1), this.ctx!.currentTime);
-      gain.gain.setValueAtTime(0, this.ctx!.currentTime);
-      gain.gain.linearRampToValueAtTime(m.padVolume, this.ctx!.currentTime + 2);
+    const t = this.ctx.currentTime;
 
-      // Filter for warmth
-      const filter = this.ctx!.createBiquadFilter();
+    padNotes.forEach((freq, i) => {
+      if (!this.ctx || !this.dryGain || !this.convolver) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      osc.type = m.padType;
+      osc.frequency.setValueAtTime(freq * 0.5, t);
+      osc.detune.setValueAtTime(m.padDetune * (i - 1), t);
+
       filter.type = "lowpass";
-      filter.frequency.setValueAtTime(m.filterFreq, this.ctx!.currentTime);
-      filter.Q.setValueAtTime(m.filterQ, this.ctx!.currentTime);
+      filter.frequency.setValueAtTime(m.filterFreq, t);
+      filter.Q.setValueAtTime(m.filterQ, t);
+
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(m.padVolume, t + 2);
 
       osc.connect(filter).connect(gain);
-      gain.connect(this.dryGain!);
-      gain.connect(this.convolver!);
-      osc.start();
+      gain.connect(this.dryGain);
+      gain.connect(this.convolver);
+      osc.start(t);
 
-      // LFO for subtle movement
-      const lfo = this.ctx!.createOscillator();
-      const lfoGain = this.ctx!.createGain();
-      lfo.frequency.setValueAtTime(0.3 + i * 0.1, this.ctx!.currentTime);
-      lfoGain.gain.setValueAtTime(m.padDetune * 2, this.ctx!.currentTime);
+      this.activeNodes.push(osc);
+
+      // LFO
+      const lfo = this.ctx.createOscillator();
+      const lfoGain = this.ctx.createGain();
+      lfo.frequency.setValueAtTime(0.3 + i * 0.1, t);
+      lfoGain.gain.setValueAtTime(m.padDetune * 2, t);
       lfo.connect(lfoGain).connect(osc.detune);
-      lfo.start();
+      lfo.start(t);
+      this.activeNodes.push(lfo);
     });
   }
 
   // ── Beat scheduler ──
   private scheduleBeat() {
-    if (!this.isPlaying || !this.ctx || !this.mood) return;
+    if (!this._isPlaying || !this.ctx || !this.mood) return;
 
     const m = this.mood;
     const beatDuration = 60 / m.tempo;
     const swing = this.currentBeat % 2 === 1 ? m.swing * beatDuration : 0;
 
-    // Melody — play a note every 2-4 beats
+    // Melody — every 2-4 beats
     if (this.currentBeat % (Math.random() < 0.4 ? 2 : 4) === 0) {
       this.playMelodyNote(swing);
     }
@@ -367,7 +328,6 @@ class AmbientMusicEngine {
       if (m.drumPattern[patIdx]) {
         this.playDrum(swing);
       }
-      // Hi-hat on off-beats
       if (this.currentBeat % 2 === 1) {
         this.playHiHat(swing);
       }
@@ -375,17 +335,17 @@ class AmbientMusicEngine {
 
     this.currentBeat++;
 
-    // Schedule next beat
     this.schedulerTimer = window.setTimeout(() => {
       this.scheduleBeat();
     }, beatDuration * 1000);
   }
 
   private playMelodyNote(delay: number) {
-    if (!this.ctx || !this.mood || !this.dryGain) return;
+    if (!this.ctx || !this.mood || !this.dryGain || !this.convolver) return;
     const m = this.mood;
     const freq = m.scale[Math.floor(Math.random() * m.scale.length)];
     const t = this.ctx.currentTime + delay;
+    const duration = 0.3 + Math.random() * 0.5;
 
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -393,36 +353,33 @@ class AmbientMusicEngine {
 
     osc.type = "sine";
     osc.frequency.setValueAtTime(freq, t);
-    
     filter.type = "lowpass";
     filter.frequency.setValueAtTime(m.filterFreq * 1.5, t);
 
-    const duration = 0.3 + Math.random() * 0.5;
     gain.gain.setValueAtTime(0, t);
     gain.gain.linearRampToValueAtTime(m.melodyVolume, t + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
 
     osc.connect(filter).connect(gain);
     gain.connect(this.dryGain);
-    gain.connect(this.convolver!);
+    gain.connect(this.convolver);
     osc.start(t);
     osc.stop(t + duration + 0.05);
+    // Short-lived nodes self-cleanup, no need to track
   }
 
   private playBass(delay: number) {
     if (!this.ctx || !this.mood || !this.dryGain) return;
     const m = this.mood;
     const t = this.ctx.currentTime + delay;
+    const duration = 60 / m.tempo * 2;
 
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = "sine";
-    // Alternate bass notes slightly
     const bassVariation = Math.random() < 0.3 ? m.bassFreq * 1.5 : m.bassFreq;
     osc.frequency.setValueAtTime(bassVariation, t);
-
-    const duration = 60 / m.tempo * 2;
     gain.gain.setValueAtTime(m.bassVolume, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
 
@@ -432,16 +389,15 @@ class AmbientMusicEngine {
   }
 
   private playDrum(delay: number) {
-    if (!this.ctx || !this.mood || !this.dryGain) return;
+    if (!this.ctx || !this.dryGain) return;
     const t = this.ctx.currentTime + delay;
 
-    // Kick-like sound
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = "sine";
     osc.frequency.setValueAtTime(80, t);
     osc.frequency.exponentialRampToValueAtTime(30, t + 0.12);
-    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.setValueAtTime(0.08, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
     osc.connect(gain).connect(this.dryGain);
     osc.start(t);
@@ -449,7 +405,7 @@ class AmbientMusicEngine {
   }
 
   private playHiHat(delay: number) {
-    if (!this.ctx || !this.mood || !this.dryGain || !this.noiseBuffer) return;
+    if (!this.ctx || !this.dryGain || !this.noiseBuffer) return;
     const t = this.ctx.currentTime + delay;
 
     const source = this.ctx.createBufferSource();
@@ -459,7 +415,7 @@ class AmbientMusicEngine {
 
     filter.type = "highpass";
     filter.frequency.setValueAtTime(8000, t);
-    gain.gain.setValueAtTime(0.03, t);
+    gain.gain.setValueAtTime(0.025, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
 
     source.connect(filter).connect(gain).connect(this.dryGain);
@@ -491,41 +447,47 @@ class AmbientMusicEngine {
   }
 }
 
-// Singleton engine
+// Singleton
 const engine = new AmbientMusicEngine();
 
 /**
  * Hook to manage ambient music during gameplay.
- * Starts when `active` is true, stops on unmount or when deactivated.
  */
 export function useAmbientMusic(active: boolean, vibe: Vibe | null) {
   const soundEnabled = useGameStore((s) => s.soundEnabled);
   const soundVolume = useGameStore((s) => s.soundVolume);
-  const musicActiveRef = useRef(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const activeRef = useRef(false);
 
   const vol = soundVolume / 100;
+
+  // Sync engine state → React state
+  useEffect(() => {
+    engine.setOnChange(setIsPlaying);
+    return () => { engine.setOnChange(null); };
+  }, []);
 
   // Start/stop based on active + soundEnabled
   useEffect(() => {
     if (active && soundEnabled && vibe) {
       engine.start(vibe, vol);
-      musicActiveRef.current = true;
-    } else if (musicActiveRef.current) {
+      activeRef.current = true;
+    } else if (activeRef.current) {
       engine.stop();
-      musicActiveRef.current = false;
+      activeRef.current = false;
     }
 
     return () => {
-      if (musicActiveRef.current) {
+      if (activeRef.current) {
         engine.stop();
-        musicActiveRef.current = false;
+        activeRef.current = false;
       }
     };
   }, [active, soundEnabled, vibe]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Volume changes
   useEffect(() => {
-    if (musicActiveRef.current) {
+    if (activeRef.current) {
       engine.setVolume(vol);
     }
   }, [vol]);
@@ -533,12 +495,12 @@ export function useAmbientMusic(active: boolean, vibe: Vibe | null) {
   const toggleMusic = useCallback(() => {
     if (engine.playing) {
       engine.stop();
-      musicActiveRef.current = false;
+      activeRef.current = false;
     } else if (vibe && soundEnabled) {
       engine.start(vibe, vol);
-      musicActiveRef.current = true;
+      activeRef.current = true;
     }
   }, [vibe, soundEnabled, vol]);
 
-  return { isPlaying: engine.playing, toggleMusic };
+  return { isPlaying, toggleMusic };
 }

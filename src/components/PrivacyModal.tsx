@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -89,13 +90,14 @@ const CGU_CONTENT = {
   ],
 };
 
-const PrivacyModal = ({ open, onClose, type }: PrivacyModalProps) => {
+const PrivacyModal = forwardRef<HTMLDivElement, PrivacyModalProps>(function PrivacyModal({ open, onClose, type }, ref) {
   const content = type === "privacy" ? PRIVACY_CONTENT : CGU_CONTENT;
 
   return (
     <AnimatePresence>
       {open && (
         <motion.div
+          ref={ref}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -144,6 +146,6 @@ const PrivacyModal = ({ open, onClose, type }: PrivacyModalProps) => {
       )}
     </AnimatePresence>
   );
-};
+});
 
 export default PrivacyModal;

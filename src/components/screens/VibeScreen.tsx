@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { VIBES, DIFFICULTIES } from "@/data/config";
-import { ArrowLeft, Lock, WifiOff } from "lucide-react";
+import { ArrowLeft, Lock, Loader2 } from "lucide-react";
 import type { Vibe } from "@/data/types";
 import AgeGateModal from "@/components/AgeGateModal";
 import { isPackDownloaded } from "@/lib/packManager";
@@ -36,13 +36,28 @@ const VibeScreen = () => {
   const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
   const setQuickChallengeDuration = useGameStore((s) => s.setQuickChallengeDuration);
   const [pendingAdultVibe, setPendingAdultVibe] = useState<Vibe | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const isCultureMode = selectedMode === "culture_generale";
   const items = isCultureMode
     ? DIFFICULTIES.map(d => ({ id: d.id as Vibe, name: d.name, emoji: d.emoji, description: d.description, free: d.free, priceLabel: d.priceLabel }))
     : VIBES;
 
+  const launchGame = async (vibe: Vibe) => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      useGameStore.getState().setVibe(vibe);
+      await useGameStore.getState().startGame(vibe);
+    } catch (err) {
+      console.error("Failed to start game:", err);
+      setIsLoading(false);
+    }
+    // Don't setIsLoading(false) on success — we navigate away
+  };
+
   const handleSelect = (vibe: Vibe, free: boolean) => {
+    if (isLoading) return;
     if (!free && !unlockedVibes[vibe]) {
       setScreen("packs");
       return;
@@ -51,8 +66,7 @@ const VibeScreen = () => {
       setPendingAdultVibe(vibe);
       return;
     }
-    useGameStore.getState().setVibe(vibe);
-    useGameStore.getState().startGame(vibe);
+    launchGame(vibe);
   };
 
   const handleAgeConfirmed = () => {
@@ -60,14 +74,17 @@ const VibeScreen = () => {
     localStorage.setItem(`malaky-age-confirmed-${pendingAdultVibe}`, "true");
     const vibe = pendingAdultVibe;
     setPendingAdultVibe(null);
-    useGameStore.getState().setVibe(vibe);
-    useGameStore.getState().startGame(vibe);
+    launchGame(vibe);
   };
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={() => setScreen("mode")} className="rounded-xl bg-card p-2.5 text-foreground">
+        <button
+          onClick={() => !isLoading && setScreen("mode")}
+          className="rounded-xl bg-card p-2.5 text-foreground"
+          disabled={isLoading}
+        >
           <ArrowLeft size={20} />
         </button>
         <div>
@@ -105,6 +122,16 @@ const VibeScreen = () => {
         </div>
       )}
 
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface/80">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 size={32} className="animate-spin text-primary" />
+            <p className="text-sm font-medium text-muted-foreground">Préparation des cartes...</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 space-y-3 pb-4 overflow-y-auto">
         {items.map((item, i) => {
           const isUnlocked = item.free || unlockedVibes[item.id];
@@ -117,10 +144,11 @@ const VibeScreen = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => handleSelect(item.id, item.free)}
+              disabled={isLoading}
               aria-label={`Choisir l'ambiance ${item.name}${!isUnlocked ? ` — ${item.priceLabel}` : ""}`}
               className={`relative w-full rounded-2xl border-0 p-4 text-left overflow-hidden transition-transform active:scale-[0.97] ${vibeStyles[item.id] || "vibe-soft"} ${
                 isUnlocked ? "" : "opacity-80"
-              }`}
+              } ${isLoading ? "pointer-events-none opacity-60" : ""}`}
             >
               <div className="relative flex items-center gap-3">
                 <span className="text-3xl">{item.emoji}</span>

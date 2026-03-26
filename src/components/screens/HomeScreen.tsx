@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import malakyLogo from "@/assets/malaky-logo.webp";
 import { useGameStore } from "@/store/gameStore";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
-import { useActiveUsers } from "@/hooks/useActiveUsers";
 
 // Lazy-load DailyDilemme — not critical for first paint
 const DailyDilemme = lazy(() => import("@/components/DailyDilemme"));
@@ -12,7 +11,6 @@ const LAUNCH_DATE_MS = new Date('2026-03-24').getTime();
 
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
-  const activeUsers = useActiveUsers();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -43,22 +41,6 @@ const HomeScreen = () => {
         className="text-center"
       >
         <img src={malakyLogo} alt="Malaky" className="w-80 max-w-[85vw] mx-auto drop-shadow-2xl" />
-        {activeUsers > 5 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary/15 px-4 py-2"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-            </span>
-            <span className="text-xs font-bold text-primary">
-              {activeUsers.toLocaleString()} joueurs actifs
-            </span>
-          </motion.div>
-        )}
         {!isOnline && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}

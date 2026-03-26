@@ -550,9 +550,13 @@ const GameScreen = () => {
                   Reprendre
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     setShowPauseMenu(false);
-                    useGameStore.getState().startGame();
+                    try {
+                      await useGameStore.getState().startGame();
+                    } catch (err) {
+                      console.error("Restart failed:", err);
+                    }
                   }}
                   className="w-full rounded-2xl bg-secondary px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
                 >
