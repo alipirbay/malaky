@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import malakyLogo from "@/assets/malaky-logo.webp";
 import { useGameStore } from "@/store/gameStore";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
-import { useActiveUsers } from "@/hooks/useActiveUsers";
 
 // Lazy-load DailyDilemme — not critical for first paint
 const DailyDilemme = lazy(() => import("@/components/DailyDilemme"));
