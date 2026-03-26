@@ -145,6 +145,6 @@ const PrivacyModal = forwardRef<HTMLDivElement, PrivacyModalProps>(function Priv
       )}
     </AnimatePresence>
   );
-};
+});
 
 export default PrivacyModal;
