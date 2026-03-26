@@ -59,7 +59,9 @@ export function useDailyDilemme() {
   const [loading, setLoading] = useState(false);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
   const [hasVoted, setHasVoted] = useState(() => {
-    return !!localStorage.getItem(`dilemme-voted-${initialDilemme.id}`);
+    try {
+      return !!localStorage.getItem(`dilemme-voted-${initialDilemme.id}`);
+    } catch { return false; }
   });
   const [voting, setVoting] = useState(false);
   const fetchedRef = useRef(false);
@@ -91,7 +93,6 @@ export function useDailyDilemme() {
 
     (async () => {
       try {
-        // Fast path: check DB
         const { data: existing } = await supabase
           .from("daily_dilemmes")
           .select("*")
@@ -112,7 +113,6 @@ export function useDailyDilemme() {
           return;
         }
 
-        // Slow path: generate via AI edge function (non-blocking)
         const { data, error } = await supabase.functions.invoke("generate-daily-dilemme");
         if (controller.signal.aborted) return;
 
@@ -143,40 +143,51 @@ export function useDailyDilemme() {
     if (!dilemme || voting || hasVoted) return;
     setVoting(true);
 
-    // Offline / local dilemme fallback
-    if (dilemme.id.startsWith("local-")) {
+    try {
+      // Offline / local dilemme fallback
+      if (dilemme.id.startsWith("local-")) {
+        localStorage.setItem(getVoteKey(dilemme.id), choice);
+        setHasVoted(true);
+        const aPct = choice === "a"
+          ? 52 + Math.floor(Math.random() * 13)
+          : 35 + Math.floor(Math.random() * 13);
+        setVoteResult({
+          choiceAPct: aPct,
+          choiceBPct: 100 - aPct,
+          totalVotes: 50 + Math.floor(Math.random() * 200),
+        });
+        return;
+      }
+
+      // Server vote
+      let fingerprint: string | null = null;
+      try {
+        const sid = sessionStorage.getItem("malaky-session-id") ?? crypto.randomUUID();
+        fingerprint = sid;
+      } catch { /* ignore */ }
+
+      const { error } = await supabase.from("dilemme_votes").insert({
+        card_text: dilemme.question,
+        choice,
+        dilemme_id: dilemme.id,
+        voter_fingerprint: fingerprint,
+      });
+
+      if (error) {
+        console.warn("[vote] Insert failed:", error.message);
+      }
+
       localStorage.setItem(getVoteKey(dilemme.id), choice);
       setHasVoted(true);
-      const aPct = choice === "a"
-        ? 52 + Math.floor(Math.random() * 13)
-        : 35 + Math.floor(Math.random() * 13);
-      setVoteResult({
-        choiceAPct: aPct,
-        choiceBPct: 100 - aPct,
-        totalVotes: 50 + Math.floor(Math.random() * 200),
-      });
+      await fetchVotes(dilemme.id);
+    } catch (e) {
+      console.warn("[vote] Error:", e);
+      // Still mark as voted locally to avoid stuck state
+      localStorage.setItem(getVoteKey(dilemme.id), choice);
+      setHasVoted(true);
+    } finally {
       setVoting(false);
-      return;
     }
-
-    // Server vote
-    let fingerprint: string | null = null;
-    try {
-      const sid = sessionStorage.getItem("malaky-session-id") ?? crypto.randomUUID();
-      fingerprint = sid;
-    } catch { /* ignore */ }
-
-    await supabase.from("dilemme_votes").insert({
-      card_text: dilemme.question,
-      choice,
-      dilemme_id: dilemme.id,
-      voter_fingerprint: fingerprint,
-    });
-
-    localStorage.setItem(getVoteKey(dilemme.id), choice);
-    setHasVoted(true);
-    await fetchVotes(dilemme.id);
-    setVoting(false);
   };
 
   return {

@@ -19,6 +19,16 @@ interface LoadDeckParams {
   players: Player[];
 }
 
+interface CachedCard {
+  id?: string;
+  mode?: string;
+  vibe?: string;
+  card_type: string;
+  template: string;
+  answer?: string;
+  lang?: string;
+}
+
 /**
  * Load deck INSTANTLY from local cards + downloaded packs.
  * No network call — always synchronous after dynamic import.
@@ -27,14 +37,10 @@ export async function loadDeckInstant(params: LoadDeckParams): Promise<GameCard[
   const { getFilteredCards } = await import("@/data/cards");
   const { getDownloadedPackCards } = await import("@/lib/packManager");
 
-  // Local cards from code (always available)
   const localCards = getFilteredCards(params.mode, params.vibe, params.players.length);
-
-  // Cards from downloaded packs (purchased, stored locally)
   const packCards = getDownloadedPackCards(params.vibe)
     .filter(c => c.mode === params.mode);
 
-  // Combine and deduplicate
   return deduplicateShuffle([...localCards, ...packCards]);
 }
 
@@ -56,20 +62,19 @@ export function enrichDeckInBackground(params: LoadDeckParams): void {
           players: params.players.map(p => p.name),
           seen_ids: seenIds,
           count: 50,
-          skip_ai: true, // Never trigger AI in background sync
+          skip_ai: true,
         },
       });
 
       if (data?.cards?.length) {
-        cacheCardsLocally(params.mode, params.vibe, data.cards);
+        cacheCardsLocally(params.mode, params.vibe, data.cards as CachedCard[]);
         markCardsSeen(
-          data.cards
-            .map((c: { id?: string }) => c.id)
-            .filter((id: string | undefined): id is string => Boolean(id))
+          (data.cards as CachedCard[])
+            .map(c => c.id)
+            .filter((id): id is string => Boolean(id))
         );
       }
     } catch (e) {
-      // Silent — not critical, we have local cards
       console.debug("[enrichDeck] Background sync skipped:", e);
     }
   })();
@@ -81,14 +86,18 @@ export function enrichDeckInBackground(params: LoadDeckParams): void {
 const CACHE_KEY_PREFIX = "malaky-cards-cache-";
 const MAX_CACHED_PER_COMBO = 200;
 
-function cacheCardsLocally(mode: GameMode, vibe: Vibe, cards: any[]): void {
+function cacheCardsLocally(mode: GameMode, vibe: Vibe, cards: CachedCard[]): void {
   try {
     const key = `${CACHE_KEY_PREFIX}${mode}-${vibe}`;
-    const existing = JSON.parse(localStorage.getItem(key) || "[]");
+    let existing: CachedCard[] = [];
+    try {
+      existing = JSON.parse(localStorage.getItem(key) || "[]");
+      if (!Array.isArray(existing)) existing = [];
+    } catch { existing = []; }
+
     const merged = [...existing, ...cards];
-    // Deduplicate by template
-    const unique = merged.filter((c: any, i: number, arr: any[]) =>
-      arr.findIndex((x: any) => x.template === c.template) === i
+    const unique = merged.filter((c, i, arr) =>
+      arr.findIndex(x => x.template === c.template) === i
     );
     localStorage.setItem(key, JSON.stringify(unique.slice(-MAX_CACHED_PER_COMBO)));
   } catch (e) {
@@ -104,8 +113,9 @@ export function getCachedServerCards(mode: GameMode, vibe: Vibe): GameCard[] {
     const key = `${CACHE_KEY_PREFIX}${mode}-${vibe}`;
     const raw = localStorage.getItem(key);
     if (!raw) return [];
-    const cards = JSON.parse(raw);
-    return cards.map((c: any, i: number) => ({
+    const cards: CachedCard[] = JSON.parse(raw);
+    if (!Array.isArray(cards)) return [];
+    return cards.map((c, i) => ({
       id: c.id ?? `cached-${mode}-${vibe}-${i}`,
       mode,
       vibe,

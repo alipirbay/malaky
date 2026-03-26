@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { usePayment, type PaymentStatus } from "@/hooks/usePayment";
 import { CheckCircle, Clock, XCircle, Loader2, ArrowLeft } from "lucide-react";
@@ -35,34 +35,56 @@ const STATUS_CONFIG: Record<PaymentStatus, { icon: typeof CheckCircle; label: st
   },
 };
 
+const MAX_POLLS = 60; // 5 min max at 5s interval
+
 const PaymentReturnScreen = ({ transactionId, onBack }: PaymentReturnScreenProps) => {
-  const { checkStatus, loading } = usePayment();
+  const { checkStatus } = usePayment();
   const [status, setStatus] = useState<PaymentStatus>("INITIATED");
   const [checking, setChecking] = useState(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollCountRef = useRef(0);
 
   useEffect(() => {
+    let cancelled = false;
+
     const check = async () => {
       const txn = await checkStatus(transactionId);
+      if (cancelled) return;
+
       if (txn) {
         setStatus(txn.status as PaymentStatus);
         if (txn.status === "SUCCESS" || txn.status === "FAILED") {
-          clearInterval(interval);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
         }
       }
       setChecking(false);
+      pollCountRef.current++;
+
+      if (pollCountRef.current >= MAX_POLLS && intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
 
     check();
-    // Poll every 5s for pending transactions
-    const interval = setInterval(check, 5000);
+    intervalRef.current = setInterval(check, 5000);
 
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [transactionId, checkStatus]);
 
   const config = STATUS_CONFIG[status];
   const Icon = config.icon;
 
-  if (checking && !status) {
+  if (checking && status === "INITIATED") {
     return (
       <div className="flex min-h-screen items-center justify-center gradient-surface">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

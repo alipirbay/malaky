@@ -26,8 +26,6 @@ serve(async (req) => {
       rawBody = await req.text();
       const params = new URLSearchParams(rawBody);
       bodyData = Object.fromEntries(params.entries());
-      // For signature verification, use the JSON-stringified version of parsed data
-      // VPI docs say: "hashage du body avec la clé secrète"
     } else {
       rawBody = await req.text();
       bodyData = JSON.parse(rawBody);
@@ -35,42 +33,42 @@ serve(async (req) => {
 
     console.log("[VPI Webhook] Received:", JSON.stringify(bodyData));
 
-    // Verify HMAC SHA256 signature
+    // Verify HMAC SHA256 signature — REJECT if missing
     const vpiSignature = req.headers.get("VPI-Signature") || req.headers.get("vpi-signature") || "";
-    
-    if (vpiSignature) {
-      const encoder = new TextEncoder();
-      const key = await crypto.subtle.importKey(
-        "raw",
-        encoder.encode(VPI_KEY_SECRET),
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-      );
-      
-      // Hash the raw body
-      const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
-      const hexHash = Array.from(new Uint8Array(signature))
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("")
-        .toUpperCase();
 
-      if (hexHash !== vpiSignature.toUpperCase()) {
-        console.error("[VPI Webhook] Signature mismatch. Expected:", hexHash, "Got:", vpiSignature);
-        return new Response(JSON.stringify({ error: "Invalid signature" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      console.log("[VPI Webhook] Signature verified ✓");
-    } else {
-      console.warn("[VPI Webhook] No VPI-Signature header present");
+    if (!vpiSignature) {
+      console.error("[VPI Webhook] Missing VPI-Signature header — rejecting");
+      return new Response(JSON.stringify({ error: "Missing signature" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(VPI_KEY_SECRET),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
+    const hexHash = Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase();
+
+    if (hexHash !== vpiSignature.toUpperCase()) {
+      console.error("[VPI Webhook] Signature mismatch. Expected:", hexHash, "Got:", vpiSignature);
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    console.log("[VPI Webhook] Signature verified ✓");
 
     // Extract fields
     const reference_vpi = bodyData.reference_VPI || bodyData.reference_vpi || "";
     const reference = bodyData.reference || "";
-    const panier = bodyData.panier || "";
-    const montant = bodyData.montant || "";
     const etat = bodyData.etat || "";
     const initiateur = bodyData.initiateur || null;
     const referenceMM = bodyData.referenceMM || bodyData.referencemm || null;
