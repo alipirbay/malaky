@@ -11,7 +11,6 @@ const LAUNCH_DATE_MS = new Date('2026-03-24').getTime();
 
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
-  const activeUsers = useActiveUsers();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
