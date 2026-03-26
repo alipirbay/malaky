@@ -19,14 +19,18 @@ export function useActiveUsers() {
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
 
+    let cancelled = false;
+
     const heartbeat = async () => {
+      if (cancelled) return;
       try {
         await supabase.from("active_sessions").upsert(
           { session_id: sessionId.current, last_seen: new Date().toISOString() },
           { onConflict: "session_id" }
         );
+        if (cancelled) return;
         const { data } = await supabase.rpc("get_active_users_count");
-        if (typeof data === "number") setCount(data);
+        if (!cancelled && typeof data === "number") setCount(data);
 
         // Probabilistic cleanup (~1% chance)
         if (Math.random() < 0.01) {
