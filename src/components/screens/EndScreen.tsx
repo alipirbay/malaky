@@ -200,23 +200,33 @@ const EndScreen = () => {
         className="w-full max-w-sm space-y-3"
       >
         <button
-          onClick={() => setScreen("vibe")}
+          onClick={() => {
+            useGameStore.getState().startGame();
+          }}
           className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary flex items-center justify-center gap-2 transition-transform active:scale-95"
         >
-          <RotateCcw size={20} /> Rejouer
+          <RotateCcw size={20} /> Encore 20 cartes !
         </button>
         <button
-          onClick={() => resetGame()}
-          className="w-full rounded-2xl bg-card px-6 py-4 text-lg font-semibold text-foreground flex items-center justify-center gap-2 transition-transform active:scale-95"
+          onClick={() => setScreen("vibe")}
+          className="w-full rounded-2xl bg-card px-6 py-4 text-sm font-semibold text-foreground flex items-center justify-center gap-2 transition-transform active:scale-95"
         >
-          Nouvelle partie
+          Changer d'ambiance
         </button>
-        <button
-          onClick={handleShare}
-          className="w-full rounded-2xl bg-card/50 px-6 py-3 text-sm font-medium text-muted-foreground flex items-center justify-center gap-2 transition-transform active:scale-95"
-        >
-          <Share2 size={16} /> Partager le score
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => resetGame()}
+            className="flex-1 rounded-2xl bg-card/50 px-4 py-3 text-sm font-medium text-muted-foreground flex items-center justify-center gap-2 transition-transform active:scale-95"
+          >
+            Nouvelle partie
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex-1 rounded-2xl bg-card/50 px-4 py-3 text-sm font-medium text-muted-foreground flex items-center justify-center gap-2 transition-transform active:scale-95"
+          >
+            <Share2 size={16} /> Partager
+          </button>
+        </div>
       </motion.div>
     </div>
   );
