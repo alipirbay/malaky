@@ -185,10 +185,10 @@ describe("seenCards", () => {
   });
 
   it("respects MAX_SEEN limit", () => {
-    const manyIds = Array.from({ length: 2500 }, (_, i) => `card-${i}`);
+    const manyIds = Array.from({ length: 3500 }, (_, i) => `card-${i}`);
     markCardsSeen(manyIds);
     const seen = getSeenCardIds();
-    expect(seen.length).toBeLessThanOrEqual(2000);
+    expect(seen.length).toBeLessThanOrEqual(3000);
   });
 });
 
