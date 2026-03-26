@@ -23,15 +23,9 @@ import { storageGet, storageSet, storageRemove } from "@/lib/storage";
 const FETCH_TIMEOUT_MS = 3000;
 
 function getCachedDilemme(today: string): DailyDilemme | null {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const cached = JSON.parse(raw) as DailyDilemme;
-    if (cached.active_date === today) return cached;
-    return null;
-  } catch {
-    return null;
-  }
+  const cached = storageGet<DailyDilemme | null>("dilemme-cache", null);
+  if (cached && cached.active_date === today) return cached;
+  return null;
 }
 
 function cacheDilemme(d: DailyDilemme): void {
