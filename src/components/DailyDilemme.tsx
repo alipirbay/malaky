@@ -96,6 +96,7 @@ const DailyDilemme = forwardRef<HTMLDivElement>(function DailyDilemme(_props, re
               <button
                 onClick={() => handleVote("a")}
                 disabled={voting}
+                aria-label={`Voter pour l'option A : ${dilemme.option_a}`}
                 className="w-full rounded-2xl px-4 py-4 text-left text-sm font-bold transition-all active:scale-[0.97] disabled:opacity-50"
                 style={{
                   background: "hsl(217 91% 60% / 0.15)",
@@ -119,6 +120,7 @@ const DailyDilemme = forwardRef<HTMLDivElement>(function DailyDilemme(_props, re
               <button
                 onClick={() => handleVote("b")}
                 disabled={voting}
+                aria-label={`Voter pour l'option B : ${dilemme.option_b}`}
                 className="w-full rounded-2xl px-4 py-4 text-left text-sm font-bold transition-all active:scale-[0.97] disabled:opacity-50"
                 style={{
                   background: "hsl(350 96% 72% / 0.15)",

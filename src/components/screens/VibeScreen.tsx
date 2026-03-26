@@ -1,11 +1,13 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import { VIBES, DIFFICULTIES } from "@/data/config";
 import { ArrowLeft, Lock, Loader2 } from "lucide-react";
 import type { Vibe } from "@/data/types";
 import AgeGateModal from "@/components/AgeGateModal";
 import { isPackDownloaded } from "@/lib/packManager";
+import { storageGet, storageSet } from "@/lib/storage";
 import { toast } from "sonner";
 
 const vibeStyles: Partial<Record<Vibe, string>> = {
@@ -28,20 +30,19 @@ const vibeStyles: Partial<Record<Vibe, string>> = {
 const ADULT_VIBES = ["afterdark", "hot"];
 const LAUNCH_TIMEOUT_MS = 8000;
 
-const hasConfirmedAge = (vibe: Vibe) => {
-  try {
-    return localStorage.getItem(`malaky-age-confirmed-${vibe}`) === "true";
-  } catch {
-    return false;
-  }
-};
+const hasConfirmedAge = (vibe: Vibe) =>
+  storageGet<boolean>(`age-confirmed-${vibe}`, false);
 
 const VibeScreen = () => {
-  const setScreen = useGameStore((s) => s.setScreen);
-  const unlockedVibes = useGameStore((s) => s.unlockedVibes);
-  const selectedMode = useGameStore((s) => s.selectedMode);
-  const quickChallengeDuration = useGameStore((s) => s.quickChallengeDuration);
-  const setQuickChallengeDuration = useGameStore((s) => s.setQuickChallengeDuration);
+  const {
+    setScreen, unlockedVibes, selectedMode, quickChallengeDuration, setQuickChallengeDuration,
+  } = useGameStore(useShallow((s) => ({
+    setScreen: s.setScreen,
+    unlockedVibes: s.unlockedVibes,
+    selectedMode: s.selectedMode,
+    quickChallengeDuration: s.quickChallengeDuration,
+    setQuickChallengeDuration: s.setQuickChallengeDuration,
+  })));
   const [pendingAdultVibe, setPendingAdultVibe] = useState<Vibe | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const launchingRef = useRef(false);
@@ -100,7 +101,7 @@ const VibeScreen = () => {
 
   const handleAgeConfirmed = useCallback(() => {
     if (!pendingAdultVibe) return;
-    localStorage.setItem(`malaky-age-confirmed-${pendingAdultVibe}`, "true");
+    storageSet(`age-confirmed-${pendingAdultVibe}`, true);
     const vibe = pendingAdultVibe;
     setPendingAdultVibe(null);
     launchGame(vibe);
@@ -162,7 +163,7 @@ const VibeScreen = () => {
         </div>
       )}
 
-      <div className="flex-1 space-y-3 pb-4 overflow-y-auto">
+      <div className="flex-1 space-y-3 pb-4 overflow-y-auto" role="radiogroup" aria-label="Choix de l'ambiance">
         {items.map((item, i) => {
           const isUnlocked = item.free || unlockedVibes[item.id];
           const isOfflineReady = item.free || isPackDownloaded(item.id);
@@ -176,6 +177,8 @@ const VibeScreen = () => {
               onClick={() => handleSelect(item.id, item.free)}
               disabled={isLoading}
               aria-label={`Choisir l'ambiance ${item.name}${!isUnlocked ? ` — ${item.priceLabel}` : ""}`}
+              role="radio"
+              aria-checked={false}
               className={`relative w-full rounded-2xl border-0 p-4 text-left overflow-hidden transition-transform active:scale-[0.97] ${vibeStyles[item.id] || "vibe-soft"} ${
                 isUnlocked ? "" : "opacity-80"
               } ${isLoading ? "pointer-events-none opacity-60" : ""}`}

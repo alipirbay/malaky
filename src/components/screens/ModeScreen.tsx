@@ -30,13 +30,15 @@ const ModeScreen = () => {
         </div>
       </div>
 
-      <div className="flex-1 space-y-3">
+      <div className="flex-1 space-y-3" role="radiogroup" aria-label="Choix du mode de jeu">
         {GAME_MODES.map((mode, i) => (
           <motion.button
             key={mode.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.06 }}
+            role="radio"
+            aria-checked={false}
             onClick={() => handleSelectMode(mode.id)}
             className={`w-full rounded-2xl p-5 text-left transition-transform active:scale-[0.98] ${colorMap[mode.color]}`}
           >

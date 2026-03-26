@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getNetworkStatus } from "@/lib/networkStatus";
 
 const SESSION_KEY = "malaky-session-id";
 const HEARTBEAT_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -23,7 +24,7 @@ export function useActiveUsers() {
     let cancelled = false;
 
     const heartbeat = async () => {
-      if (cancelled || document.hidden) return;
+      if (cancelled || document.hidden || !getNetworkStatus()) return;
       try {
         await supabase.from("active_sessions").upsert(
           { session_id: sessionId.current, last_seen: new Date().toISOString() },

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import {
   ArrowLeft, Volume2, VolumeX, Vibrate, Shield, FileText,
   Trash2, Mail, ChevronRight, AlertTriangle, Smartphone,
@@ -16,15 +17,20 @@ import { getStorageUsage } from "@/lib/storage";
 import { getUnlockedAchievements, ACHIEVEMENTS } from "@/lib/achievements";
 
 const SettingsScreen = () => {
-  const setScreen = useGameStore((s) => s.setScreen);
-  const soundEnabled = useGameStore((s) => s.soundEnabled);
-  const soundVolume = useGameStore((s) => s.soundVolume);
-  const vibrationEnabled = useGameStore((s) => s.vibrationEnabled);
-  const toggleSound = useGameStore((s) => s.toggleSound);
-  const setSoundVolume = useGameStore((s) => s.setSoundVolume);
-  const toggleVibration = useGameStore((s) => s.toggleVibration);
-  const resetGame = useGameStore((s) => s.resetGame);
-  const unlockedVibes = useGameStore((s) => s.unlockedVibes);
+  const {
+    setScreen, soundEnabled, soundVolume, vibrationEnabled,
+    toggleSound, setSoundVolume, toggleVibration, resetGame, unlockedVibes,
+  } = useGameStore(useShallow((s) => ({
+    setScreen: s.setScreen,
+    soundEnabled: s.soundEnabled,
+    soundVolume: s.soundVolume,
+    vibrationEnabled: s.vibrationEnabled,
+    toggleSound: s.toggleSound,
+    setSoundVolume: s.setSoundVolume,
+    toggleVibration: s.toggleVibration,
+    resetGame: s.resetGame,
+    unlockedVibes: s.unlockedVibes,
+  })));
 
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [cguOpen, setCguOpen] = useState(false);

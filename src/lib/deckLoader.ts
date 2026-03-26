@@ -5,6 +5,7 @@ import type { GameCard, GameMode, Vibe, Player, StoredCard } from "@/data/types"
 import { GAME_LIMITS } from "@/data/constants";
 import { deduplicateShuffle } from "@/lib/shuffleUtils";
 import { storageGet, storageSet } from "@/lib/storage";
+import { getNetworkStatus } from "@/lib/networkStatus";
 
 interface LoadDeckParams {
   mode: GameMode;
@@ -31,7 +32,7 @@ export async function loadDeckInstant(params: LoadDeckParams): Promise<GameCard[
  */
 export function enrichDeckInBackground(params: LoadDeckParams): void {
   // Skip if offline
-  if (typeof navigator !== "undefined" && !navigator.onLine) return;
+  if (!getNetworkStatus()) return;
 
   (async () => {
     try {
