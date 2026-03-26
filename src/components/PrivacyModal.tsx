@@ -90,7 +90,7 @@ const CGU_CONTENT = {
   ],
 };
 
-const PrivacyModal = ({ open, onClose, type }: PrivacyModalProps) => {
+const PrivacyModal = forwardRef<HTMLDivElement, PrivacyModalProps>(function PrivacyModal({ open, onClose, type }, ref) {
   const content = type === "privacy" ? PRIVACY_CONTENT : CGU_CONTENT;
 
   return (
