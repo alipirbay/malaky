@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { GAME_MODES } from "@/data/config";
 import { fillCardTemplate } from "@/lib/cardUtils";
-import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward, Flag } from "lucide-react";
+import { ArrowLeft, Pause, Volume2, VolumeX, ChevronRight, Play, RotateCcw, X, SkipForward, Flag, Music, MusicOff } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 import { reportCard } from "@/hooks/useCardReport";
+import { useAmbientMusic } from "@/hooks/useAmbientMusic";
 import { toast } from "sonner";
 
 const CARD_TYPE_LABELS: Record<string, { label: string; color: string }> = {
