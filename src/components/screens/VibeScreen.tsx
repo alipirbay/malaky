@@ -101,7 +101,7 @@ const VibeScreen = () => {
 
   const handleAgeConfirmed = useCallback(() => {
     if (!pendingAdultVibe) return;
-    localStorage.setItem(`malaky-age-confirmed-${pendingAdultVibe}`, "true");
+    storageSet(`age-confirmed-${pendingAdultVibe}`, true);
     const vibe = pendingAdultVibe;
     setPendingAdultVibe(null);
     launchGame(vibe);
