@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDailyDilemme } from "@/hooks/useDailyDilemme";
 import { Scale, Clock, TrendingUp, Sparkles } from "lucide-react";
@@ -16,8 +16,9 @@ const TOPIC_LABELS: Record<string, { emoji: string; label: string }> = {
   general: { emoji: "⚖️", label: "Général" },
 };
 
-const DailyDilemme = () => {
-  const { dilemme, loading, voteResult, hasVoted, voting, vote, getTimeUntilNext } = useDailyDilemme();
+// forwardRef needed because parent wraps this in Suspense + motion.div
+const DailyDilemme = forwardRef<HTMLDivElement>(function DailyDilemme(_props, ref) {
+  const { dilemme, voteResult, hasVoted, voting, vote, getTimeUntilNext } = useDailyDilemme();
   const [countdown, setCountdown] = useState("");
   const { playConfirm, vibrate } = useSounds();
 
@@ -40,6 +41,7 @@ const DailyDilemme = () => {
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
@@ -138,7 +140,6 @@ const DailyDilemme = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-3"
             >
-              {/* Vote bar */}
               <div className="relative h-16 w-full overflow-hidden rounded-2xl" style={{ background: "hsl(var(--foreground) / 0.05)" }}>
                 <motion.div
                   initial={{ width: "50%" }}
@@ -147,9 +148,7 @@ const DailyDilemme = () => {
                   className="absolute inset-y-0 left-0 flex items-center px-3"
                   style={{ background: "hsl(217 91% 60% / 0.25)" }}
                 >
-                  <div className="flex flex-col">
-                    <span className="text-lg font-black" style={{ color: "hsl(217 91% 70%)" }}>{voteResult.choiceAPct}%</span>
-                  </div>
+                  <span className="text-lg font-black" style={{ color: "hsl(217 91% 70%)" }}>{voteResult.choiceAPct}%</span>
                 </motion.div>
                 <motion.div
                   initial={{ width: "50%" }}
@@ -158,19 +157,13 @@ const DailyDilemme = () => {
                   className="absolute inset-y-0 right-0 flex items-center justify-end px-3"
                   style={{ background: "hsl(350 96% 72% / 0.25)" }}
                 >
-                  <div className="flex flex-col items-end">
-                    <span className="text-lg font-black" style={{ color: "hsl(350 96% 80%)" }}>{voteResult.choiceBPct}%</span>
-                  </div>
+                  <span className="text-lg font-black" style={{ color: "hsl(350 96% 80%)" }}>{voteResult.choiceBPct}%</span>
                 </motion.div>
               </div>
-
-              {/* Labels */}
               <div className="flex justify-between text-xs px-1">
                 <span className="font-bold truncate max-w-[45%]" style={{ color: "hsl(217 91% 70%)" }}>{dilemme.option_a}</span>
                 <span className="font-bold truncate max-w-[45%] text-right" style={{ color: "hsl(350 96% 80%)" }}>{dilemme.option_b}</span>
               </div>
-
-              {/* Stats */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <TrendingUp size={12} className="text-muted-foreground/60" />
@@ -186,6 +179,6 @@ const DailyDilemme = () => {
       </div>
     </motion.div>
   );
-};
+});
 
 export default DailyDilemme;

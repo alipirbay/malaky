@@ -2,20 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import {
-  ArrowLeft,
-  Volume2,
-  VolumeX,
-  Vibrate,
-  Shield,
-  FileText,
-  Trash2,
-  Mail,
-  ChevronRight,
-  AlertTriangle,
-  Smartphone,
-  HelpCircle,
-  Trophy,
-  RefreshCw,
+  ArrowLeft, Volume2, VolumeX, Vibrate, Shield, FileText,
+  Trash2, Mail, ChevronRight, AlertTriangle, Smartphone,
+  HelpCircle, Trophy, RefreshCw,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -60,6 +49,7 @@ const SettingsScreen = () => {
       pendingTransactionId: null,
     });
     clearSeenCards();
+    clearStats();
     setShowResetConfirm(false);
     toast.success("Données réinitialisées");
   };
@@ -74,11 +64,11 @@ const SettingsScreen = () => {
   return (
     <>
       <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
-        {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => setScreen("home")}
             className="rounded-xl bg-card p-2.5 text-foreground"
+            aria-label="Retour à l'accueil"
           >
             <ArrowLeft size={20} />
           </button>
@@ -86,8 +76,7 @@ const SettingsScreen = () => {
         </div>
 
         <div className="flex-1 space-y-6 overflow-y-auto pb-8">
-
-          {/* ─── SECTION : SON & VIBRATIONS ─── */}
+          {/* ─── SON & VIBRATIONS ─── */}
           <div>
             <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-wider mb-2 px-1">
               Son & Vibrations
@@ -102,7 +91,6 @@ const SettingsScreen = () => {
                 <span className={labelClass}>Sons du jeu</span>
                 <Switch checked={soundEnabled} onCheckedChange={toggleSound} />
               </div>
-
               {soundEnabled && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -110,23 +98,16 @@ const SettingsScreen = () => {
                   className={rowClass}
                 >
                   <div className="w-5" />
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    Volume
-                  </span>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">Volume</span>
                   <Slider
                     value={[soundVolume]}
                     onValueChange={(v) => setSoundVolume(v[0])}
-                    min={0}
-                    max={100}
-                    step={5}
+                    min={0} max={100} step={5}
                     className="flex-1"
                   />
-                  <span className="text-xs font-bold text-muted-foreground w-8 text-right">
-                    {soundVolume}%
-                  </span>
+                  <span className="text-xs font-bold text-muted-foreground w-8 text-right">{soundVolume}%</span>
                 </motion.div>
               )}
-
               <div className={rowClass}>
                 <Vibrate size={20} className="text-muted-foreground shrink-0" />
                 <span className={labelClass}>Vibrations</span>
@@ -135,7 +116,7 @@ const SettingsScreen = () => {
             </div>
           </div>
 
-          {/* ─── SECTION : MON COMPTE ─── */}
+          {/* ─── MON COMPTE ─── */}
           <div>
             <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-wider mb-2 px-1">
               Mon compte
@@ -158,7 +139,6 @@ const SettingsScreen = () => {
                   Voir
                 </button>
               </div>
-
               <button onClick={handleContact} className={`${rowClass} text-left`}>
                 <Mail size={20} className="text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -170,40 +150,28 @@ const SettingsScreen = () => {
             </div>
           </div>
 
-          {/* ─── SECTION : LÉGAL ─── */}
+          {/* ─── LÉGAL ─── */}
           <div>
             <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-wider mb-2 px-1">
               Légal
             </p>
             <div className="space-y-2">
-              <button
-                onClick={() => setPrivacyOpen(true)}
-                className={`${rowClass} text-left`}
-              >
+              <button onClick={() => setPrivacyOpen(true)} className={`${rowClass} text-left`}>
                 <Shield size={20} className="text-muted-foreground shrink-0" />
                 <span className={labelClass}>Politique de confidentialité</span>
                 <ChevronRight size={16} className="text-muted-foreground/40 shrink-0" />
               </button>
-
-              <button
-                onClick={() => setCguOpen(true)}
-                className={`${rowClass} text-left`}
-              >
+              <button onClick={() => setCguOpen(true)} className={`${rowClass} text-left`}>
                 <FileText size={20} className="text-muted-foreground shrink-0" />
                 <span className={labelClass}>Conditions d'utilisation</span>
                 <ChevronRight size={16} className="text-muted-foreground/40 shrink-0" />
               </button>
-
               <button onClick={handleContact} className={`${rowClass} text-left`}>
                 <Mail size={20} className="text-muted-foreground shrink-0" />
                 <span className={labelClass}>Nous contacter</span>
                 <span className="text-xs text-muted-foreground/50">contact@malaky.app</span>
               </button>
-
-              <button
-                onClick={() => window.open("/support.html", "_blank")}
-                className={`${rowClass} text-left`}
-              >
+              <button onClick={() => window.open("/support.html", "_blank")} className={`${rowClass} text-left`}>
                 <HelpCircle size={20} className="text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-foreground text-sm">Page de support</p>
@@ -214,7 +182,7 @@ const SettingsScreen = () => {
             </div>
           </div>
 
-          {/* ─── SECTION : DANGER ZONE ─── */}
+          {/* ─── DONNÉES ─── */}
           <div>
             <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-wider mb-2 px-1">
               Données
@@ -247,7 +215,6 @@ const SettingsScreen = () => {
                 </button>
               )}
             </button>
-
             <button
               onClick={() => { clearStats(); toast.success("Palmarès effacé"); }}
               className={`${rowClass} text-left`}
@@ -258,12 +225,8 @@ const SettingsScreen = () => {
                 <p className="text-xs text-muted-foreground">Remet les stats historiques à zéro</p>
               </div>
             </button>
-
             <button
-              onClick={() => { 
-                clearSeenCards();
-                toast.success("Cartes vues réinitialisées");
-              }}
+              onClick={() => { clearSeenCards(); toast.success("Cartes vues réinitialisées"); }}
               className={`${rowClass} text-left`}
             >
               <RefreshCw size={20} className="text-muted-foreground shrink-0" />
@@ -273,19 +236,13 @@ const SettingsScreen = () => {
               </div>
             </button>
           </div>
-
         </div>
 
-        {/* Footer */}
         <div className="text-center pt-4 pb-2">
           <p className="text-xs text-muted-foreground/40">Malaky v1.0.0</p>
-          <p className="text-xs text-muted-foreground/30 mt-1">
-            Made with ❤️ à Antananarivo 🇲🇬
-          </p>
+          <p className="text-xs text-muted-foreground/30 mt-1">Made with ❤️ à Antananarivo 🇲🇬</p>
         </div>
       </div>
-
-      {/* Modals */}
       <PrivacyModal open={privacyOpen} onClose={() => setPrivacyOpen(false)} type="privacy" />
       <PrivacyModal open={cguOpen} onClose={() => setCguOpen(false)} type="cgu" />
     </>
