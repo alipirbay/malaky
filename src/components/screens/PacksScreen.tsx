@@ -18,19 +18,23 @@ const PacksScreen = () => {
     if (pack.id === "bundle_all") {
       const allVibes: Vibe[] = ["hot", "chaos", "couple", "apero", "mada", "confessions", "vip", "afterdark", "difficile", "expert"];
       unlockBundle(allVibes);
-      toast.success('Pack débloqué ! Téléchargement des cartes...');
+      toast.success("Pack débloqué ! Téléchargement des cartes en cours...");
       const { downloadPack } = await import("@/lib/packManager");
-      for (const v of allVibes) {
-        downloadPack(v); // fire and forget
+      const results = await Promise.allSettled(allVibes.map(v => downloadPack(v)));
+      const succeeded = results.filter(r => r.status === "fulfilled" && r.value).length;
+      const failed = allVibes.length - succeeded;
+      if (failed > 0) {
+        toast.warning(`${succeeded}/${allVibes.length} packs téléchargés. ${failed} échoué(s) — rejoue en ligne pour les récupérer.`);
+      } else {
+        toast.success("Tous les packs sont prêts ! Jouable hors-ligne ✈️");
       }
-      toast.success('Cartes téléchargées ! Jouable hors-ligne. ✈️');
     } else if (pack.vibe) {
       unlockVibe(pack.vibe as Vibe);
       toast.success(`Pack "${pack.name}" débloqué ! Téléchargement...`);
       const { downloadPack } = await import("@/lib/packManager");
       const success = await downloadPack(pack.vibe as Vibe);
       if (success) {
-        toast.success('Cartes prêtes ! Jouable hors-ligne. ✈️');
+        toast.success("Cartes prêtes ! Jouable hors-ligne ✈️");
       }
     }
   };

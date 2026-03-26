@@ -29,9 +29,7 @@ function getCachedDilemme(today: string): DailyDilemme | null {
 }
 
 function cacheDilemme(d: DailyDilemme): void {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(d));
-  } catch { /* ignore */ }
+  storageSet("dilemme-cache", d);
 }
 
 function buildLocalDilemme(today: string): DailyDilemme {

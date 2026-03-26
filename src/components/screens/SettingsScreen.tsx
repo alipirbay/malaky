@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import {
   ArrowLeft, Volume2, VolumeX, Vibrate, Shield, FileText,
   Trash2, Mail, ChevronRight, AlertTriangle, Smartphone,
-  HelpCircle, Trophy, RefreshCw,
+  HelpCircle, Trophy, RefreshCw, History, HardDrive,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import PrivacyModal from "@/components/PrivacyModal";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
 import { clearSeenCards } from "@/hooks/useSeenCards";
+import { getStorageUsage } from "@/lib/storage";
+import { getUnlockedAchievements, ACHIEVEMENTS } from "@/lib/achievements";
 
 const SettingsScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
@@ -27,7 +29,9 @@ const SettingsScreen = () => {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [cguOpen, setCguOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const { clearStats } = usePlayerStats();
+  const { sessions, clearStats } = usePlayerStats();
+  const storageInfo = useMemo(() => getStorageUsage(), []);
+  const unlockedBadges = useMemo(() => getUnlockedAchievements(), []);
 
   const purchasedPacksCount = Object.values(unlockedVibes).filter(Boolean).length - 4;
 
@@ -122,6 +126,17 @@ const SettingsScreen = () => {
               Mon compte
             </p>
             <div className="space-y-2">
+              <button onClick={() => setScreen("history")} className={`${rowClass} text-left`}>
+                <History size={20} className="text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground text-sm">Historique des parties</p>
+                  <p className="text-xs text-muted-foreground">
+                    {sessions.length} partie{sessions.length > 1 ? "s" : ""} jouée{sessions.length > 1 ? "s" : ""}
+                    {unlockedBadges.length > 0 && ` · ${unlockedBadges.length} badge${unlockedBadges.length > 1 ? "s" : ""}`}
+                  </p>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground/40 shrink-0" />
+              </button>
               <div className={rowClass}>
                 <Smartphone size={20} className="text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -187,6 +202,19 @@ const SettingsScreen = () => {
             <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-wider mb-2 px-1">
               Données
             </p>
+            <div className={rowClass}>
+              <HardDrive size={20} className="text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground text-sm">Stockage local</p>
+                <p className="text-xs text-muted-foreground">{storageInfo.used} utilisé</p>
+              </div>
+              <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${Math.min(storageInfo.percent, 100)}%` }}
+                />
+              </div>
+            </div>
             <button
               onClick={handleResetProgress}
               className={`${rowClass} text-left ${showResetConfirm ? "border-2 border-destructive/30" : ""}`}
