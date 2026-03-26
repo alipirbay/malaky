@@ -90,7 +90,6 @@ serve(async (req) => {
             most_likely: "vote (Entre {player} et {player2}...)",
             would_you_rather: "truth (tu préfères... ou... ?)",
             quick_challenge: "timer (défi avec durée)",
-            tsimoa: "truth et dare sur le Nouvel An",
             culture_generale: "quiz (question avec réponse)",
           };
           const types = typeMap[mode] ?? "truth et dare";
