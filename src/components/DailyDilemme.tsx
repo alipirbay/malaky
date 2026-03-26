@@ -34,17 +34,6 @@ const DailyDilemme = () => {
     return () => clearInterval(interval);
   }, []); // getTimeUntilNext is a stable module-level function
 
-  if (loading) {
-    return (
-      <div className="w-full rounded-3xl bg-card p-5 animate-pulse">
-        <div className="h-5 w-32 bg-muted rounded mb-3" />
-        <div className="h-4 w-full bg-muted rounded mb-2" />
-        <div className="h-12 w-full bg-muted rounded mb-2" />
-        <div className="h-12 w-full bg-muted rounded" />
-      </div>
-    );
-  }
-
   if (!dilemme) return null;
 
   const topicInfo = TOPIC_LABELS[dilemme.topic] || TOPIC_LABELS.general;
