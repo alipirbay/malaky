@@ -58,6 +58,16 @@ export function useSounds() {
   const vibrationEnabled = useGameStore((s) => s.vibrationEnabled);
   const tickRef = useRef<number | null>(null);
 
+  // Cleanup tick loop on unmount
+  useEffect(() => {
+    return () => {
+      if (tickRef.current) {
+        clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
+    };
+  }, []);
+
   const vol = soundVolume / 100;
 
   const vibrate = useCallback(
