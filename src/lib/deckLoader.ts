@@ -5,6 +5,7 @@ import type { GameCard, GameMode, Vibe, Player, StoredCard } from "@/data/types"
 import { GAME_LIMITS } from "@/data/constants";
 import { deduplicateShuffle } from "@/lib/shuffleUtils";
 import { storageGet, storageSet } from "@/lib/storage";
+import { getNetworkStatus } from "@/lib/networkStatus";
 
 interface LoadDeckParams {
   mode: GameMode;

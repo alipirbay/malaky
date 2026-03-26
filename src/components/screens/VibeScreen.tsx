@@ -177,6 +177,8 @@ const VibeScreen = () => {
               onClick={() => handleSelect(item.id, item.free)}
               disabled={isLoading}
               aria-label={`Choisir l'ambiance ${item.name}${!isUnlocked ? ` — ${item.priceLabel}` : ""}`}
+              role="radio"
+              aria-checked={false}
               className={`relative w-full rounded-2xl border-0 p-4 text-left overflow-hidden transition-transform active:scale-[0.97] ${vibeStyles[item.id] || "vibe-soft"} ${
                 isUnlocked ? "" : "opacity-80"
               } ${isLoading ? "pointer-events-none opacity-60" : ""}`}

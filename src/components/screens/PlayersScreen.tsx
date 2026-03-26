@@ -73,6 +73,7 @@ const PlayersScreen = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
+              role="listitem"
               className="flex items-center gap-3 rounded-xl bg-card px-4 py-3"
             >
               <div

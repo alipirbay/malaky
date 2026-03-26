@@ -1,6 +1,7 @@
 import type { GameCard, Vibe, StoredCard } from "@/data/types";
 import { GAME_LIMITS } from "@/data/constants";
 import { storageGet, storageSet, storageKeys } from "@/lib/storage";
+// No direct localStorage usage — all access goes through storage.ts
 
 const PACK_KEY_PREFIX = "pack-";
 const PACK_META_KEY = "packs-meta";

@@ -37,6 +37,8 @@ const ModeScreen = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.06 }}
+            role="radio"
+            aria-checked={false}
             onClick={() => handleSelectMode(mode.id)}
             className={`w-full rounded-2xl p-5 text-left transition-transform active:scale-[0.98] ${colorMap[mode.color]}`}
           >

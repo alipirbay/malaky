@@ -24,7 +24,7 @@ export function useActiveUsers() {
     let cancelled = false;
 
     const heartbeat = async () => {
-      if (cancelled || document.hidden) return;
+      if (cancelled || document.hidden || !getNetworkStatus()) return;
       try {
         await supabase.from("active_sessions").upsert(
           { session_id: sessionId.current, last_seen: new Date().toISOString() },
