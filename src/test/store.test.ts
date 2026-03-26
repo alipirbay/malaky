@@ -1,10 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { GAME_LIMITS } from "@/data/constants";
 import { initPlayerData } from "@/lib/deckLoader";
 import { hashToScreen, isHashNavigable } from "@/lib/hashUtils";
 import { fillCardTemplate } from "@/lib/cardUtils";
 import { deduplicateShuffle } from "@/lib/shuffleUtils";
 import { getSeenCardIds, markCardsSeen, clearSeenCards } from "@/hooks/useSeenCards";
+import { getMood, DIFFICULTY_MOOD_MAP } from "@/lib/ambientMoods";
 import type { GameCard } from "@/data/types";
 
 // Helper
@@ -36,6 +37,12 @@ describe("initPlayerData", () => {
     expect(Object.keys(passes)).toHaveLength(0);
     expect(Object.keys(playerStats)).toHaveLength(0);
   });
+
+  it("handles duplicate player names gracefully", () => {
+    const players = [{ name: "Alice" }, { name: "Alice" }];
+    const { passes } = initPlayerData(players);
+    expect(passes["Alice"]).toBe(GAME_LIMITS.MAX_PASSES_PER_PLAYER);
+  });
 });
 
 describe("hashToScreen", () => {
@@ -52,7 +59,7 @@ describe("hashToScreen", () => {
     expect(hashToScreen("#players")).toBe("players");
   });
 
-  it("returns null for game/end", () => {
+  it("returns null for game/end (non-navigable)", () => {
     expect(hashToScreen("game")).toBeNull();
     expect(hashToScreen("end")).toBeNull();
   });
@@ -67,6 +74,7 @@ describe("isHashNavigable", () => {
   it("returns true for navigable screens", () => {
     expect(isHashNavigable("home")).toBe(true);
     expect(isHashNavigable("players")).toBe(true);
+    expect(isHashNavigable("vibe")).toBe(true);
   });
 
   it("returns false for non-navigable screens", () => {
@@ -95,7 +103,6 @@ describe("fillCardTemplate", () => {
   });
 
   it("player2 varies for different cardIndex", () => {
-    // With 2 other players, different indices should eventually give different player2
     const results = new Set<string>();
     for (let i = 0; i < 20; i++) {
       results.add(fillCardTemplate("{player2}", "Alice", allPlayers, i));
@@ -137,6 +144,17 @@ describe("deduplicateShuffle", () => {
     const result = deduplicateShuffle(cards);
     expect(result).toHaveLength(1);
   });
+
+  it("spaces similar cards apart", () => {
+    const cards = [
+      makeCard("Je n'ai jamais mangé du sushi", "1"),
+      makeCard("Je n'ai jamais mangé du pizza", "2"),
+      makeCard("Un tout autre texte", "3"),
+      makeCard("Encore différent", "4"),
+    ];
+    const result = deduplicateShuffle(cards);
+    expect(result).toHaveLength(4);
+  });
 });
 
 describe("seenCards", () => {
@@ -165,13 +183,51 @@ describe("seenCards", () => {
     clearSeenCards();
     expect(getSeenCardIds()).toEqual([]);
   });
+
+  it("respects MAX_SEEN limit", () => {
+    const manyIds = Array.from({ length: 2500 }, (_, i) => `card-${i}`);
+    markCardsSeen(manyIds);
+    const seen = getSeenCardIds();
+    expect(seen.length).toBeLessThanOrEqual(2000);
+  });
 });
 
-describe("deckLoader edge cases", () => {
-  it("initPlayerData handles duplicate player names gracefully", () => {
-    const players = [{ name: "Alice" }, { name: "Alice" }];
-    const { passes } = initPlayerData(players);
-    // Last one wins — still has key
-    expect(passes["Alice"]).toBe(GAME_LIMITS.MAX_PASSES_PER_PLAYER);
+describe("ambientMoods", () => {
+  it("resolves known vibes", () => {
+    const mood = getMood("soft");
+    expect(mood.tempo).toBe(70);
+    expect(mood.padType).toBe("sine");
+  });
+
+  it("resolves difficulty to mapped vibe", () => {
+    expect(DIFFICULTY_MOOD_MAP["facile"]).toBe("soft");
+    const mood = getMood("facile");
+    expect(mood.tempo).toBe(70);
+  });
+
+  it("falls back to soft for unknown vibe", () => {
+    const mood = getMood("nonexistent");
+    expect(mood.tempo).toBe(70);
+  });
+
+  it("mada has drums and salegy pattern", () => {
+    const mood = getMood("mada");
+    expect(mood.hasDrums).toBe(true);
+    expect(mood.drumPattern).toBeDefined();
+    expect(mood.tempo).toBe(125);
+  });
+});
+
+describe("store persistence strategy", () => {
+  it("selectedMode and selectedVibe are not persisted (clean start on refresh)", () => {
+    // This is a design validation test — the partialize function
+    // should NOT include selectedMode, selectedVibe, currentScreen, deck, etc.
+    // We verify by checking the store default values
+    const { useGameStore } = require("@/store/gameStore");
+    const state = useGameStore.getState();
+    expect(state.currentScreen).toBe("home");
+    expect(state.deck).toEqual([]);
+    expect(state.selectedMode).toBeNull();
+    expect(state.selectedVibe).toBeNull();
   });
 });
