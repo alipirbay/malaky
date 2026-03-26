@@ -271,6 +271,7 @@ export const useGameStore = create<GameState>()(
     {
       name: "malaky-store",
       partialize: (state) => ({
+        // Structural data — persisted across sessions
         unlockedVibes: state.unlockedVibes,
         soundEnabled: state.soundEnabled,
         soundVolume: state.soundVolume,
@@ -278,8 +279,8 @@ export const useGameStore = create<GameState>()(
         pendingTransactionId: state.pendingTransactionId,
         quickChallengeDuration: state.quickChallengeDuration,
         players: state.players,
-        selectedMode: state.selectedMode,
-        selectedVibe: state.selectedVibe,
+        // NOTE: currentScreen, deck, currentCardIndex, stats are NOT persisted.
+        // On refresh, the app always starts at "home". This is intentional.
       }),
     }
   )
