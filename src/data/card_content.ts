@@ -991,7 +991,7 @@ export const dareActions: VibeContent = {
     'Fais comme si tu négociais le prix d\'un objet au marché.',
     'Imite le mouvement d\'un voilier Dhow sur l\'eau.',
     'Chante \'Efa ela\' (ça fait longtemps) avec émotion.',
-    'Décris les couleurs du drapeau malgache.',
+    'Dessine le drapeau malgache en l\'air avec tes bras et nomme chaque couleur.',
     'Fais un petit mouvement de danse \'Salegy\'.',
     'Utilise l\'expression \'Tsy misy olana\' (pas de problème) avec un sourire.',
   ],
