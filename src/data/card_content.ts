@@ -1082,7 +1082,7 @@ export const dareActions: VibeContent = {
     'Mime le démarrage d\'une voiture de luxe et fais le bruit du moteur.',
     'Jette un regard hautain à l\'assemblée.',
     'Fais un mini-défilé de mode avec ta tenue actuelle.',
-    'Décris la vue depuis ton penthouse imaginaire.',
+    'Fais visiter ton penthouse imaginaire au groupe avec des gestes grandioses.',
     'Prends un air suffisant et déclare \'Évidemment !\'.',
     'Fais un toast élaboré à l\'incroyable soirée que tu as passée.',
     'Imite un photographe paparazzi te prenant en photo.',
