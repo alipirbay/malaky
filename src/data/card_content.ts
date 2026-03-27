@@ -3644,7 +3644,7 @@ export const challengeActions: VibeContent = {
     'Laisse ton regard glisser vers le bas et remonter lentement.',
     'Fais un petit gémissement discret.',
     'Fais un clin d\'œil langoureux.',
-    'Pose ta main sur ta nuque et caressse-la doucement.',
+    'Pose ta main sur ta nuque et caresse-la doucement.',
     'Invente une danse du ventre minuscule avec ton torse.',
     'Mords légèrement ta lèvre inférieure, puis relâche-la.',
     'Fais des petits ronds avec ton doigt sur la table.',
