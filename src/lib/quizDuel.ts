@@ -81,30 +81,11 @@ export function generateInviteCode(): string {
  * Get or create a persistent device ID.
  */
 export function getDeviceId(): string {
-  const { storageGet, storageSet } = await_storage();
   const id = storageGet<string>("device-id", "");
   if (id) return id;
   const newId = crypto.randomUUID();
   storageSet("device-id", newId);
   return newId;
-}
-
-// Lazy import to avoid circular deps
-function await_storage() {
-  // Use direct localStorage with malaky- prefix (same as storage.ts)
-  return {
-    storageGet<T>(key: string, fallback: T): T {
-      try {
-        const raw = localStorage.getItem(`malaky-${key}`);
-        if (raw === null) return fallback;
-        return JSON.parse(raw) as T;
-      } catch { return fallback; }
-    },
-    storageSet(key: string, value: unknown): void {
-      try { localStorage.setItem(`malaky-${key}`, JSON.stringify(value)); }
-      catch { /* ignore */ }
-    },
-  };
 }
 
 /**
