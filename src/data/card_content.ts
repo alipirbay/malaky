@@ -987,7 +987,7 @@ export const dareActions: VibeContent = {
     'Fais un geste de respect traditionnel malgache.',
     'Joue un marchand d\'épices au marché et vends ta vanille au groupe.',
     'Imite un groupe de musiciens traditionnels malgaches.',
-    'Dis \'Azafady\' (s\'il vous plaît/excusez-moi) d\'une manière polie.',
+    'Mime un Malgache ultra poli qui traverse une foule en répétant \'Azafady\'.',
     'Fais comme si tu négociais le prix d\'un objet au marché.',
     'Imite le mouvement d\'un voilier Dhow sur l\'eau.',
     'Chante \'Efa ela\' (ça fait longtemps) avec émotion.',
