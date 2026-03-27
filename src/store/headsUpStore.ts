@@ -3,7 +3,7 @@ import { HEADS_UP_CATEGORIES, type HeadsUpCategory } from "@/data/heads_up_categ
 import { GAME_LIMITS } from "@/data/constants";
 import type { Player } from "@/data/types";
 
-type HeadsUpScreen = "categories" | "instructions" | "playing" | "round_result" | "final_result";
+type HeadsUpScreen = "categories" | "ai_theme" | "instructions" | "playing" | "round_result" | "final_result";
 
 interface RoundResult {
   playerName: string;
@@ -31,6 +31,7 @@ interface HeadsUpState {
 
   setScreen: (s: HeadsUpScreen) => void;
   selectCategory: (catId: string) => void;
+  selectCustomDeck: (theme: string, words: string[]) => void;
   initGame: (players: Player[]) => void;
   startRound: () => void;
   markFound: () => void;
@@ -76,6 +77,17 @@ export const useHeadsUpStore = create<HeadsUpState>()((set, get) => ({
     }
   },
 
+  selectCustomDeck: (theme, words) => {
+    const cat: HeadsUpCategory = {
+      id: `ai_${Date.now()}`,
+      name: theme,
+      emoji: "✨",
+      description: `Deck IA : ${theme}`,
+      words,
+    };
+    set({ selectedCategory: cat, screen: "instructions" });
+  },
+
   initGame: (players) => {
     const scores: Record<string, number> = {};
     players.forEach((p) => { scores[p.name] = 0; });
@@ -112,7 +124,6 @@ export const useHeadsUpStore = create<HeadsUpState>()((set, get) => ({
     const newFound = [...found, currentWord];
     const nextIdx = wordIndex + 1;
     if (nextIdx >= words.length) {
-      // No more words
       set({ found: newFound, roundRunning: false, roundComplete: true });
       get().endRound();
       return;
@@ -171,7 +182,6 @@ export const useHeadsUpStore = create<HeadsUpState>()((set, get) => ({
     const { currentPlayerIndex, players } = get();
     const nextIdx = currentPlayerIndex + 1;
     if (nextIdx >= players.length) {
-      // All players played — final result
       set({ screen: "final_result" });
     } else {
       set({
