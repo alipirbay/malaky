@@ -194,6 +194,15 @@ export const useHeadsUpStore = create<HeadsUpState>()((set, get) => ({
     }
   },
 
+  replayCurrentPlayer: () => {
+    set({ roundComplete: false });
+    get().startRound();
+  },
+
+  showFinalResults: () => {
+    set({ screen: "final_result" });
+  },
+
   resetGame: () =>
     set({
       screen: "categories",
