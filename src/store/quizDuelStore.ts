@@ -75,7 +75,7 @@ function mapRowToMatch(row: QuizDuelRow): DuelMatch {
     player2Attempt: row.player2_attempt as unknown as DuelAttempt | null,
     createdAt: row.created_at,
     status: row.status as DuelMatch["status"],
-    expiresAt: (row as Record<string, unknown>).expires_at as string | null ?? null,
+    expiresAt: row.expires_at ?? null,
   };
 }
 
