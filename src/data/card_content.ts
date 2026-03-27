@@ -958,7 +958,7 @@ export const dareActions: VibeContent = {
     'décris le bus 185 à quelqu\'un qui ne l\'a jamais pris.',
     'fais le cri du fossa.',
     'imite quelqu\'un qui essaie de parler malgache sans le maîtriser.',
-    'raconte une légende du kalanoro en 30 secondes.',
+    'mime un kalanoro effrayant pendant 15 secondes.',
     'Dis \'Salama\' avec votre meilleure prononciation malgache.',
     'Danse le Malagasy \'Afindrafindrao\' (même assis).',
     'Imite le klaxon d\'un Taxi-Be d\'Antananarivo.',
