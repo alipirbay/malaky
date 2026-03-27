@@ -75,7 +75,7 @@ function mapRowToMatch(row: QuizDuelRow): DuelMatch {
     player2Attempt: row.player2_attempt as unknown as DuelAttempt | null,
     createdAt: row.created_at,
     status: row.status as DuelMatch["status"],
-    expiresAt: (row as Record<string, unknown>).expires_at as string | null ?? null,
+    expiresAt: row.expires_at ?? null,
   };
 }
 
@@ -193,8 +193,7 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
         set({ error: "Tu ne peux pas rejoindre ton propre duel.", isLoading: false });
         return;
       }
-      const expiresAt = (match as Record<string, unknown>).expires_at as string | undefined;
-      if (expiresAt && new Date(expiresAt) < new Date()) {
+      if (match.expires_at && new Date(match.expires_at) < new Date()) {
         set({ error: "Ce duel a expiré.", isLoading: false });
         return;
       }
@@ -301,8 +300,7 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
 
       if (!fresh) return false;
 
-      const expiresAt = (fresh as Record<string, unknown>).expires_at as string | undefined;
-      if (expiresAt && new Date(expiresAt) < new Date()) {
+      if (fresh.expires_at && new Date(fresh.expires_at) < new Date()) {
         set({ error: "Ce duel a expiré.", screen: "hub" });
         return false;
       }

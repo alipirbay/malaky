@@ -64,6 +64,22 @@ const DuelHubScreen = () => {
     );
   }
 
+  // Route guard: if no playerName could be resolved, redirect to mode
+  if (!playerName && screen === "hub") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center px-6 gradient-surface safe-top safe-bottom">
+        <div className="text-center">
+          <span className="text-5xl mb-4 block">👤</span>
+          <h2 className="text-xl font-bold text-foreground mb-2">Pseudo requis</h2>
+          <p className="text-sm text-muted-foreground mb-6">Configure ton pseudo dans le profil avant de lancer un duel.</p>
+          <button onClick={() => setGameScreen("profile")} className="rounded-2xl gradient-primary px-6 py-3 font-semibold text-primary-foreground mb-3">Aller au profil</button>
+          <br />
+          <button onClick={() => setGameScreen("mode")} className="rounded-2xl bg-card px-6 py-3 font-semibold text-foreground mt-2">Retour</button>
+        </div>
+      </div>
+    );
+  }
+
   if (screen === "difficulty") return <DifficultyPicker />;
   if (screen === "matchmaking") return <MatchmakingScreen />;
   if (screen === "playing") return <DuelQuizPlaying />;
@@ -599,8 +615,21 @@ const DuelWaiting = () => {
     if (!hasPlayed && currentMatch) {
       let q = questions;
       if (q.length === 0) {
-        const { generateDuelQuestions } = await import("@/lib/quizDuel");
-        q = generateDuelQuestions(currentMatch.difficulty, currentMatch.seed);
+        // Pull questions from DB (source of truth), not local regeneration
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data: fresh } = await supabase
+          .from("quiz_duel_matches")
+          .select("questions")
+          .eq("id", currentMatch.id)
+          .single();
+        const rawQ = fresh?.questions as unknown;
+        if (Array.isArray(rawQ) && rawQ.length > 0) {
+          q = rawQ as typeof questions;
+        } else {
+          // Last-resort fallback only if DB has no questions
+          const { generateDuelQuestions } = await import("@/lib/quizDuel");
+          q = generateDuelQuestions(currentMatch.difficulty, currentMatch.seed);
+        }
       }
       useQuizDuelStore.setState({
         currentQuestionIndex: 0,
