@@ -659,7 +659,7 @@ export const dareActions: VibeContent = {
     'Lève les bras au ciel et crie \'Hourra\' comme si tu avais gagné à la loterie.',
     'Fais une fleur avec tes mains et offre-la à quelqu\'un.',
     'Marche comme un canard autour de la table.',
-    'Dis \'Je suis le roi/la reine du monde\' avec conviction.',
+    'Monte sur ta chaise et crie \'Je suis le roi/la reine du monde\' avec conviction.',
     'Fais trois flexions de genoux.',
     'Chuchote un secret à la personne à ta gauche (un faux secret bien sûr).',
     'Fais un high-five à toutes les personnes présentes.',
