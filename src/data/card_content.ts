@@ -1048,7 +1048,7 @@ export const dareActions: VibeContent = {
   vip: [
     'fais un défilé de mode avec un accessoire de luxe imaginaire.',
     'commande un cocktail très cher (fictif) avec assurance.',
-    'parle de ta marque de designer préférée avec passion.',
+    'joue le mannequin d\'une marque de luxe et fais un défilé avec présentation.',
     'fais un discours de remerciement pour un prix Nobel imaginaire.',
     'écris un autographe sur un billet de 500 euros (fictif).',
     'prends une pose de \'power pose\' pendant 15 secondes.',
