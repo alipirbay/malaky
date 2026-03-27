@@ -39,6 +39,8 @@ interface HeadsUpState {
   tickTimer: () => void;
   endRound: () => void;
   nextPlayer: () => void;
+  replayCurrentPlayer: () => void;
+  showFinalResults: () => void;
   resetGame: () => void;
 }
 
@@ -190,6 +192,15 @@ export const useHeadsUpStore = create<HeadsUpState>()((set, get) => ({
         roundComplete: false,
       });
     }
+  },
+
+  replayCurrentPlayer: () => {
+    set({ roundComplete: false });
+    get().startRound();
+  },
+
+  showFinalResults: () => {
+    set({ screen: "final_result" });
   },
 
   resetGame: () =>

@@ -4,20 +4,21 @@ import { useHeadsUpStore } from "@/store/headsUpStore";
 import { useGameStore } from "@/store/gameStore";
 import { useDeviceTilt } from "@/hooks/useDeviceTilt";
 import { HEADS_UP_CATEGORIES } from "@/data/heads_up_categories";
-import { ArrowLeft, Check, X, Trophy, RotateCcw, ChevronRight, Smartphone, Sparkles, Loader2 } from "lucide-react";
+import { GAME_LIMITS } from "@/data/constants";
+import { ArrowLeft, Check, X, Trophy, RotateCcw, ChevronRight, Smartphone, Sparkles, Loader2, Home, Layers, Pause, Play } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { storageGet, storageSet } from "@/lib/storage";
 
 // ── AI Theme cache ──
 interface AiDeck {
   theme: string;
-  words: string[];
+  wordCount: number;
   createdAt: number;
+  words: string[];
 }
 
-const AI_CACHE_KEY = "guess-rush-ai-decks";
+const AI_CACHE_KEY = "tiltup-ai-decks";
 const MAX_CACHED_DECKS = 5;
 
 function getCachedDecks(): AiDeck[] {
@@ -32,40 +33,42 @@ function cacheDeck(deck: AiDeck) {
 
 // ── Main Screen ──
 const HeadsUpScreen = () => {
-  const store = useHeadsUpStore();
+  const screen = useHeadsUpStore((s) => s.screen);
+  const initGame = useHeadsUpStore((s) => s.initGame);
   const players = useGameStore((s) => s.players);
 
   useEffect(() => {
     if (players.length >= 2) {
-      store.initGame(players);
+      initGame(players);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (store.screen === "categories") return <CategoryPicker />;
-  if (store.screen === "ai_theme") return <AiThemeScreen />;
-  if (store.screen === "instructions") return <Instructions />;
-  if (store.screen === "playing") return <GuessRushPlaying />;
-  if (store.screen === "round_result") return <RoundResultScreen />;
-  if (store.screen === "final_result") return <FinalResultScreen />;
-
-  return null;
+  switch (screen) {
+    case "categories": return <CategoryPicker />;
+    case "ai_theme": return <AiThemeScreen />;
+    case "instructions": return <Instructions />;
+    case "playing": return <TiltUpPlaying />;
+    case "round_result": return <RoundResultScreen />;
+    case "final_result": return <FinalResultScreen />;
+    default: return null;
+  }
 };
 
 // ── Category Picker ──
 const CategoryPicker = () => {
-  const store = useHeadsUpStore();
+  const setScreen = useHeadsUpStore((s) => s.setScreen);
+  const selectCategory = useHeadsUpStore((s) => s.selectCategory);
   const setGameScreen = useGameStore((s) => s.setScreen);
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => setGameScreen("mode")} className="rounded-xl bg-card p-2.5 text-foreground" aria-label="Retour">
+        <button onClick={() => setGameScreen("mode")} className="rounded-xl bg-card p-2.5 text-foreground" aria-label="Retour aux modes">
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h2 className="text-xl font-bold text-foreground">⚡ Guess Rush</h2>
-          <p className="text-sm text-muted-foreground">Choisis une catégorie</p>
+          <h2 className="text-xl font-bold text-foreground">📱 Tilt Up</h2>
+          <p className="text-sm text-muted-foreground">Choisis un thème</p>
         </div>
       </div>
 
@@ -74,7 +77,7 @@ const CategoryPicker = () => {
         <motion.button
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          onClick={() => store.setScreen("ai_theme")}
+          onClick={() => setScreen("ai_theme")}
           className="w-full rounded-2xl gradient-violet p-5 text-left transition-transform active:scale-[0.97] glow-violet"
         >
           <div className="flex items-center gap-3">
@@ -93,7 +96,7 @@ const CategoryPicker = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: (i + 1) * 0.04 }}
-            onClick={() => store.selectCategory(cat.id)}
+            onClick={() => selectCategory(cat.id)}
             className="w-full rounded-2xl bg-card p-5 text-left transition-transform active:scale-[0.97]"
           >
             <div className="flex items-center gap-3">
@@ -114,12 +117,13 @@ const CategoryPicker = () => {
   );
 };
 
-// ── AI Theme Screen ──
+// ── AI Theme Screen (NO word preview) ──
 const AiThemeScreen = () => {
-  const store = useHeadsUpStore();
+  const setScreen = useHeadsUpStore((s) => s.setScreen);
+  const selectCustomDeck = useHeadsUpStore((s) => s.selectCustomDeck);
   const [theme, setTheme] = useState("");
   const [loading, setLoading] = useState(false);
-  const [generatedWords, setGeneratedWords] = useState<string[] | null>(null);
+  const [generated, setGenerated] = useState<{ theme: string; count: number; words: string[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const cachedDecks = getCachedDecks();
 
@@ -131,51 +135,43 @@ const AiThemeScreen = () => {
     }
     setLoading(true);
     setError(null);
-    setGeneratedWords(null);
+    setGenerated(null);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("generate-guess-rush-theme", {
         body: { theme: trimmed },
       });
 
-      if (fnError) {
-        throw new Error(fnError.message || "Erreur de génération");
-      }
+      if (fnError) throw new Error(fnError.message || "Erreur de génération");
 
       const words = data?.words as string[] | undefined;
-      if (!words || words.length < 10) {
-        throw new Error("Pas assez de mots générés. Essaie un autre thème.");
-      }
+      if (!words || words.length < 10) throw new Error("Pas assez de mots générés. Essaie un autre thème.");
 
-      setGeneratedWords(words);
-      cacheDeck({ theme: trimmed, words, createdAt: Date.now() });
+      setGenerated({ theme: trimmed, count: words.length, words });
+      cacheDeck({ theme: trimmed, wordCount: words.length, createdAt: Date.now(), words });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erreur inconnue";
-      if (msg.includes("429")) {
-        setError("Trop de requêtes. Attends quelques secondes.");
-      } else if (msg.includes("402")) {
-        setError("Crédits IA épuisés.");
-      } else {
-        setError(msg);
-      }
+      if (msg.includes("429")) setError("Trop de requêtes. Attends quelques secondes.");
+      else if (msg.includes("402")) setError("Crédits IA épuisés.");
+      else setError(msg);
     } finally {
       setLoading(false);
     }
   }, [theme]);
 
   const handlePlay = useCallback((words: string[], deckTheme: string) => {
-    store.selectCustomDeck(deckTheme, words);
-  }, [store]);
+    selectCustomDeck(deckTheme, words);
+  }, [selectCustomDeck]);
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => store.setScreen("categories")} className="rounded-xl bg-card p-2.5 text-foreground" aria-label="Retour">
+        <button onClick={() => setScreen("categories")} className="rounded-xl bg-card p-2.5 text-foreground" aria-label="Retour aux catégories">
           <ArrowLeft size={20} />
         </button>
         <div>
           <h2 className="text-xl font-bold text-foreground">✨ Thème IA</h2>
-          <p className="text-sm text-muted-foreground">Génère un deck sur n'importe quel sujet</p>
+          <p className="text-sm text-muted-foreground">Tilt Up — Deck personnalisé</p>
         </div>
       </div>
 
@@ -185,8 +181,8 @@ const AiThemeScreen = () => {
           <label className="text-sm font-medium text-foreground mb-2 block">Quel thème veux-tu ?</label>
           <input
             value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-            placeholder="Ex : Célébrités malgaches, Plats japonais, Films Disney..."
+            onChange={(e) => { setTheme(e.target.value); setGenerated(null); }}
+            placeholder="Ex : Célébrités malgaches, Films Disney, Plats japonais..."
             maxLength={100}
             className="w-full rounded-2xl bg-card px-4 py-4 text-foreground placeholder:text-muted-foreground/40 border border-border focus:border-primary focus:outline-none text-sm"
           />
@@ -196,63 +192,70 @@ const AiThemeScreen = () => {
           <div className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        <button
-          onClick={handleGenerate}
-          disabled={loading || theme.trim().length < 2}
-          className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary disabled:opacity-40 transition-transform active:scale-95"
-        >
-          {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <Loader2 size={20} className="animate-spin" /> Génération en cours...
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              <Sparkles size={20} /> Générer le deck
-            </span>
-          )}
-        </button>
+        {!generated && (
+          <button
+            onClick={handleGenerate}
+            disabled={loading || theme.trim().length < 2}
+            className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary disabled:opacity-40 transition-transform active:scale-95"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 size={20} className="animate-spin" /> Génération en cours...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <Sparkles size={20} /> Générer le deck
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
-      {/* Generated preview */}
-      {generatedWords && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <div className="rounded-2xl bg-card p-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-foreground">
-                🎯 {generatedWords.length} mots générés
-              </h3>
-              <span className="text-xs text-muted-foreground">Thème : {theme}</span>
-            </div>
-            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-              {generatedWords.map((w, i) => (
-                <span key={i} className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">{w}</span>
-              ))}
-            </div>
+      {/* Success — NO words shown */}
+      {generated && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <div className="rounded-2xl bg-card p-5 mb-4 text-center">
+            <div className="text-5xl mb-3">🎯</div>
+            <h3 className="text-lg font-bold text-foreground mb-1">Deck prêt !</h3>
+            <p className="text-sm text-muted-foreground mb-2">
+              Thème : <strong>{generated.theme}</strong>
+            </p>
+            <p className="text-2xl font-black text-primary">{generated.count} mots à deviner</p>
           </div>
-          <div className="flex gap-3">
+          <div className="space-y-3">
             <button
-              onClick={() => handlePlay(generatedWords, theme)}
-              className="flex-1 rounded-2xl gradient-primary px-4 py-3 font-bold text-primary-foreground transition-transform active:scale-95"
+              onClick={() => handlePlay(generated.words, generated.theme)}
+              className="w-full rounded-2xl gradient-primary px-4 py-4 text-lg font-bold text-primary-foreground glow-primary transition-transform active:scale-95"
             >
               Jouer ! 🚀
             </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setGenerated(null); handleGenerate(); }}
+                disabled={loading}
+                className="flex-1 rounded-2xl bg-card px-4 py-3 font-semibold text-foreground transition-transform active:scale-95 flex items-center justify-center gap-2"
+              >
+                <RotateCcw size={16} /> Regénérer
+              </button>
+              <button
+                onClick={() => { setGenerated(null); setTheme(""); }}
+                className="flex-1 rounded-2xl bg-card px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
+              >
+                Changer de thème
+              </button>
+            </div>
             <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="rounded-2xl bg-card px-4 py-3 font-semibold text-foreground transition-transform active:scale-95"
+              onClick={() => { setGenerated(null); setScreen("categories"); }}
+              className="w-full rounded-2xl bg-card/60 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-transform active:scale-95"
             >
-              <RotateCcw size={18} />
+              ← Retour aux catégories
             </button>
           </div>
         </motion.div>
       )}
 
-      {/* Cached decks */}
-      {cachedDecks.length > 0 && !generatedWords && (
+      {/* Cached decks (NO words shown, just theme + count) */}
+      {cachedDecks.length > 0 && !generated && (
         <div>
           <h3 className="text-sm font-bold text-muted-foreground mb-3">Decks récents</h3>
           <div className="space-y-2">
@@ -266,7 +269,7 @@ const AiThemeScreen = () => {
                   <Sparkles size={16} className="text-primary" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{deck.theme}</p>
-                    <p className="text-xs text-muted-foreground">{deck.words.length} mots</p>
+                    <p className="text-xs text-muted-foreground">{deck.wordCount} mots</p>
                   </div>
                   <ChevronRight size={16} className="text-muted-foreground/50" />
                 </div>
@@ -281,24 +284,24 @@ const AiThemeScreen = () => {
 
 // ── Instructions ──
 const Instructions = () => {
-  const store = useHeadsUpStore();
+  const startRound = useHeadsUpStore((s) => s.startRound);
+  const setScreen = useHeadsUpStore((s) => s.setScreen);
+  const currentPlayerIndex = useHeadsUpStore((s) => s.currentPlayerIndex);
+  const players = useHeadsUpStore((s) => s.players);
+  const selectedCategory = useHeadsUpStore((s) => s.selectedCategory);
   const { playConfirm, vibrate } = useSounds();
-  const currentPlayer = store.players[store.currentPlayerIndex];
+  const currentPlayer = players[currentPlayerIndex];
 
   const handleStart = useCallback(() => {
     playConfirm();
     vibrate(50);
-    store.startRound();
-  }, [store, playConfirm, vibrate]);
-
-  const handleBack = useCallback(() => {
-    store.setScreen("categories");
-  }, [store]);
+    startRound();
+  }, [startRound, playConfirm, vibrate]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 gradient-surface safe-top safe-bottom">
       <div className="absolute top-6 left-6 safe-top">
-        <button onClick={handleBack} className="rounded-xl bg-card p-2.5 text-foreground" aria-label="Retour">
+        <button onClick={() => setScreen("categories")} className="rounded-xl bg-card p-2.5 text-foreground" aria-label="Retour aux catégories">
           <ArrowLeft size={20} />
         </button>
       </div>
@@ -308,7 +311,7 @@ const Instructions = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="text-center max-w-sm w-full"
       >
-        <div className="text-6xl mb-6">⚡</div>
+        <div className="text-6xl mb-6">📱</div>
 
         <div
           className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2"
@@ -340,8 +343,11 @@ const Instructions = () => {
           </div>
         </div>
 
-        <p className="text-xs text-muted-foreground mb-4">
-          Catégorie : <strong>{store.selectedCategory?.emoji} {store.selectedCategory?.name}</strong>
+        <p className="text-xs text-muted-foreground mb-2">
+          Thème : <strong>{selectedCategory?.emoji} {selectedCategory?.name}</strong>
+        </p>
+        <p className="text-xs text-muted-foreground mb-6">
+          ⏱ {GAME_LIMITS.HEADS_UP_ROUND_SECONDS} secondes par manche
         </p>
 
         <button
@@ -356,11 +362,13 @@ const Instructions = () => {
 };
 
 // ── Playing ──
-const GuessRushPlaying = () => {
+const TiltUpPlaying = () => {
   const store = useHeadsUpStore();
+  const setGameScreen = useGameStore((s) => s.setScreen);
   const { playClick, playBuzzer, vibrate } = useSounds();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [flash, setFlash] = useState<"found" | "pass" | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
 
   const handleFound = useCallback(() => {
     if (flash) return;
@@ -394,7 +402,7 @@ const GuessRushPlaying = () => {
     };
   }, [store, store.roundRunning]);
 
-  // Buzzer when time runs out
+  // Buzzer on time up
   useEffect(() => {
     if (store.roundTimeLeft === 0 && store.roundComplete) {
       playBuzzer();
@@ -403,12 +411,11 @@ const GuessRushPlaying = () => {
 
   // Device tilt
   const { tiltSupported, permissionGranted, requestPermission } = useDeviceTilt({
-    enabled: store.roundRunning,
+    enabled: store.roundRunning && !showMenu,
     onFound: handleFound,
     onPass: handlePass,
   });
 
-  // Request permission on first interaction if needed
   useEffect(() => {
     if (tiltSupported && !permissionGranted) {
       requestPermission();
@@ -416,7 +423,20 @@ const GuessRushPlaying = () => {
   }, [tiltSupported, permissionGranted, requestPermission]);
 
   const currentPlayer = store.players[store.currentPlayerIndex];
-  const timerPct = (store.roundTimeLeft / 60) * 100;
+  const roundSeconds = GAME_LIMITS.HEADS_UP_ROUND_SECONDS;
+  const timerPct = (store.roundTimeLeft / roundSeconds) * 100;
+
+  const handleQuit = useCallback((target: "categories" | "mode" | "home") => {
+    store.resetGame();
+    if (target === "categories") {
+      store.setScreen("categories");
+    } else if (target === "mode") {
+      setGameScreen("mode");
+    } else {
+      setGameScreen("home");
+    }
+    setShowMenu(false);
+  }, [store, setGameScreen]);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center gradient-surface safe-top safe-bottom overflow-hidden">
@@ -441,7 +461,7 @@ const GuessRushPlaying = () => {
         />
       </div>
 
-      {/* Header info */}
+      {/* Header */}
       <div className="absolute top-6 left-6 right-6 flex items-center justify-between safe-top">
         <div className="flex items-center gap-2">
           <div
@@ -459,9 +479,10 @@ const GuessRushPlaying = () => {
           <span className={`text-2xl font-black ${store.roundTimeLeft <= 10 ? "text-destructive animate-pulse" : "text-foreground"}`}>
             {store.roundTimeLeft}s
           </span>
-          <span className="text-sm text-muted-foreground">
-            ✓{store.found.length}
-          </span>
+          <span className="text-sm text-muted-foreground">✓{store.found.length}</span>
+          <button onClick={() => setShowMenu(true)} className="rounded-lg bg-card/80 p-2 text-muted-foreground" aria-label="Menu">
+            <Pause size={16} />
+          </button>
         </div>
       </div>
 
@@ -484,7 +505,7 @@ const GuessRushPlaying = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Action buttons (always visible as fallback) */}
+      {/* Action buttons */}
       <div className="absolute bottom-12 left-6 right-6 flex items-center gap-4 safe-bottom">
         <button
           onClick={handlePass}
@@ -513,17 +534,82 @@ const GuessRushPlaying = () => {
           </p>
         </div>
       )}
+
+      {/* Pause menu */}
+      <AnimatePresence>
+        {showMenu && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-6 backdrop-blur-sm"
+            onClick={() => setShowMenu(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="w-full max-w-sm rounded-3xl bg-card p-5 shadow-2xl space-y-3"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold text-foreground text-center">Pause</h3>
+              <button onClick={() => setShowMenu(false)} className="w-full rounded-2xl gradient-primary px-4 py-3 font-semibold text-primary-foreground flex items-center justify-center gap-2">
+                <Play size={18} /> Reprendre
+              </button>
+              <button onClick={() => handleQuit("categories")} className="w-full rounded-2xl bg-muted px-4 py-3 font-semibold text-foreground flex items-center justify-center gap-2">
+                <Layers size={18} /> Catégories
+              </button>
+              <button onClick={() => handleQuit("mode")} className="w-full rounded-2xl bg-muted px-4 py-3 font-semibold text-foreground flex items-center justify-center gap-2">
+                <ArrowLeft size={18} /> Modes
+              </button>
+              <button onClick={() => handleQuit("home")} className="w-full rounded-2xl bg-muted px-4 py-3 font-semibold text-destructive flex items-center justify-center gap-2">
+                <Home size={18} /> Accueil
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-// ── Round Result ──
+// ── Round Result (no forced next player) ──
 const RoundResultScreen = () => {
   const store = useHeadsUpStore();
+  const setGameScreen = useGameStore((s) => s.setScreen);
   const lastResult = store.roundResults[store.roundResults.length - 1];
+  const nextPlayerObj = store.players[store.currentPlayerIndex + 1];
   const isLastPlayer = store.currentPlayerIndex >= store.players.length - 1;
+  const currentPlayer = store.players[store.currentPlayerIndex];
 
   if (!lastResult) return null;
+
+  const handleReplayThemeSamePlayer = () => {
+    store.replayCurrentPlayer();
+  };
+
+  const handleNextPlayer = () => {
+    store.nextPlayer();
+  };
+
+  const handleFinalResults = () => {
+    store.showFinalResults();
+  };
+
+  const handleChangeTheme = () => {
+    store.resetGame();
+    store.setScreen("categories");
+  };
+
+  const handleGoHome = () => {
+    store.resetGame();
+    setGameScreen("home");
+  };
+
+  const handleGoModes = () => {
+    store.resetGame();
+    setGameScreen("mode");
+  };
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
@@ -533,7 +619,7 @@ const RoundResultScreen = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center max-w-sm w-full"
         >
-          <div className="text-5xl mb-4">⚡</div>
+          <div className="text-5xl mb-4">📱</div>
           <h2 className="text-2xl font-bold text-foreground mb-2">{lastResult.playerName}</h2>
           <p className="text-4xl font-black text-primary mb-6">{lastResult.score} mots trouvés !</p>
 
@@ -561,12 +647,37 @@ const RoundResultScreen = () => {
         </motion.div>
       </div>
 
-      <button
-        onClick={() => store.nextPlayer()}
-        className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary transition-transform active:scale-95"
-      >
-        {isLastPlayer ? "Voir les résultats 🏆" : `Au tour de ${store.players[store.currentPlayerIndex + 1]?.name} ➡️`}
-      </button>
+      {/* Flexible choices — never forced */}
+      <div className="space-y-3">
+        <button onClick={handleReplayThemeSamePlayer} className="w-full rounded-2xl bg-card px-4 py-3 font-semibold text-foreground transition-transform active:scale-95">
+          <RotateCcw size={16} className="inline mr-2" /> Rejouer — {currentPlayer?.name}
+        </button>
+
+        {!isLastPlayer && nextPlayerObj && (
+          <button onClick={handleNextPlayer} className="w-full rounded-2xl gradient-primary px-4 py-4 text-lg font-bold text-primary-foreground glow-primary transition-transform active:scale-95">
+            Au tour de {nextPlayerObj.name} ➡️
+          </button>
+        )}
+
+        {isLastPlayer && (
+          <button onClick={handleFinalResults} className="w-full rounded-2xl gradient-primary px-4 py-4 text-lg font-bold text-primary-foreground glow-primary transition-transform active:scale-95">
+            Voir les résultats 🏆
+          </button>
+        )}
+
+        <button onClick={handleChangeTheme} className="w-full rounded-2xl bg-card px-4 py-3 font-semibold text-foreground transition-transform active:scale-95">
+          <Layers size={16} className="inline mr-2" /> Changer de thème
+        </button>
+
+        <div className="flex gap-3">
+          <button onClick={handleGoModes} className="flex-1 rounded-2xl bg-card/60 px-4 py-2.5 text-sm font-medium text-muted-foreground">
+            ← Modes
+          </button>
+          <button onClick={handleGoHome} className="flex-1 rounded-2xl bg-card/60 px-4 py-2.5 text-sm font-medium text-muted-foreground">
+            <Home size={14} className="inline mr-1" /> Accueil
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
@@ -625,22 +736,22 @@ const FinalResultScreen = () => {
 
       <div className="space-y-3">
         <button
-          onClick={() => {
-            store.resetGame();
-            store.setScreen("categories");
-          }}
+          onClick={() => { store.resetGame(); store.setScreen("categories"); }}
           className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary transition-transform active:scale-95"
         >
           <RotateCcw size={20} className="inline mr-2" /> Rejouer
         </button>
         <button
-          onClick={() => {
-            store.resetGame();
-            setGameScreen("home");
-          }}
+          onClick={() => { store.resetGame(); setGameScreen("mode"); }}
           className="w-full rounded-2xl bg-card px-6 py-3 font-semibold text-foreground transition-transform active:scale-95"
         >
-          Retour à l'accueil
+          ← Changer de mode
+        </button>
+        <button
+          onClick={() => { store.resetGame(); setGameScreen("home"); }}
+          className="w-full rounded-2xl bg-card/60 px-6 py-2.5 text-sm font-medium text-muted-foreground transition-transform active:scale-95"
+        >
+          <Home size={14} className="inline mr-1" /> Accueil
         </button>
       </div>
     </div>

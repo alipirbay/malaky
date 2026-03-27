@@ -57,11 +57,11 @@ export const GAME_MODES = [
   },
   {
     id: "guess_rush" as GameMode,
-    name: "Guess Rush",
-    subtitle: "Fais deviner un max de mots",
-    emoji: "⚡",
-    badge: "Party",
-    color: "sky" as const,
+    name: "Tilt Up",
+    subtitle: "Devine. Penche. Gagne.",
+    emoji: "📱",
+    badge: "Phare",
+    color: "violet" as const,
     minPlayers: 2,
   },
 ];
