@@ -39,6 +39,8 @@ interface HeadsUpState {
   tickTimer: () => void;
   endRound: () => void;
   nextPlayer: () => void;
+  replayCurrentPlayer: () => void;
+  showFinalResults: () => void;
   resetGame: () => void;
 }
 
