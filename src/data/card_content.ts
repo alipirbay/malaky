@@ -884,7 +884,7 @@ export const dareActions: VibeContent = {
     'Fais un \'je t\'aime\' silencieux à ton partenaire avec tes yeux.',
     'Prends la main de ton partenaire et pose-la sur ton cœur.',
     'Fais une caresse douce sur le bras de ton partenaire.',
-    'Dis \'Tu es magnifique/beau\' à ton partenaire avec conviction.',
+    'Fais une révérence théâtrale devant ton partenaire en déclarant \'Tu es magnifique\'.',
     'Touche délicatement le dos de la main de ton partenaire.',
     'Fais un sourire sincère à ton partenaire.',
     'Reproduis en duo une scène de film romantique choisie par le groupe.',
