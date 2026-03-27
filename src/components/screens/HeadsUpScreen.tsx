@@ -312,7 +312,7 @@ const Instructions = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="text-center max-w-sm w-full"
       >
-        <div className="text-6xl mb-6">📱</div>
+        <TiltUpIcon size={64} className="mx-auto mb-4 text-primary" />
 
         <div
           className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2"
@@ -329,17 +329,21 @@ const Instructions = () => {
         <div className="space-y-3 text-left mb-8">
           <div className="flex items-start gap-3 rounded-xl bg-card p-3">
             <span className="text-xl">1️⃣</span>
-            <p className="text-sm text-foreground">Place le téléphone sur ton front, écran face aux autres</p>
+            <p className="text-sm text-foreground"><strong>Tourne ton téléphone en paysage</strong> (horizontal)</p>
           </div>
           <div className="flex items-start gap-3 rounded-xl bg-card p-3">
             <span className="text-xl">2️⃣</span>
-            <p className="text-sm text-foreground">Les autres te font deviner le mot affiché</p>
+            <p className="text-sm text-foreground">Place-le sur ton <strong>front</strong>, écran face aux autres</p>
           </div>
           <div className="flex items-start gap-3 rounded-xl bg-card p-3">
             <span className="text-xl">3️⃣</span>
+            <p className="text-sm text-foreground">Les autres te font deviner le mot affiché</p>
+          </div>
+          <div className="flex items-start gap-3 rounded-xl bg-card p-3">
+            <span className="text-xl">4️⃣</span>
             <p className="text-sm text-foreground">
-              <strong>Trouvé ?</strong> Incline vers le bas ou appuie ✓{" "}
-              <strong>Passer ?</strong> Incline vers le haut ou appuie ✗
+              <strong>Trouvé ?</strong> Incline vers le <strong>bas ↓</strong><br />
+              <strong>Passer ?</strong> Incline vers le <strong>haut ↑</strong>
             </p>
           </div>
         </div>
