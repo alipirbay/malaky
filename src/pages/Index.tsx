@@ -30,6 +30,7 @@ const SCREENS = {
   history: HistoryScreen,
   duel_hub: DuelHubScreen,
   guess_rush: HeadsUpScreen,
+  profile: ProfileScreen,
 } as const;
 
 const ScreenFallback = () => (

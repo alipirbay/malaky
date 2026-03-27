@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield } from "lucide-react";
 import malakyLogo from "@/assets/malaky-logo.webp";
+import { useProfileStore } from "@/store/profileStore";
 
 interface FirstLaunchModalProps {
   onAccept: () => void;
@@ -9,6 +11,15 @@ interface FirstLaunchModalProps {
 }
 
 const FirstLaunchModal = ({ onAccept, onShowPrivacy, onShowCGU }: FirstLaunchModalProps) => {
+  const [username, setUsername] = useState("");
+
+  const handleAccept = () => {
+    if (username.trim()) {
+      useProfileStore.getState().setUsername(username.trim());
+    }
+    onAccept();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background px-6">
       <motion.div
@@ -19,7 +30,7 @@ const FirstLaunchModal = ({ onAccept, onShowPrivacy, onShowCGU }: FirstLaunchMod
         <img src={malakyLogo} alt="Malaky" className="w-64 max-w-[75vw] mx-auto mb-3 drop-shadow-lg" />
         <p className="text-sm text-muted-foreground mb-8">Ose tout. Assume rien. 🇲🇬</p>
 
-        <div className="rounded-2xl bg-card p-5 text-left space-y-4 mb-6">
+        <div className="rounded-2xl bg-card p-5 text-left space-y-4 mb-4">
           <p className="text-xs text-muted-foreground leading-relaxed">
             En continuant, vous acceptez nos{" "}
             <button onClick={onShowCGU} className="underline text-primary font-semibold">
@@ -39,8 +50,16 @@ const FirstLaunchModal = ({ onAccept, onShowPrivacy, onShowCGU }: FirstLaunchMod
           </div>
         </div>
 
+        <input
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Ton pseudo (ex: Rivo, Haja...)"
+          maxLength={20}
+          className="w-full rounded-xl bg-secondary px-4 py-3 text-foreground placeholder:text-muted-foreground/50 border border-border focus:border-primary focus:outline-none mb-4 text-center"
+        />
+
         <button
-          onClick={onAccept}
+          onClick={handleAccept}
           className="w-full rounded-2xl gradient-primary py-4 text-base font-bold text-primary-foreground glow-primary transition-transform active:scale-95"
         >
           Commencer à jouer
