@@ -4,6 +4,7 @@ import malakyLogo from "@/assets/malaky-logo.webp";
 import { useGameStore } from "@/store/gameStore";
 import { useProfileStore, getXpProgress } from "@/store/profileStore";
 import { getNetworkStatus, onNetworkChange } from "@/lib/networkStatus";
+import { GAME_MODES, STORE_PACKS } from "@/data/config";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 

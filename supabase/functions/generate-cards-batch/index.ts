@@ -44,7 +44,7 @@ function getCorsHeaders(req: Request) {
   };
 }
 
-const MODES = ["truth_dare", "never_have_i_ever", "most_likely", "would_you_rather", "quick_challenge"];
+const MODES = ["truth_dare", "never_have_i_ever", "most_likely", "would_you_rather"];
 const VIBES = ["soft", "fun", "hot", "chaos", "couple", "apero", "mada", "confessions", "vip", "afterdark"];
 const TARGET_PER_COMBO = 200;
 
@@ -95,7 +95,6 @@ serve(async (req) => {
           never_have_i_ever: "vote (Je n'ai jamais...)",
           most_likely: "vote (Entre {player} et {player2}...)",
           would_you_rather: "truth (tu préfères... ou... ?)",
-          quick_challenge: "timer (défi avec durée)",
         };
         const types = typeMap[mode] ?? "truth et dare";
 

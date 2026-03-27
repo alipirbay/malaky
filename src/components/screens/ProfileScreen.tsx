@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { useProfileStore, AVATAR_OPTIONS, TITLE_UNLOCKS, getXpProgress } from "@/store/profileStore";
 import { ACHIEVEMENTS, getUnlockedAchievements } from "@/lib/achievements";
+import { GAME_MODES } from "@/data/config";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Pencil, Check, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
