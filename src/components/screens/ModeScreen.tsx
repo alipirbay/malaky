@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { GAME_MODES } from "@/data/config";
 import { ArrowLeft, Lock } from "lucide-react";
+import { TiltUpIcon } from "@/components/TiltUpIcon";
 
 type ModeEntry = typeof GAME_MODES[number];
 
@@ -91,7 +92,11 @@ const ModeScreen = () => {
                       className={`w-full rounded-2xl p-4 text-left transition-transform active:scale-[0.98] ${colorMap[mode.color] || "gradient-primary glow-primary"} ${isDisabled ? "opacity-40 cursor-not-allowed" : ""}`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{mode.emoji}</span>
+                        {mode.emoji === "tilt_up_icon" ? (
+                          <TiltUpIcon size={28} />
+                        ) : (
+                          <span className="text-2xl">{mode.emoji}</span>
+                        )}
                         <div className="flex-1 min-w-0">
                           <h3 className="text-base font-bold text-foreground leading-tight">{mode.name}</h3>
                           <p className="text-xs text-foreground/60 truncate">{mode.subtitle}</p>

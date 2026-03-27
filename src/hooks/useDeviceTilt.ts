@@ -21,9 +21,9 @@ export function useDeviceTilt({
   enabled,
   onFound,
   onPass,
-  cooldownMs = 1200,
-  foundThreshold = 50,
-  passThreshold = -30,
+  cooldownMs = 1000,
+  foundThreshold = 40,
+  passThreshold = -25,
 }: UseDeviceTiltOptions): UseDeviceTiltReturn {
   const [tiltSupported, setTiltSupported] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);

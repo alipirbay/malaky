@@ -59,7 +59,7 @@ export const GAME_MODES = [
     id: "guess_rush" as GameMode,
     name: "Tilt Up",
     subtitle: "Devine. Penche. Gagne.",
-    emoji: "📱",
+    emoji: "tilt_up_icon",
     badge: "Phare",
     color: "violet" as const,
     minPlayers: 2,
