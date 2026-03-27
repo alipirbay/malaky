@@ -64,6 +64,22 @@ const DuelHubScreen = () => {
     );
   }
 
+  // Route guard: if no playerName could be resolved, redirect to mode
+  if (!playerName && screen === "hub") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center px-6 gradient-surface safe-top safe-bottom">
+        <div className="text-center">
+          <span className="text-5xl mb-4 block">👤</span>
+          <h2 className="text-xl font-bold text-foreground mb-2">Pseudo requis</h2>
+          <p className="text-sm text-muted-foreground mb-6">Configure ton pseudo dans le profil avant de lancer un duel.</p>
+          <button onClick={() => setGameScreen("profile")} className="rounded-2xl gradient-primary px-6 py-3 font-semibold text-primary-foreground mb-3">Aller au profil</button>
+          <br />
+          <button onClick={() => setGameScreen("mode")} className="rounded-2xl bg-card px-6 py-3 font-semibold text-foreground mt-2">Retour</button>
+        </div>
+      </div>
+    );
+  }
+
   if (screen === "difficulty") return <DifficultyPicker />;
   if (screen === "matchmaking") return <MatchmakingScreen />;
   if (screen === "playing") return <DuelQuizPlaying />;
