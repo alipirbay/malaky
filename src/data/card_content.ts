@@ -976,7 +976,7 @@ export const dareActions: VibeContent = {
     'Utilise l\'expression \'Hay ve?\' (Ah bon?) avec surprise.',
     'Imite un joueur de \'Fanorona\' (jeu de société malgache).',
     'Fais le mouvement d\'un danseur de \'Vakodrazana\'.',
-    'Décris la beauté d\'un baobab en trois mots.',
+    'Mime un baobab qui pousse du sol avec les bras et les bruitages.',
     'Chuchote le nom d\'une ville malgache.',
     'Fais semblant de cultiver du riz à la main.',
     'Dis \'Misaotra\' (merci) à la personne qui t\'a aidé récemment.',
