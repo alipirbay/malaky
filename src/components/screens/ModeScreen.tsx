@@ -12,8 +12,8 @@ const ModeScreen = () => {
     setMode(modeId);
     if (modeId === "quiz_duel") {
       setScreen("duel_hub");
-    } else if (modeId === "heads_up") {
-      setScreen("heads_up");
+    } else if (modeId === "guess_rush") {
+      setScreen("guess_rush");
     } else {
       setScreen("vibe");
     }
