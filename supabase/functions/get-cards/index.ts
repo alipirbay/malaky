@@ -48,6 +48,8 @@ function getCorsHeaders(req: Request) {
   };
 }
 
+const VALID_MODES = new Set(["truth_dare", "never_have_i_ever", "most_likely", "would_you_rather", "culture_generale"]);
+
 const SYSTEM_PROMPT = `Tu es un générateur de cartes pour Malaky, le jeu de soirée des Malgaches.
 Tu génères des cartes fun, authentiques, ancrées dans la culture malgache et la vie quotidienne.
 Tu renvoies UNIQUEMENT un tableau JSON valide, sans markdown, sans commentaires.
@@ -66,7 +68,7 @@ RÈGLES :
 FORMAT ATTENDU selon card_type :
 - truth: "{player}, avoue/raconte/dis..."
 - dare: "{player}, fais/chante/imite..."
-- vote: "Je n'ai jamais..." ou "Entre {player} et {player2}, qui est le plus susceptible de..."
+- vote: "Je n'ai jamais..." ou "Entre {player} et {player2}..."
 - truth (would_you_rather): "{player}, tu préfères [option a] ou [option b] ?"
 - timer: "{player}, [défi] pendant X secondes."`;
 
@@ -78,6 +80,13 @@ serve(async (req) => {
 
     if (!mode || !vibe) {
       return new Response(JSON.stringify({ error: "mode and vibe required" }), {
+        status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
+    // Reject dead modes
+    if (!VALID_MODES.has(mode)) {
+      return new Response(JSON.stringify({ error: `Invalid mode: ${mode}` }), {
         status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
@@ -121,7 +130,6 @@ serve(async (req) => {
             never_have_i_ever: "vote (Je n'ai jamais...)",
             most_likely: "vote (Entre {player} et {player2}...)",
             would_you_rather: "truth (tu préfères... ou... ?)",
-            quick_challenge: "timer (défi avec durée)",
             culture_generale: "quiz (question avec réponse)",
           };
           const types = typeMap[mode] ?? "truth et dare";

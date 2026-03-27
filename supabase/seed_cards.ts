@@ -2,7 +2,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   truthPrompts, dareActions, neverBase, likelyBase,
-  ratherA, ratherB, challengeActions, madaCardsMg,
+  ratherA, ratherB, madaCardsMg,
 } from "../src/data/card_content.ts";
 import { cultureQuestions } from "../src/data/culture_questions.ts";
 
@@ -60,13 +60,6 @@ vibes.forEach(vibe => {
   for (let i = 0; i < len; i++) {
     records.push({ mode: "would_you_rather", vibe, card_type: "truth", template: `{player}, tu préfères ${aList[i]} ou ${bList[i]} ?`, lang: "fr", source: "human" });
   }
-});
-
-// quick_challenge
-vibes.forEach(vibe => {
-  (challengeActions[vibe] ?? []).forEach(p => {
-    records.push({ mode: "quick_challenge", vibe, card_type: "timer", template: `{player}, ${p}`, lang: "fr", source: "human" });
-  });
 });
 
 // culture_generale

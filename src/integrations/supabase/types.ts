@@ -236,6 +236,7 @@ export type Database = {
         Row: {
           created_at: string
           difficulty: string
+          expires_at: string | null
           id: string
           invite_code: string | null
           is_public: boolean
@@ -252,6 +253,7 @@ export type Database = {
         Insert: {
           created_at?: string
           difficulty?: string
+          expires_at?: string | null
           id?: string
           invite_code?: string | null
           is_public?: boolean
@@ -268,6 +270,7 @@ export type Database = {
         Update: {
           created_at?: string
           difficulty?: string
+          expires_at?: string | null
           id?: string
           invite_code?: string | null
           is_public?: boolean
@@ -289,6 +292,7 @@ export type Database = {
     }
     Functions: {
       cleanup_old_sessions: { Args: never; Returns: undefined }
+      expire_old_duels: { Args: never; Returns: undefined }
       get_active_users_count: { Args: never; Returns: number }
       get_daily_dilemme_votes: {
         Args: { p_dilemme_id: string }

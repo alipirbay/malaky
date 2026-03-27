@@ -4,6 +4,7 @@ import malakyLogo from "@/assets/malaky-logo.webp";
 import { useGameStore } from "@/store/gameStore";
 import { useProfileStore, getXpProgress } from "@/store/profileStore";
 import { getNetworkStatus, onNetworkChange } from "@/lib/networkStatus";
+import { GAME_MODES, STORE_PACKS } from "@/data/config";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -140,9 +141,9 @@ const HomeScreen = () => {
         className="mt-8 flex flex-col items-center gap-3"
       >
         <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
-          <span>7 Modes</span>
+          <span>{GAME_MODES.length} Modes</span>
           <span>•</span>
-          <span>10 Packs</span>
+          <span>{STORE_PACKS.length} Packs</span>
           <span>•</span>
           <span>7500+ Cartes</span>
         </div>

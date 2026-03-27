@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuizDuelStore } from "@/store/quizDuelStore";
 import { useGameStore } from "@/store/gameStore";
+import { useProfileStore } from "@/store/profileStore";
 import { DIFFICULTIES } from "@/data/config";
 import { ArrowLeft, Zap, Lock as LockIcon, Users, Copy, Share2, Loader2, Clock, ChevronRight, X } from "lucide-react";
 import { getNetworkStatus } from "@/lib/networkStatus";
@@ -12,26 +13,34 @@ import type { Difficulty } from "@/data/types";
 const DuelHubScreen = () => {
   const setGameScreen = useGameStore((s) => s.setScreen);
   const players = useGameStore((s) => s.players);
-  const store = useQuizDuelStore();
+  const screen = useQuizDuelStore((s) => s.screen);
+  const playerName = useQuizDuelStore((s) => s.playerName);
+  const setPlayerName = useQuizDuelStore((s) => s.setPlayerName);
+  const setMatchType = useQuizDuelStore((s) => s.setMatchType);
+  const setScreen = useQuizDuelStore((s) => s.setScreen);
+  const loadRecentDuels = useQuizDuelStore((s) => s.loadRecentDuels);
+  const recentDuels = useQuizDuelStore((s) => s.recentDuels);
   const isOnline = getNetworkStatus();
 
   useEffect(() => {
-    if (players.length > 0 && !store.playerName) {
-      store.setPlayerName(players[0].name);
+    if (players.length > 0 && !playerName) {
+      setPlayerName(players[0].name);
     }
-  }, [players, store]);
+  }, [players, playerName, setPlayerName]);
 
   useEffect(() => {
-    if (store.screen === "hub") {
-      store.loadRecentDuels();
+    if (screen === "hub") {
+      loadRecentDuels();
     }
-  }, [store.screen]);
+  }, [screen, loadRecentDuels]);
 
   useEffect(() => {
-    if (store.screen !== "waiting") return;
-    const interval = setInterval(() => { store.pollForOpponent(); }, 5000);
+    if (screen !== "waiting") return;
+    const interval = setInterval(() => {
+      useQuizDuelStore.getState().pollForOpponent();
+    }, 5000);
     return () => clearInterval(interval);
-  }, [store.screen]);
+  }, [screen]);
 
   if (!isOnline) {
     return (
@@ -46,12 +55,12 @@ const DuelHubScreen = () => {
     );
   }
 
-  if (store.screen === "difficulty") return <DifficultyPicker />;
-  if (store.screen === "matchmaking") return <MatchmakingScreen />;
-  if (store.screen === "playing") return <DuelQuizPlaying />;
-  if (store.screen === "waiting") return <DuelWaiting />;
-  if (store.screen === "result") return <DuelResultView />;
-  if (store.screen === "join") return <DuelJoin />;
+  if (screen === "difficulty") return <DifficultyPicker />;
+  if (screen === "matchmaking") return <MatchmakingScreen />;
+  if (screen === "playing") return <DuelQuizPlaying />;
+  if (screen === "waiting") return <DuelWaiting />;
+  if (screen === "result") return <DuelResultView />;
+  if (screen === "join") return <DuelJoin />;
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
@@ -67,7 +76,7 @@ const DuelHubScreen = () => {
 
       <div className="space-y-3 mb-8">
         <button
-          onClick={() => { store.setMatchType("quick"); store.setScreen("difficulty"); }}
+          onClick={() => { setMatchType("quick"); setScreen("difficulty"); }}
           className="w-full rounded-2xl gradient-primary p-5 text-left glow-primary transition-transform active:scale-[0.98]"
         >
           <div className="flex items-center gap-3">
@@ -81,7 +90,7 @@ const DuelHubScreen = () => {
         </button>
 
         <button
-          onClick={() => { store.setMatchType("private"); store.setScreen("difficulty"); }}
+          onClick={() => { setMatchType("private"); setScreen("difficulty"); }}
           className="w-full rounded-2xl bg-card p-5 text-left transition-transform active:scale-[0.98]"
         >
           <div className="flex items-center gap-3">
@@ -95,7 +104,7 @@ const DuelHubScreen = () => {
         </button>
 
         <button
-          onClick={() => store.setScreen("join")}
+          onClick={() => setScreen("join")}
           className="w-full rounded-2xl bg-card p-5 text-left transition-transform active:scale-[0.98]"
         >
           <div className="flex items-center gap-3">
@@ -109,18 +118,20 @@ const DuelHubScreen = () => {
         </button>
       </div>
 
-      {store.recentDuels.length > 0 && (
+      {recentDuels.length > 0 && (
         <div>
           <h3 className="text-sm font-bold text-muted-foreground mb-3">Récents</h3>
           <div className="space-y-2">
-            {store.recentDuels.slice(0, 5).map((d) => (
+            {recentDuels.slice(0, 5).map((d) => (
               <div key={d.id} className="rounded-xl bg-card p-3 flex items-center gap-3">
-                <span className="text-lg">{d.status === "completed" ? "✅" : "⏳"}</span>
+                <span className="text-lg">{d.status === "completed" ? "✅" : d.status === "expired" ? "⏰" : "⏳"}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
                     {d.player1Name} vs {d.player2Name || "..."}
                   </p>
-                  <p className="text-xs text-muted-foreground">{d.difficulty} • {d.status === "completed" ? "terminé" : d.status === "open" ? "en attente" : "en cours"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {d.difficulty} • {d.status === "completed" ? "terminé" : d.status === "expired" ? "expiré" : d.status === "open" ? "en attente" : "en cours"}
+                  </p>
                 </div>
               </div>
             ))}
@@ -133,34 +144,39 @@ const DuelHubScreen = () => {
 
 // --- Difficulty Picker ---
 const DifficultyPicker = () => {
-  const store = useQuizDuelStore();
+  const setScreen = useQuizDuelStore((s) => s.setScreen);
+  const setDifficulty = useQuizDuelStore((s) => s.setDifficulty);
+  const matchType = useQuizDuelStore((s) => s.matchType);
+  const createQuickMatch = useQuizDuelStore((s) => s.createQuickMatch);
+  const createPrivateMatch = useQuizDuelStore((s) => s.createPrivateMatch);
+  const error = useQuizDuelStore((s) => s.error);
 
-  const handleSelect = (diff: Difficulty) => {
-    store.setDifficulty(diff);
-    store.setScreen("matchmaking");
-    if (store.matchType === "quick") {
-      store.createQuickMatch();
+  const handleSelect = useCallback((diff: Difficulty) => {
+    setDifficulty(diff);
+    setScreen("matchmaking");
+    if (matchType === "quick") {
+      createQuickMatch();
     } else {
-      store.createPrivateMatch();
+      createPrivateMatch();
     }
-  };
+  }, [setDifficulty, setScreen, matchType, createQuickMatch, createPrivateMatch]);
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => store.setScreen("hub")} className="rounded-xl bg-card p-2.5 text-foreground">
+        <button onClick={() => setScreen("hub")} className="rounded-xl bg-card p-2.5 text-foreground">
           <ArrowLeft size={20} />
         </button>
         <div>
           <h2 className="text-xl font-bold text-foreground">Choisis la difficulté</h2>
           <p className="text-sm text-muted-foreground">
-            {store.matchType === "quick" ? "⚡ Match rapide" : "🔒 Duel privé"}
+            {matchType === "quick" ? "⚡ Match rapide" : "🔒 Duel privé"}
           </p>
         </div>
       </div>
 
-      {store.error && (
-        <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{store.error}</div>
+      {error && (
+        <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       <div className="flex-1 space-y-3">
@@ -191,38 +207,36 @@ const DifficultyPicker = () => {
 const FAKE_NAMES = ["Rivo", "Haja", "Fara", "Nomena", "Tiana", "Lova", "Ando", "Nirina", "Toky", "Vahatra", "Mamy", "Soa", "Harena", "Zo", "Dina"];
 
 const MatchmakingScreen = () => {
-  const store = useQuizDuelStore();
+  const screen = useQuizDuelStore((s) => s.screen);
+  const matchType = useQuizDuelStore((s) => s.matchType);
+  const error = useQuizDuelStore((s) => s.error);
+  const reset = useQuizDuelStore((s) => s.reset);
   const setGameScreen = useGameStore((s) => s.setScreen);
   const [displayName, setDisplayName] = useState(FAKE_NAMES[0]);
   const [dotCount, setDotCount] = useState(1);
-  const nameIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     let idx = 0;
-    nameIntervalRef.current = setInterval(() => {
+    const interval = setInterval(() => {
       idx = (idx + 1) % FAKE_NAMES.length;
       setDisplayName(FAKE_NAMES[idx]);
     }, 600);
-    return () => { if (nameIntervalRef.current) clearInterval(nameIntervalRef.current); };
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    const int = setInterval(() => setDotCount(d => (d % 3) + 1), 500);
-    return () => clearInterval(int);
+    const interval = setInterval(() => setDotCount(d => (d % 3) + 1), 500);
+    return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (store.screen !== "matchmaking") return;
-  }, [store.screen]);
-
-  if (store.screen !== "matchmaking") return null;
+  if (screen !== "matchmaking") return null;
 
   const handleCancel = () => {
-    store.reset();
+    reset();
     setGameScreen("mode");
   };
 
-  const isQuickMatch = store.matchType === "quick";
+  const isQuickMatch = matchType === "quick";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 gradient-surface safe-top safe-bottom">
@@ -265,8 +279,8 @@ const MatchmakingScreen = () => {
           </motion.div>
         )}
 
-        {store.error && (
-          <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{store.error}</div>
+        {error && (
+          <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         <Loader2 className="animate-spin text-primary mx-auto mb-6" size={28} />
@@ -284,9 +298,13 @@ const MatchmakingScreen = () => {
 
 // --- Quiz Playing (rich feedback) ---
 const DuelQuizPlaying = () => {
-  const store = useQuizDuelStore();
+  const questions = useQuizDuelStore((s) => s.questions);
+  const currentQuestionIndex = useQuizDuelStore((s) => s.currentQuestionIndex);
+  const score = useQuizDuelStore((s) => s.score);
+  const answerQuestion = useQuizDuelStore((s) => s.answerQuestion);
+  const finishDuel = useQuizDuelStore((s) => s.finishDuel);
+  const resetStore = useQuizDuelStore((s) => s.reset);
   const setGameScreen = useGameStore((s) => s.setScreen);
-  const { questions, currentQuestionIndex, score } = store;
   const question = questions[currentQuestionIndex];
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -294,6 +312,27 @@ const DuelQuizPlaying = () => {
   const [questionTimer, setQuestionTimer] = useState(15);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTimerRef = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  const handleTimeUp = useCallback(() => {
+    if (selectedOption !== null) return;
+    clearTimerRef();
+    setSelectedOption(-1);
+    setShowFeedback(true);
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+    feedbackTimeoutRef.current = setTimeout(() => {
+      answerQuestion(-1);
+      setShowFeedback(false);
+      setSelectedOption(null);
+    }, 2000);
+  }, [selectedOption, answerQuestion, clearTimerRef]);
 
   // Timer per question
   useEffect(() => {
@@ -308,23 +347,8 @@ const DuelQuizPlaying = () => {
         return prev - 1;
       });
     }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestionIndex, showFeedback]);
-
-  const handleTimeUp = useCallback(() => {
-    if (selectedOption !== null) return;
-    if (timerRef.current) clearInterval(timerRef.current);
-    setSelectedOption(-1);
-    setShowFeedback(true);
-    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-
-    feedbackTimeoutRef.current = setTimeout(() => {
-      store.answerQuestion(-1);
-      setShowFeedback(false);
-      setSelectedOption(null);
-    }, 2000);
-  }, [selectedOption, store]);
+    return clearTimerRef;
+  }, [currentQuestionIndex, showFeedback, handleTimeUp, clearTimerRef]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -336,9 +360,9 @@ const DuelQuizPlaying = () => {
   // Finish duel when all questions answered
   useEffect(() => {
     if (currentQuestionIndex >= questions.length && questions.length > 0) {
-      store.finishDuel();
+      finishDuel();
     }
-  }, [currentQuestionIndex, questions.length, store]);
+  }, [currentQuestionIndex, questions.length, finishDuel]);
 
   if (!question) {
     return (
@@ -350,7 +374,7 @@ const DuelQuizPlaying = () => {
 
   const handleAnswer = (idx: number) => {
     if (selectedOption !== null) return;
-    if (timerRef.current) clearInterval(timerRef.current);
+    clearTimerRef();
     setSelectedOption(idx);
     setShowFeedback(true);
 
@@ -360,16 +384,16 @@ const DuelQuizPlaying = () => {
     }
 
     feedbackTimeoutRef.current = setTimeout(() => {
-      store.answerQuestion(idx);
+      answerQuestion(idx);
       setShowFeedback(false);
       setSelectedOption(null);
     }, 2000);
   };
 
   const handleQuit = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    clearTimerRef();
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
-    store.reset();
+    resetStore();
     setGameScreen("mode");
   };
 
@@ -526,11 +550,14 @@ const DuelQuizPlaying = () => {
 
 // --- Waiting Screen ---
 const DuelWaiting = () => {
-  const store = useQuizDuelStore();
+  const currentMatch = useQuizDuelStore((s) => s.currentMatch);
+  const myAttempt = useQuizDuelStore((s) => s.myAttempt);
+  const questions = useQuizDuelStore((s) => s.questions);
+  const error = useQuizDuelStore((s) => s.error);
+  const reset = useQuizDuelStore((s) => s.reset);
   const setGameScreen = useGameStore((s) => s.setScreen);
-  const match = store.currentMatch;
-  const hasPlayed = store.myAttempt !== null;
-  const inviteCode = match?.inviteCode;
+  const hasPlayed = myAttempt !== null;
+  const inviteCode = currentMatch?.inviteCode;
 
   const handleCopy = useCallback(() => {
     if (inviteCode) {
@@ -546,26 +573,26 @@ const DuelWaiting = () => {
   }, [inviteCode]);
 
   const handleStartPlaying = useCallback(async () => {
-    if (!hasPlayed && match) {
-      let questions = store.questions;
-      if (questions.length === 0) {
+    if (!hasPlayed && currentMatch) {
+      let q = questions;
+      if (q.length === 0) {
         const { generateDuelQuestions } = await import("@/lib/quizDuel");
-        questions = generateDuelQuestions(match.difficulty, match.seed);
+        q = generateDuelQuestions(currentMatch.difficulty, currentMatch.seed);
       }
       useQuizDuelStore.setState({
         currentQuestionIndex: 0,
         score: 0,
         startTimeMs: Date.now(),
-        questions,
+        questions: q,
         screen: "playing",
       });
     }
-  }, [hasPlayed, match, store.questions]);
+  }, [hasPlayed, currentMatch, questions]);
 
   const handleBack = useCallback(() => {
-    store.reset();
+    reset();
     setGameScreen("mode");
-  }, [store, setGameScreen]);
+  }, [reset, setGameScreen]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 gradient-surface safe-top safe-bottom">
@@ -577,6 +604,10 @@ const DuelWaiting = () => {
         <p className="text-sm text-muted-foreground mb-8">
           {hasPlayed ? "Tu seras notifié quand ton adversaire aura joué." : "Partage le code ou joue ta manche."}
         </p>
+
+        {error && (
+          <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        )}
 
         {inviteCode && (
           <div className="mb-6">
@@ -623,18 +654,19 @@ const DuelWaiting = () => {
 
 // --- Result Screen ---
 const DuelResultView = () => {
-  const store = useQuizDuelStore();
+  const myAttempt = useQuizDuelStore((s) => s.myAttempt);
+  const opponentAttempt = useQuizDuelStore((s) => s.opponentAttempt);
+  const duelResult = useQuizDuelStore((s) => s.duelResult);
+  const questions = useQuizDuelStore((s) => s.questions);
+  const reset = useQuizDuelStore((s) => s.reset);
   const setGameScreen = useGameStore((s) => s.setScreen);
-  const { myAttempt, opponentAttempt, duelResult, questions } = store;
 
-  // Track duel result in profile (once)
+  // Track duel result in profile (once, properly via useEffect)
   const hasTracked = useRef(false);
-  useMemo(() => {
+  useEffect(() => {
     if (!hasTracked.current && duelResult) {
       hasTracked.current = true;
-      import("@/store/profileStore").then(({ useProfileStore }) => {
-        useProfileStore.getState().addDuelResult(duelResult === "win");
-      });
+      useProfileStore.getState().addDuelResult(duelResult === "win");
     }
   }, [duelResult]);
 
@@ -726,11 +758,11 @@ const DuelResultView = () => {
         </div>
 
         <div className="space-y-3">
-          <button onClick={() => store.reset()} className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary transition-transform active:scale-95">
+          <button onClick={() => reset()} className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary transition-transform active:scale-95">
             Nouveau duel
           </button>
           <button
-            onClick={() => { store.reset(); setGameScreen("home"); }}
+            onClick={() => { reset(); setGameScreen("home"); }}
             className="w-full rounded-2xl bg-card px-6 py-3 font-semibold text-foreground"
           >
             Retour à l'accueil
@@ -743,24 +775,23 @@ const DuelResultView = () => {
 
 // --- Join Screen ---
 const DuelJoin = () => {
-  const store = useQuizDuelStore();
+  const setScreen = useQuizDuelStore((s) => s.setScreen);
+  const joinWithCode = useQuizDuelStore((s) => s.joinWithCode);
+  const isLoading = useQuizDuelStore((s) => s.isLoading);
+  const error = useQuizDuelStore((s) => s.error);
   const [code, setCode] = useState("");
-
-  const handleBack = () => {
-    store.setScreen("hub");
-  };
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={handleBack} className="rounded-xl bg-card p-2.5 text-foreground">
+        <button onClick={() => setScreen("hub")} className="rounded-xl bg-card p-2.5 text-foreground">
           <ArrowLeft size={20} />
         </button>
         <h2 className="text-xl font-bold text-foreground">Rejoindre un duel</h2>
       </div>
 
-      {store.error && (
-        <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{store.error}</div>
+      {error && (
+        <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       <div className="flex-1 flex flex-col items-center justify-center">
@@ -773,11 +804,11 @@ const DuelJoin = () => {
           className="w-48 rounded-2xl bg-card px-6 py-4 text-center text-2xl font-black tracking-[0.3em] text-foreground placeholder:text-muted-foreground/30 border border-border focus:border-primary focus:outline-none mb-6"
         />
         <button
-          onClick={() => store.joinWithCode(code)}
-          disabled={code.length < 6 || store.isLoading}
+          onClick={() => joinWithCode(code)}
+          disabled={code.length < 6 || isLoading}
           className="w-full max-w-xs rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground glow-primary disabled:opacity-30 transition-transform active:scale-95"
         >
-          {store.isLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Rejoindre"}
+          {isLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Rejoindre"}
         </button>
       </div>
     </div>

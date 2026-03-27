@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { useProfileStore, AVATAR_OPTIONS, TITLE_UNLOCKS, getXpProgress } from "@/store/profileStore";
 import { ACHIEVEMENTS, getUnlockedAchievements } from "@/lib/achievements";
+import { GAME_MODES } from "@/data/config";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Pencil, Check, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -67,7 +68,7 @@ const ProfileScreen = () => {
     { label: "Quiz correct", value: store.totalQuizCorrect, emoji: "🧠" },
     { label: "Duels gagnés", value: `${store.totalDuelsWon}/${store.totalDuelsPlayed}`, emoji: "⚔️" },
     { label: "Joueurs rencontrés", value: store.uniquePlayersPlayed.length, emoji: "👥" },
-    { label: "Modes explorés", value: `${store.modesPlayed.length}/7`, emoji: "🌈" },
+    { label: "Modes explorés", value: `${store.modesPlayed.length}/${GAME_MODES.length}`, emoji: "🌈" },
     { label: "Parties sans refus", value: store.gamesWithZeroRefusals, emoji: "💪" },
     { label: "Membre depuis", value: new Date(store.joinedAt).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }), emoji: "📅" },
   ];
