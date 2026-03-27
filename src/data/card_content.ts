@@ -873,7 +873,7 @@ export const dareActions: VibeContent = {
     'Rappelle-toi la date de votre premier rendez-vous.',
     'Donne à ton partenaire un surnom affectueux pour le reste de la soirée.',
     'Fais un \'high five\' avec ton partenaire, puis un câlin.',
-    'Dis à ton partenaire une raison pour laquelle tu l\'aimes.',
+    'Chante une raison pour laquelle tu aimes ton partenaire sur un air inventé.',
     'Fais un mouvement de danse synchronisé avec ton partenaire.',
     'Tiens ton partenaire par la taille ou l\'épaule.',
     'Demande à ton partenaire quel est son rêve le plus fou.',
