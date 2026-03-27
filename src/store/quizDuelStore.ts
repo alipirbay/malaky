@@ -193,8 +193,7 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
         set({ error: "Tu ne peux pas rejoindre ton propre duel.", isLoading: false });
         return;
       }
-      const expiresAt = (match as Record<string, unknown>).expires_at as string | undefined;
-      if (expiresAt && new Date(expiresAt) < new Date()) {
+      if (match.expires_at && new Date(match.expires_at) < new Date()) {
         set({ error: "Ce duel a expiré.", isLoading: false });
         return;
       }
