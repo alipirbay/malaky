@@ -964,7 +964,7 @@ export const dareActions: VibeContent = {
     'Imite le klaxon d\'un Taxi-Be d\'Antananarivo.',
     'Chante un petit bout d\'une chanson folklorique malgache.',
     'Invente une salutation traditionnelle malgache.',
-    'Décris un plat malgache typique avec passion.',
+    'Mime la préparation d\'un plat malgache typique étape par étape.',
     'Fais semblant de pêcher comme au bord de mer à Madagascar.',
     'Mime un guide touristique qui fait visiter Madagascar de façon hilarante.',
     'Imite un \'mora mora\' (lentement, doucement) dans tes mouvements.',
