@@ -213,7 +213,7 @@ describe("quick_challenge removal", () => {
     expect(modeIds).not.toContain("quick_challenge");
   });
 
-  it("guess_rush is present in config", async () => {
+  it("guess_rush (Tilt Up) is present in config", async () => {
     const { GAME_MODES } = await import("@/data/config");
     const modeIds = GAME_MODES.map(m => m.id);
     expect(modeIds).toContain("guess_rush");
