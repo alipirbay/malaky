@@ -1079,7 +1079,7 @@ export const dareActions: VibeContent = {
     'Fais un geste de la main de la reine ou du roi.',
     'Joue le commissaire-priseur et vends une œuvre d\'art imaginaire au groupe.',
     'Fais une démonstration de ta poignée de main de pouvoir.',
-    'Parle de ta marque de voiture de luxe préférée.',
+    'Mime le démarrage d\'une voiture de luxe et fais le bruit du moteur.',
     'Jette un regard hautain à l\'assemblée.',
     'Fais un mini-défilé de mode avec ta tenue actuelle.',
     'Décris la vue depuis ton penthouse imaginaire.',
