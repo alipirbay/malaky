@@ -25,6 +25,7 @@ export const TITLE_UNLOCKS = [
 interface ProfileState {
   username: string;
   avatar: string;
+  avatarUrl: string | null; // URL of uploaded photo
   selectedTitle: string;
   totalGamesPlayed: number;
   totalCardsPlayed: number;
@@ -39,6 +40,7 @@ interface ProfileState {
   xp: number;
   setUsername: (name: string) => void;
   setAvatar: (emoji: string) => void;
+  setAvatarUrl: (url: string | null) => void;
   setTitle: (titleId: string) => void;
   addGameStats: (stats: {
     cardsPlayed: number;
