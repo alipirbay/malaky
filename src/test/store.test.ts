@@ -65,7 +65,7 @@ describe("hashToScreen", () => {
 describe("isHashNavigable", () => {
   it("returns true for navigable screens", () => {
     expect(isHashNavigable("home")).toBe(true);
-    expect(isHashNavigable("guess_rush")).toBe(true);
+    expect(isHashNavigable("duel_hub")).toBe(true);
   });
 
   it("returns false for non-navigable screens", () => {
