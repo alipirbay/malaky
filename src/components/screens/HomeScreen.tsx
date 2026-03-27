@@ -15,6 +15,7 @@ const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
   const [isOnline, setIsOnline] = useState(getNetworkStatus());
   const avatar = useProfileStore((s) => s.avatar);
+  const avatarUrl = useProfileStore((s) => s.avatarUrl);
   const xp = useProfileStore((s) => s.xp);
   const xpData = getXpProgress(xp);
 
