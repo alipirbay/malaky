@@ -45,4 +45,33 @@ describe("Quiz Duel utilities", () => {
   it("HEADS_UP_ROUND_SECONDS is 30 seconds", () => {
     expect(GAME_LIMITS.HEADS_UP_ROUND_SECONDS).toBe(30);
   });
+
+  it("generateDuelQuestions returns different questions for different seeds", () => {
+    const q1 = generateDuelQuestions("facile", "seed-A");
+    const q2 = generateDuelQuestions("facile", "seed-B");
+    const questions1 = q1.map(q => q.question);
+    const questions2 = q2.map(q => q.question);
+    // At least some questions should differ
+    const overlap = questions1.filter(q => questions2.includes(q)).length;
+    expect(overlap).toBeLessThan(q1.length);
+  });
+
+  it("each question has unique options (no duplicate answers)", () => {
+    const questions = generateDuelQuestions("facile", "dedup-test");
+    for (const q of questions) {
+      const uniqueOptions = new Set(q.options);
+      expect(uniqueOptions.size).toBe(4);
+    }
+  });
+
+  it("questions are unique within a duel (no repeated questions)", () => {
+    const questions = generateDuelQuestions("facile", "unique-test");
+    const questionTexts = questions.map(q => q.question);
+    const uniqueTexts = new Set(questionTexts);
+    expect(uniqueTexts.size).toBe(questionTexts.length);
+  });
+
+  it("DUEL_EXPIRY_HOURS is 48", () => {
+    expect(GAME_LIMITS.DUEL_EXPIRY_HOURS).toBe(48);
+  });
 });

@@ -105,3 +105,22 @@ describe("Tilt Up score replay", () => {
     expect(state.roundResults.filter(r => r.playerName === "Alice")).toHaveLength(1);
   });
 });
+
+describe("Tilt Up route guards", () => {
+  it("Tilt Up mode requires minPlayers >= 2", () => {
+    const tiltUp = GAME_MODES.find(m => m.id === "guess_rush");
+    expect(tiltUp!.minPlayers).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("Difficulty gating", () => {
+  it("difficile and expert are paid (not free)", () => {
+    const paid = DIFFICULTIES.filter(d => !d.free);
+    expect(paid.map(d => d.id)).toEqual(expect.arrayContaining(["difficile", "expert"]));
+  });
+
+  it("facile and intermediaire are free", () => {
+    const free = DIFFICULTIES.filter(d => d.free);
+    expect(free.map(d => d.id)).toEqual(expect.arrayContaining(["facile", "intermediaire"]));
+  });
+});
