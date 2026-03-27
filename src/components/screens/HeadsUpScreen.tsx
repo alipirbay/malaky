@@ -374,6 +374,42 @@ const TiltUpPlaying = () => {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [flash, setFlash] = useState<"found" | "pass" | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
+  const landscapeLockedRef = useRef(false);
+
+  // Lock orientation to landscape
+  useEffect(() => {
+    const lockOrientation = async () => {
+      try {
+        const so = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
+        if (so?.lock) {
+          await so.lock("landscape-primary");
+          landscapeLockedRef.current = true;
+          setIsLandscape(true);
+        }
+      } catch {
+        // Lock not supported — use CSS fallback
+      }
+    };
+    lockOrientation();
+
+    // Check actual orientation for CSS fallback
+    const checkOrientation = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight || landscapeLockedRef.current);
+    };
+    checkOrientation();
+    window.addEventListener("resize", checkOrientation);
+
+    return () => {
+      window.removeEventListener("resize", checkOrientation);
+      if (landscapeLockedRef.current) {
+        try {
+          screen.orientation?.unlock();
+        } catch { /* ignore */ }
+        landscapeLockedRef.current = false;
+      }
+    };
+  }, []);
 
   const handleFound = useCallback(() => {
     if (flash) return;
@@ -414,7 +450,7 @@ const TiltUpPlaying = () => {
     }
   }, [store.roundTimeLeft, store.roundComplete, playBuzzer]);
 
-  // Device tilt
+  // Device tilt — primary interaction
   const { tiltSupported, permissionGranted, requestPermission } = useDeviceTilt({
     enabled: store.roundRunning && !showMenu,
     onFound: handleFound,
@@ -430,6 +466,8 @@ const TiltUpPlaying = () => {
   const currentPlayer = store.players[store.currentPlayerIndex];
   const roundSeconds = GAME_LIMITS.HEADS_UP_ROUND_SECONDS;
   const timerPct = (store.roundTimeLeft / roundSeconds) * 100;
+  const tiltActive = tiltSupported && permissionGranted;
+  const needsCssRotation = !landscapeLockedRef.current && !isLandscape;
 
   const handleQuit = useCallback((target: "categories" | "mode" | "home") => {
     store.resetGame();
@@ -443,34 +481,48 @@ const TiltUpPlaying = () => {
     setShowMenu(false);
   }, [store, setGameScreen]);
 
+  const containerStyle: React.CSSProperties = needsCssRotation
+    ? {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vh",
+        height: "100vw",
+        transform: "rotate(90deg)",
+        transformOrigin: "top left",
+        marginLeft: "100vw",
+        zIndex: 9999,
+      }
+    : { position: "fixed", inset: 0, zIndex: 9999 };
+
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center gradient-surface safe-top safe-bottom overflow-hidden">
+    <div style={containerStyle} className="flex flex-col items-center justify-center bg-background overflow-hidden">
       {/* Flash overlay */}
       <AnimatePresence>
         {flash && (
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.4 }}
+            animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
-            className={`absolute inset-0 z-40 ${flash === "found" ? "bg-green-500" : "bg-destructive"}`}
+            className={`absolute inset-0 z-40 ${flash === "found" ? "bg-emerald-500" : "bg-destructive"}`}
           />
         )}
       </AnimatePresence>
 
-      {/* Timer bar */}
-      <div className="absolute top-0 left-0 right-0 h-2 bg-muted safe-top">
+      {/* Timer bar — top */}
+      <div className="absolute top-0 left-0 right-0 h-1.5 bg-muted">
         <motion.div
-          className={`h-2 ${store.roundTimeLeft <= 10 ? "bg-destructive" : "bg-primary"}`}
+          className={`h-full ${store.roundTimeLeft <= 10 ? "bg-destructive" : "bg-primary"}`}
           animate={{ width: `${timerPct}%` }}
           transition={{ duration: 0.5 }}
         />
       </div>
 
-      {/* Header */}
-      <div className="absolute top-6 left-6 right-6 flex items-center justify-between safe-top">
+      {/* Header — landscape optimized */}
+      <div className="absolute top-3 left-4 right-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div
-            className="h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold"
+            className="h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold"
             style={{
               backgroundColor: currentPlayer ? `hsl(${currentPlayer.color} / 0.2)` : undefined,
               color: currentPlayer ? `hsl(${currentPlayer.color})` : undefined,
@@ -478,20 +530,21 @@ const TiltUpPlaying = () => {
           >
             {currentPlayer?.name[0]?.toUpperCase()}
           </div>
-          <span className="font-bold text-foreground text-sm">{currentPlayer?.name}</span>
+          <span className="font-semibold text-foreground text-xs">{currentPlayer?.name}</span>
         </div>
+
         <div className="flex items-center gap-3">
-          <span className={`text-2xl font-black ${store.roundTimeLeft <= 10 ? "text-destructive animate-pulse" : "text-foreground"}`}>
+          <span className={`text-xl font-black tabular-nums ${store.roundTimeLeft <= 10 ? "text-destructive animate-pulse" : "text-foreground"}`}>
             {store.roundTimeLeft}s
           </span>
-          <span className="text-sm text-muted-foreground">✓{store.found.length}</span>
-          <button onClick={() => setShowMenu(true)} className="rounded-lg bg-card/80 p-2 text-muted-foreground" aria-label="Menu">
-            <Pause size={16} />
+          <span className="text-xs text-muted-foreground">✓{store.found.length}</span>
+          <button onClick={() => setShowMenu(true)} className="rounded-lg bg-card/80 p-1.5 text-muted-foreground" aria-label="Menu">
+            <Pause size={14} />
           </button>
         </div>
       </div>
 
-      {/* Word display */}
+      {/* Word display — giant, centered, landscape */}
       <AnimatePresence mode="wait">
         <motion.div
           key={store.currentWord}
@@ -499,46 +552,43 @@ const TiltUpPlaying = () => {
           animate={{ opacity: 1, scale: 1, rotateX: 0 }}
           exit={{ opacity: 0, scale: 0.9 }}
           transition={{ duration: 0.25 }}
-          className="text-center px-8"
+          className="text-center px-12"
         >
-          <h1 className="text-5xl font-black text-foreground leading-tight">
+          <h1 className="text-6xl md:text-7xl font-black text-foreground leading-tight tracking-tight">
             {store.currentWord}
           </h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            {store.selectedCategory?.emoji} {store.selectedCategory?.name}
-          </p>
         </motion.div>
       </AnimatePresence>
 
-      {/* Action buttons */}
-      <div className="absolute bottom-12 left-6 right-6 flex items-center gap-4 safe-bottom">
-        <button
-          onClick={handlePass}
-          disabled={store.passesLeft <= 0 || !!flash}
-          className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-destructive/20 py-5 text-lg font-bold text-destructive disabled:opacity-30 transition-transform active:scale-95"
-          aria-label="Passer"
-        >
-          <X size={24} /> Passer ({store.passesLeft})
-        </button>
-        <button
-          onClick={handleFound}
-          disabled={!!flash}
-          className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-green-500/20 py-5 text-lg font-bold text-green-400 transition-transform active:scale-95"
-          aria-label="Trouvé"
-        >
-          <Check size={24} /> Trouvé !
-        </button>
-      </div>
-
-      {/* Tilt hint */}
-      {tiltSupported && permissionGranted && (
-        <div className="absolute bottom-4 left-0 right-0 text-center safe-bottom">
-          <p className="text-[10px] text-muted-foreground/40">
-            <Smartphone size={10} className="inline mr-1" />
-            Tilt avant = trouvé · Tilt arrière = passer
+      {/* Bottom area */}
+      <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
+        {tiltActive ? (
+          /* Tilt active — just a subtle hint */
+          <p className="w-full text-center text-[10px] text-muted-foreground/50">
+            ↕ Incline pour jouer
           </p>
-        </div>
-      )}
+        ) : (
+          /* Fallback buttons — only when tilt is NOT available */
+          <div className="w-full flex items-center gap-3">
+            <button
+              onClick={handlePass}
+              disabled={store.passesLeft <= 0 || !!flash}
+              className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-destructive/20 py-3 text-base font-bold text-destructive disabled:opacity-30 transition-transform active:scale-95"
+              aria-label="Passer"
+            >
+              <X size={20} /> Passer ({store.passesLeft})
+            </button>
+            <button
+              onClick={handleFound}
+              disabled={!!flash}
+              className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500/20 py-3 text-base font-bold text-emerald-400 transition-transform active:scale-95"
+              aria-label="Trouvé"
+            >
+              <Check size={20} /> Trouvé !
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Pause menu */}
       <AnimatePresence>
@@ -547,14 +597,14 @@ const TiltUpPlaying = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-6 backdrop-blur-sm"
+            className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 px-6 backdrop-blur-sm"
             onClick={() => setShowMenu(false)}
           >
             <motion.div
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
-              className="w-full max-w-sm rounded-3xl bg-card p-5 shadow-2xl space-y-3"
+              className="w-full max-w-xs rounded-3xl bg-card p-5 shadow-2xl space-y-3"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-bold text-foreground text-center">Pause</h3>
