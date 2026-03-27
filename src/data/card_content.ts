@@ -895,7 +895,7 @@ export const dareActions: VibeContent = {
     'bois cul sec un breuvage doux.',
     'fais un salut militaire à chaque verre.',
     'invente un geste de \'cheers\' unique.',
-    'raconte une blague très osée.',
+    'improvise un stand-up osé de 15 secondes.',
     'prépare un cocktail imaginaire.',
     'danse sur la table (prudemment).',
     'fais une ola seul(e).',
