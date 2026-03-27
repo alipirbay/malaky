@@ -170,7 +170,7 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
     const { questions, currentQuestionIndex, score } = get();
     const q = questions[currentQuestionIndex];
     if (!q) return;
-    const isCorrect = q.options[optionIndex] === q.correctAnswer;
+    const isCorrect = optionIndex >= 0 && q.options[optionIndex] === q.correctAnswer;
     set({
       score: isCorrect ? score + 1 : score,
       currentQuestionIndex: currentQuestionIndex + 1,

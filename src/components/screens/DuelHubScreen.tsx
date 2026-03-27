@@ -138,7 +138,6 @@ const DifficultyPicker = () => {
   const handleSelect = (diff: Difficulty) => {
     store.setDifficulty(diff);
     store.setScreen("matchmaking");
-    // Start match creation in background
     if (store.matchType === "quick") {
       store.createQuickMatch();
     } else {
@@ -198,7 +197,6 @@ const MatchmakingScreen = () => {
   const [dotCount, setDotCount] = useState(1);
   const nameIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Cycle through fake opponent names
   useEffect(() => {
     let idx = 0;
     nameIntervalRef.current = setInterval(() => {
@@ -208,20 +206,15 @@ const MatchmakingScreen = () => {
     return () => { if (nameIntervalRef.current) clearInterval(nameIntervalRef.current); };
   }, []);
 
-  // Dots animation
   useEffect(() => {
     const int = setInterval(() => setDotCount(d => (d % 3) + 1), 500);
     return () => clearInterval(int);
   }, []);
 
-  // Watch for match ready (store transitions to "playing" or "waiting")
   useEffect(() => {
     if (store.screen !== "matchmaking") return;
-    // The store actions (createQuickMatch/createPrivateMatch) will change screen
-    // when complete. This screen is purely visual during that async operation.
   }, [store.screen]);
 
-  // If store moved away from matchmaking, this won't render
   if (store.screen !== "matchmaking") return null;
 
   const handleCancel = () => {
@@ -238,7 +231,6 @@ const MatchmakingScreen = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="text-center max-w-sm w-full"
       >
-        {/* Pulsing search ring */}
         <div className="relative mx-auto mb-8 h-32 w-32">
           <motion.div
             className="absolute inset-0 rounded-full border-4 border-primary/30"
@@ -290,15 +282,56 @@ const MatchmakingScreen = () => {
   );
 };
 
-// --- Quiz Playing ---
+// --- Quiz Playing (rich feedback) ---
 const DuelQuizPlaying = () => {
   const store = useQuizDuelStore();
   const setGameScreen = useGameStore((s) => s.setScreen);
   const { questions, currentQuestionIndex, score } = store;
   const question = questions[currentQuestionIndex];
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [showResult, setShowResult] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [questionTimer, setQuestionTimer] = useState(15);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Timer per question
+  useEffect(() => {
+    if (showFeedback) return;
+    setQuestionTimer(15);
+    timerRef.current = setInterval(() => {
+      setQuestionTimer(prev => {
+        if (prev <= 1) {
+          handleTimeUp();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestionIndex, showFeedback]);
+
+  const handleTimeUp = useCallback(() => {
+    if (selectedOption !== null) return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    setSelectedOption(-1);
+    setShowFeedback(true);
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+    feedbackTimeoutRef.current = setTimeout(() => {
+      store.answerQuestion(-1);
+      setShowFeedback(false);
+      setSelectedOption(null);
+    }, 2000);
+  }, [selectedOption, store]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+    };
+  }, []);
 
   // Finish duel when all questions answered
   useEffect(() => {
@@ -306,15 +339,6 @@ const DuelQuizPlaying = () => {
       store.finishDuel();
     }
   }, [currentQuestionIndex, questions.length, store]);
-
-  useEffect(() => {
-    if (!showResult) return;
-    const timeout = setTimeout(() => {
-      setShowResult(false);
-      setSelectedOption(null);
-    }, 800);
-    return () => clearTimeout(timeout);
-  }, [showResult]);
 
   if (!question) {
     return (
@@ -326,30 +350,39 @@ const DuelQuizPlaying = () => {
 
   const handleAnswer = (idx: number) => {
     if (selectedOption !== null) return;
+    if (timerRef.current) clearInterval(timerRef.current);
     setSelectedOption(idx);
-    setShowResult(true);
-    store.answerQuestion(idx);
+    setShowFeedback(true);
+
+    const isCorrect = question.options[idx] === question.correctAnswer;
+    if (navigator.vibrate) {
+      navigator.vibrate(isCorrect ? [50] : [100, 50, 100]);
+    }
+
+    feedbackTimeoutRef.current = setTimeout(() => {
+      store.answerQuestion(idx);
+      setShowFeedback(false);
+      setSelectedOption(null);
+    }, 2000);
   };
 
   const handleQuit = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
     store.reset();
     setGameScreen("mode");
   };
 
-  const isCorrect = selectedOption !== null && question.options[selectedOption] === question.correctAnswer;
+  const isCorrect = selectedOption !== null && selectedOption >= 0 && question.options[selectedOption] === question.correctAnswer;
   const progress = (currentQuestionIndex / questions.length) * 100;
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
-      {/* Header with back button */}
-      <div className="mb-6">
+      {/* Header */}
+      <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowQuitConfirm(true)}
-              className="rounded-lg bg-card p-2 text-muted-foreground"
-              aria-label="Quitter le duel"
-            >
+            <button onClick={() => setShowQuitConfirm(true)} className="rounded-lg bg-card p-2 text-muted-foreground" aria-label="Quitter">
               <ArrowLeft size={16} />
             </button>
             <span className="text-sm font-bold text-muted-foreground">
@@ -363,6 +396,20 @@ const DuelQuizPlaying = () => {
         </div>
       </div>
 
+      {/* Timer countdown bar */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+          <motion.div
+            className={`h-2 rounded-full ${questionTimer <= 5 ? "bg-destructive" : "bg-primary"}`}
+            animate={{ width: `${(questionTimer / 15) * 100}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+        <span className={`text-sm font-bold min-w-[2rem] text-right ${questionTimer <= 5 ? "text-destructive animate-pulse" : "text-muted-foreground"}`}>
+          {questionTimer}s
+        </span>
+      </div>
+
       <AnimatePresence mode="wait">
         <motion.div
           key={currentQuestionIndex}
@@ -371,78 +418,103 @@ const DuelQuizPlaying = () => {
           exit={{ opacity: 0, x: -30 }}
           className="flex-1 flex flex-col"
         >
-          <div className="card-game mb-6 flex-1 flex items-center justify-center">
-            <p className="text-xl font-bold text-foreground text-center leading-relaxed">{question.question}</p>
+          {/* Question card */}
+          <div className="card-game mb-6 flex-1 flex items-center justify-center min-h-[180px]">
+            <p className="text-xl font-bold text-foreground text-center leading-relaxed px-2">{question.question}</p>
           </div>
 
+          {/* Options */}
           <div className="space-y-3">
             {question.options.map((opt, idx) => {
+              const isThisOption = selectedOption === idx;
+              const isCorrectAnswer = opt === question.correctAnswer;
+
               let optionClass = "bg-card text-foreground border-border";
-              if (showResult && selectedOption === idx) {
-                optionClass = isCorrect
-                  ? "bg-primary/20 text-primary border-primary/50"
-                  : "bg-destructive/20 text-destructive border-destructive/50";
-              }
-              if (showResult && opt === question.correctAnswer && selectedOption !== idx) {
-                optionClass = "bg-primary/10 text-primary/70 border-primary/30";
+              let iconSlot: React.ReactNode = null;
+
+              if (showFeedback) {
+                if (isCorrectAnswer) {
+                  optionClass = "bg-green-500/20 text-green-400 border-green-500/50 scale-[1.02]";
+                  iconSlot = <span className="text-green-400 font-bold text-lg">✓</span>;
+                } else if (isThisOption && !isCorrectAnswer) {
+                  optionClass = "bg-destructive/20 text-destructive border-destructive/50";
+                  iconSlot = <span className="text-destructive font-bold text-lg">✗</span>;
+                } else {
+                  optionClass = "bg-card/50 text-muted-foreground/50 border-border/50";
+                }
               }
 
               return (
                 <motion.button
                   key={idx}
-                  whileTap={{ scale: 0.97 }}
+                  whileTap={!showFeedback ? { scale: 0.97 } : undefined}
                   onClick={() => handleAnswer(idx)}
                   disabled={selectedOption !== null}
-                  className={`w-full rounded-2xl border p-4 text-left font-semibold transition-all ${optionClass} disabled:opacity-90`}
+                  className={`w-full rounded-2xl border p-4 text-left font-semibold transition-all duration-300 ${optionClass} disabled:cursor-default`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">
+                    <span className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+                      showFeedback && isCorrectAnswer ? "bg-green-500/30 text-green-400" :
+                      showFeedback && isThisOption && !isCorrectAnswer ? "bg-destructive/30 text-destructive" :
+                      "bg-muted text-muted-foreground"
+                    }`}>
                       {String.fromCharCode(65 + idx)}
                     </span>
                     <span className="flex-1">{opt}</span>
-                    {showResult && opt === question.correctAnswer && <span className="text-primary">✓</span>}
+                    {iconSlot}
                   </div>
                 </motion.button>
               );
             })}
           </div>
+
+          {/* Emoji overlay */}
+          <AnimatePresence>
+            {showFeedback && selectedOption !== null && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none"
+              >
+                <span className="text-8xl drop-shadow-2xl">
+                  {selectedOption < 0 ? "⏰" : isCorrect ? "✅" : "❌"}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Score popup +1 */}
+          <AnimatePresence>
+            {showFeedback && isCorrect && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: -20 }}
+                exit={{ opacity: 0 }}
+                className="fixed top-24 right-8 z-40 pointer-events-none"
+              >
+                <span className="text-2xl font-black text-primary">+1</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </AnimatePresence>
 
       {/* Quit confirmation */}
       <AnimatePresence>
         {showQuitConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-6 backdrop-blur-sm"
-            onClick={() => setShowQuitConfirm(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm rounded-3xl bg-card p-5 shadow-2xl"
-              onClick={e => e.stopPropagation()}
-            >
+            onClick={() => setShowQuitConfirm(false)}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              className="w-full max-w-sm rounded-3xl bg-card p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
               <h3 className="text-lg font-bold text-foreground">Quitter le duel ?</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Ta progression sera perdue.
-              </p>
+              <p className="mt-1 text-sm text-muted-foreground">Ta progression sera perdue.</p>
               <div className="mt-5 space-y-3">
-                <button
-                  onClick={() => setShowQuitConfirm(false)}
-                  className="gradient-primary w-full rounded-2xl px-4 py-3 font-semibold text-primary-foreground transition-transform active:scale-95"
-                >
-                  Continuer
-                </button>
-                <button
-                  onClick={handleQuit}
-                  className="w-full rounded-2xl bg-card px-4 py-3 font-semibold text-destructive transition-transform active:scale-95"
-                >
-                  Quitter
-                </button>
+                <button onClick={() => setShowQuitConfirm(false)}
+                  className="gradient-primary w-full rounded-2xl px-4 py-3 font-semibold text-primary-foreground">Continuer</button>
+                <button onClick={handleQuit}
+                  className="w-full rounded-2xl bg-card px-4 py-3 font-semibold text-destructive">Quitter</button>
               </div>
             </motion.div>
           </motion.div>
@@ -553,10 +625,11 @@ const DuelWaiting = () => {
 const DuelResultView = () => {
   const store = useQuizDuelStore();
   const setGameScreen = useGameStore((s) => s.setScreen);
-  const { myAttempt, opponentAttempt, duelResult } = store;
+  const { myAttempt, opponentAttempt, duelResult, questions } = store;
 
   if (!myAttempt || !opponentAttempt) return null;
 
+  const totalQ = questions.length || 10;
   const resultConfig = {
     win: { emoji: "🏆", text: "Victoire !", color: "text-primary" },
     lose: { emoji: "😔", text: "Défaite", color: "text-destructive" },
@@ -575,10 +648,10 @@ const DuelResultView = () => {
         <div className="text-7xl mb-4">{config.emoji}</div>
         <h2 className={`text-3xl font-black mb-8 ${config.color}`}>{config.text}</h2>
 
-        <div className="flex items-stretch gap-4 mb-8">
+        <div className="flex items-stretch gap-4 mb-6">
           <div className="flex-1 rounded-2xl bg-card p-5 text-center">
             <p className="text-sm text-muted-foreground mb-1">Toi</p>
-            <p className="text-2xl font-black text-primary">{myAttempt.score}/10</p>
+            <p className="text-2xl font-black text-primary">{myAttempt.score}/{totalQ}</p>
             <div className="flex items-center justify-center gap-1 mt-2 text-xs text-muted-foreground">
               <Clock size={12} />{formatTimeMs(myAttempt.timeMs)}
             </div>
@@ -588,10 +661,56 @@ const DuelResultView = () => {
           </div>
           <div className="flex-1 rounded-2xl bg-card p-5 text-center">
             <p className="text-sm text-muted-foreground mb-1">{opponentAttempt.playerName}</p>
-            <p className="text-2xl font-black text-coral">{opponentAttempt.score}/10</p>
+            <p className="text-2xl font-black text-coral">{opponentAttempt.score}/{totalQ}</p>
             <div className="flex items-center justify-center gap-1 mt-2 text-xs text-muted-foreground">
               <Clock size={12} />{formatTimeMs(opponentAttempt.timeMs)}
             </div>
+          </div>
+        </div>
+
+        {/* Score progress bars */}
+        <div className="rounded-2xl bg-card p-4 mb-4">
+          <div className="space-y-3">
+            <div>
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>Toi</span>
+                <span>{myAttempt.score}/{totalQ}</span>
+              </div>
+              <div className="h-3 rounded-full bg-muted overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-primary"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(myAttempt.score / totalQ) * 100}%` }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>{opponentAttempt.playerName}</span>
+                <span>{opponentAttempt.score}/{totalQ}</span>
+              </div>
+              <div className="h-3 rounded-full bg-muted overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-destructive"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(opponentAttempt.score / totalQ) * 100}%` }}
+                  transition={{ duration: 0.8, delay: 0.5 }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Time comparison */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="rounded-2xl bg-card p-3 text-center">
+            <p className="text-xs text-muted-foreground">Ton temps</p>
+            <p className="text-lg font-bold text-foreground">{formatTimeMs(myAttempt.timeMs)}</p>
+          </div>
+          <div className="rounded-2xl bg-card p-3 text-center">
+            <p className="text-xs text-muted-foreground">Temps adverse</p>
+            <p className="text-lg font-bold text-foreground">{formatTimeMs(opponentAttempt.timeMs)}</p>
           </div>
         </div>
 
@@ -614,7 +733,6 @@ const DuelResultView = () => {
 // --- Join Screen ---
 const DuelJoin = () => {
   const store = useQuizDuelStore();
-  const setGameScreen = useGameStore((s) => s.setScreen);
   const [code, setCode] = useState("");
 
   const handleBack = () => {
