@@ -1111,7 +1111,7 @@ export const dareActions: VibeContent = {
     'touche le bras de la personne à côté avec un effleurement.',
     'parle d\'une voix rauque et très lente pendant ton prochain tour.',
     'échange un regard plein de sous-entendus avec le/la plus timide.',
-    'décris le premier contact physique le plus torride que tu as eu.',
+    'rejoue au ralenti le premier contact physique le plus torride avec un partenaire imaginaire.',
     'chuchote une proposition indécente à ton voisin(e).',
     'Murmure le titre du dernier film X que tu as regardé (inventé si tu n\'en regardes pas).',
     'Fais un déhanché suggestif pendant 15 secondes (assis).',
