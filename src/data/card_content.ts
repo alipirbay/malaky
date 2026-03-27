@@ -902,7 +902,7 @@ export const dareActions: VibeContent = {
     'bois un verre avec tes coudes.',
     'imite un serveur saoul.',
     'fais un compliment à ta boisson.',
-    'dis 5 mots sans te mordre la langue.',
+    'prononce 5 virelangues sans te mordre la langue.',
     'essaie de faire un nœud avec la langue.',
     'fais un jeu de mots avec l\'alcool.',
     'prends une pose de \'buveur fou\'.',
