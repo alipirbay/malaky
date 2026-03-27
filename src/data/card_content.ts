@@ -345,7 +345,7 @@ export const truthPrompts: VibeContent = {
     'Avoue si tu as déjà flirté avec le videur en boîte.',
     'Décris l\'after le plus mémorable que tu aies vécu.',
     'Cite le pire état dans lequel tu t\'es réveillé après une soirée.',
-    'Montre le dernier texto regrettable que tu as envoyé bourré.',
+    'Décris le texto le plus regrettable que tu as envoyé bourré.',
     'Raconte la rencontre de bar la plus inattendue.',
     'Avoue si tu as déjà volé quelque chose en boîte.',
     'Dis-nous la chose la plus folle que tu aies faite sous l\'effet de l\'alcool.',
