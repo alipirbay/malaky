@@ -665,7 +665,7 @@ export const dareActions: VibeContent = {
     'Fais un high-five à toutes les personnes présentes.',
     'Dessine un cœur avec tes pieds.',
     'Imite la démarche d\'un personnage de dessin animé.',
-    'Dis ton aliment préféré avec une voix très aigüe.',
+    'Vends ton aliment préféré au groupe comme un télé-achat avec voix aigüe.',
     'Fais un clin d\'œil à la personne de ton choix.',
     'Tends tes bras et fais comme si tu volais pendant quelques secondes.',
     'Fais un signe de la paix à tout le monde.',
