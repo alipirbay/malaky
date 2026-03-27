@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { GAME_MODES } from "@/data/config";
 import { ArrowLeft, Lock } from "lucide-react";
+import { TiltUpIcon } from "@/components/TiltUpIcon";
 
 type ModeEntry = typeof GAME_MODES[number];
 
