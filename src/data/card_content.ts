@@ -1092,7 +1092,7 @@ export const dareActions: VibeContent = {
     'Mime l\'embarquement dans ton jet privé imaginaire avec le champagne.',
     'Fais un \'air kiss\' à quelqu\'un en l\'air.',
     'Ajuste tes vêtements avec précision et dédain.',
-    'Dis ton nom complet avec un accent chic et un petit coup de tête.',
+    'Présente-toi au groupe comme une star avec accent chic, coup de tête et pose.',
     'Fais semblant d\'être interviewé par un journaliste de potins.',
     'Lève un sourcil d\'un air intrigué et supérieur.',
     'Fais un mouvement de main pour demander le silence.',
