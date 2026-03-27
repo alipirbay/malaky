@@ -232,6 +232,57 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_duel_matches: {
+        Row: {
+          created_at: string
+          difficulty: string
+          id: string
+          invite_code: string | null
+          is_public: boolean
+          player1_attempt: Json | null
+          player1_device_id: string
+          player1_name: string
+          player2_attempt: Json | null
+          player2_device_id: string | null
+          player2_name: string | null
+          questions: Json
+          seed: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string
+          id?: string
+          invite_code?: string | null
+          is_public?: boolean
+          player1_attempt?: Json | null
+          player1_device_id: string
+          player1_name: string
+          player2_attempt?: Json | null
+          player2_device_id?: string | null
+          player2_name?: string | null
+          questions?: Json
+          seed: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          id?: string
+          invite_code?: string | null
+          is_public?: boolean
+          player1_attempt?: Json | null
+          player1_device_id?: string
+          player1_name?: string
+          player2_attempt?: Json | null
+          player2_device_id?: string | null
+          player2_name?: string | null
+          questions?: Json
+          seed?: string
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
