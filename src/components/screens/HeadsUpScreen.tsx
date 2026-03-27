@@ -6,6 +6,7 @@ import { useDeviceTilt } from "@/hooks/useDeviceTilt";
 import { HEADS_UP_CATEGORIES } from "@/data/heads_up_categories";
 import { GAME_LIMITS } from "@/data/constants";
 import { ArrowLeft, Check, X, Trophy, RotateCcw, ChevronRight, Smartphone, Sparkles, Loader2, Home, Layers, Pause, Play } from "lucide-react";
+import { TiltUpIcon } from "@/components/TiltUpIcon";
 import { useSounds } from "@/hooks/useSounds";
 import { supabase } from "@/integrations/supabase/client";
 import { storageGet, storageSet } from "@/lib/storage";
