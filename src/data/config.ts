@@ -55,6 +55,15 @@ export const GAME_MODES = [
     color: "violet" as const,
     minPlayers: 1,
   },
+  {
+    id: "guess_rush" as GameMode,
+    name: "Guess Rush",
+    subtitle: "Fais deviner un max de mots",
+    emoji: "⚡",
+    badge: "Party",
+    color: "sky" as const,
+    minPlayers: 2,
+  },
 ];
 
 export const VIBES = [

@@ -9,7 +9,7 @@ const SECTIONS: { title: string; subtitle: string; ids: string[] }[] = [
   {
     title: "🎉 Party",
     subtitle: "2+ joueurs • Ambiance garantie",
-    ids: ["truth_dare", "never_have_i_ever", "most_likely", "would_you_rather"],
+    ids: ["truth_dare", "never_have_i_ever", "most_likely", "would_you_rather", "guess_rush"],
   },
   {
     title: "🧠 Quiz",
@@ -37,6 +37,8 @@ const ModeScreen = () => {
     setMode(modeId);
     if (modeId === "quiz_duel") {
       setScreen("duel_hub");
+    } else if (modeId === "guess_rush") {
+      setScreen("guess_rush");
     } else {
       setScreen("vibe");
     }

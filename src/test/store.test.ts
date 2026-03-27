@@ -56,9 +56,13 @@ describe("hashToScreen", () => {
     expect(hashToScreen("end")).toBeNull();
   });
 
-  it("returns null for removed modes", () => {
-    expect(hashToScreen("heads_up")).toBeNull();
-    expect(hashToScreen("guess_rush")).toBeNull();
+  it("returns null for non-navigable screens", () => {
+    expect(hashToScreen("game")).toBeNull();
+    expect(hashToScreen("end")).toBeNull();
+  });
+
+  it("guess_rush is navigable", () => {
+    expect(hashToScreen("guess_rush")).toBe("guess_rush");
   });
 });
 
@@ -209,16 +213,15 @@ describe("quick_challenge removal", () => {
     expect(modeIds).not.toContain("quick_challenge");
   });
 
-  it("guess_rush is removed from config", async () => {
+  it("guess_rush is present in config", async () => {
     const { GAME_MODES } = await import("@/data/config");
     const modeIds = GAME_MODES.map(m => m.id);
-    expect(modeIds).not.toContain("guess_rush");
-    expect(modeIds).not.toContain("heads_up");
+    expect(modeIds).toContain("guess_rush");
   });
 
-  it("has exactly 6 modes", async () => {
+  it("has exactly 7 modes", async () => {
     const { GAME_MODES } = await import("@/data/config");
-    expect(GAME_MODES).toHaveLength(6);
+    expect(GAME_MODES).toHaveLength(7);
   });
 });
 

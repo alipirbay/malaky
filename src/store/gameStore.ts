@@ -15,7 +15,7 @@ interface GameState {
   selectedMode: GameMode | null;
   selectedVibe: Vibe | null;
   unlockedVibes: Record<Vibe, boolean>;
-  currentScreen: "home" | "players" | "mode" | "vibe" | "game" | "end" | "packs" | "settings" | "history" | "payment_return" | "duel_hub";
+  currentScreen: "home" | "players" | "mode" | "vibe" | "game" | "end" | "packs" | "settings" | "history" | "payment_return" | "duel_hub" | "guess_rush";
   pendingTransactionId: string | null;
   currentPlayerIndex: number;
   currentCardIndex: number;
@@ -117,7 +117,7 @@ export const useGameStore = create<GameState>()(
         if (vibeOverride) set({ selectedVibe: vibeOverride });
         if (!selectedMode || !selectedVibe || players.length < 1) return;
         // For party modes, enforce min 2 players
-        if (selectedMode !== "quiz_duel" && players.length < GAME_LIMITS.MIN_PLAYERS) return;
+        if (selectedMode !== "quiz_duel" && selectedMode !== "guess_rush" && players.length < GAME_LIMITS.MIN_PLAYERS) return;
 
         const merged = { ...defaultUnlockedVibes, ...unlockedVibes };
         if (!merged[selectedVibe]) {
