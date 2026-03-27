@@ -16,8 +16,6 @@ const GameScreen = lazy(() => import("@/components/screens/GameScreen"));
 const EndScreen = lazy(() => import("@/components/screens/EndScreen"));
 const PaymentReturnScreen = lazy(() => import("@/components/screens/PaymentReturnScreen"));
 const DuelHubScreen = lazy(() => import("@/components/screens/DuelHubScreen"));
-const GuessRushScreen = lazy(() => import("@/components/screens/HeadsUpScreen"));
-
 const SCREENS = {
   home: HomeScreen,
   players: PlayersScreen,
@@ -29,7 +27,6 @@ const SCREENS = {
   settings: SettingsScreen,
   history: HistoryScreen,
   duel_hub: DuelHubScreen,
-  guess_rush: GuessRushScreen,
 } as const;
 
 const ScreenFallback = () => (

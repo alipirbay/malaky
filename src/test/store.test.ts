@@ -44,7 +44,7 @@ describe("hashToScreen", () => {
     expect(hashToScreen("mode")).toBe("mode");
     expect(hashToScreen("vibe")).toBe("vibe");
     expect(hashToScreen("duel_hub")).toBe("duel_hub");
-    expect(hashToScreen("guess_rush")).toBe("guess_rush");
+    expect(hashToScreen("duel_hub")).toBe("duel_hub");
   });
 
   it("strips # prefix", () => {
@@ -58,13 +58,14 @@ describe("hashToScreen", () => {
 
   it("returns null for removed modes", () => {
     expect(hashToScreen("heads_up")).toBeNull();
+    expect(hashToScreen("guess_rush")).toBeNull();
   });
 });
 
 describe("isHashNavigable", () => {
   it("returns true for navigable screens", () => {
     expect(isHashNavigable("home")).toBe(true);
-    expect(isHashNavigable("guess_rush")).toBe(true);
+    expect(isHashNavigable("duel_hub")).toBe(true);
   });
 
   it("returns false for non-navigable screens", () => {
@@ -208,16 +209,16 @@ describe("quick_challenge removal", () => {
     expect(modeIds).not.toContain("quick_challenge");
   });
 
-  it("guess_rush replaces heads_up in config", async () => {
+  it("guess_rush is removed from config", async () => {
     const { GAME_MODES } = await import("@/data/config");
     const modeIds = GAME_MODES.map(m => m.id);
-    expect(modeIds).toContain("guess_rush");
+    expect(modeIds).not.toContain("guess_rush");
     expect(modeIds).not.toContain("heads_up");
   });
 
-  it("has exactly 7 modes", async () => {
+  it("has exactly 6 modes", async () => {
     const { GAME_MODES } = await import("@/data/config");
-    expect(GAME_MODES).toHaveLength(7);
+    expect(GAME_MODES).toHaveLength(6);
   });
 });
 

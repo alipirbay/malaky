@@ -123,7 +123,7 @@ const HomeScreen = () => {
         className="mt-8 flex flex-col items-center gap-3"
       >
         <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
-          <span>7 Modes</span>
+          <span>6 Modes</span>
           <span>•</span>
           <span>10 Packs</span>
           <span>•</span>

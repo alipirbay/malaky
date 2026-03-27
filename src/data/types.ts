@@ -11,7 +11,7 @@ export interface GameCard {
   player_max: number;
 }
 
-export type GameMode = "truth_dare" | "never_have_i_ever" | "most_likely" | "would_you_rather" | "culture_generale" | "quiz_duel" | "guess_rush";
+export type GameMode = "truth_dare" | "never_have_i_ever" | "most_likely" | "would_you_rather" | "culture_generale" | "quiz_duel";
 export type Vibe = "soft" | "fun" | "hot" | "chaos" | "couple" | "apero" | "mada" | "confessions" | "vip" | "afterdark" | "facile" | "intermediaire" | "difficile" | "expert";
 export type Difficulty = "facile" | "intermediaire" | "difficile" | "expert";
 
