@@ -949,7 +949,7 @@ export const dareActions: VibeContent = {
     'chante 15 secondes de "Aza Arianao" de Poopy.',
     'imite quelqu\'un qui essaie d\'expliquer une panne Jirama.',
     'fais une imitation d\'un guide touristique qui exagère.',
-    'dis une phrase complète en alternant malgache et français.',
+    'joue un présentateur TV qui alterne malgache et français avec les gestes.',
     'imite quelqu\'un qui mange du mofo baolina très chaud.',
     'fais le mime d\'un Malgache qui attend l\'heure "gasy".',
     'prononce correctement "Antananarivo" 3 fois d\'affilée.',
