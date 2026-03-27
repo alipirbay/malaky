@@ -1044,6 +1044,8 @@ export const dareActions: VibeContent = {
     'Montre au groupe comment tu danses quand personne ne te regarde.',
     'Imite quelqu\'un qui fait la cuisine avec passion.',
     'Fais un monologue dramatique de 15 secondes sur un secret de nourriture.',
+    'Écris un mot sur ta main et montre-le au groupe en faisant une pose solennelle.',
+    'Rejoue en mime la dernière fois où tu as été vraiment surpris(e).',
   ],
   vip: [
     'fais un défilé de mode avec un accessoire de luxe imaginaire.',
