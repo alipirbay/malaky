@@ -4,7 +4,7 @@ import { useHeadsUpStore } from "@/store/headsUpStore";
 import { useGameStore } from "@/store/gameStore";
 import { useDeviceTilt } from "@/hooks/useDeviceTilt";
 import { GAME_LIMITS } from "@/data/constants";
-import { Check, X, Pause, Play, ArrowLeft, Layers, Home } from "lucide-react";
+import { Pause, Play, ArrowLeft, Layers, Home } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 
 const TiltUpPlaying = () => {
@@ -89,18 +89,12 @@ const TiltUpPlaying = () => {
     }
   }, [store.roundTimeLeft, store.roundComplete, playBuzzer]);
 
-  // Device tilt — primary interaction
-  const { tiltSupported, permissionGranted, requestPermission } = useDeviceTilt({
+  // Device tilt — primary interaction (permission already requested in InstructionsScreen)
+  const { tiltSupported, permissionGranted } = useDeviceTilt({
     enabled: store.roundRunning && !showMenu,
     onFound: handleFound,
     onPass: handlePass,
   });
-
-  useEffect(() => {
-    if (tiltSupported && !permissionGranted) {
-      requestPermission();
-    }
-  }, [tiltSupported, permissionGranted, requestPermission]);
 
   const currentPlayer = store.players[store.currentPlayerIndex];
   const roundSeconds = GAME_LIMITS.HEADS_UP_ROUND_SECONDS;
@@ -199,32 +193,11 @@ const TiltUpPlaying = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Bottom area */}
-      <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-        {tiltActive ? (
-          <p className="w-full text-center text-[10px] text-muted-foreground/50">
-            ↕ Incline pour jouer
-          </p>
-        ) : (
-          <div className="w-full flex items-center gap-3">
-            <button
-              onClick={handlePass}
-              disabled={store.passesLeft <= 0 || !!flash}
-              className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-destructive/20 py-3 text-base font-bold text-destructive disabled:opacity-30 transition-transform active:scale-95"
-              aria-label="Passer"
-            >
-              <X size={20} /> Passer ({store.passesLeft})
-            </button>
-            <button
-              onClick={handleFound}
-              disabled={!!flash}
-              className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500/20 py-3 text-base font-bold text-emerald-400 transition-transform active:scale-95"
-              aria-label="Trouvé"
-            >
-              <Check size={20} /> Trouvé !
-            </button>
-          </div>
-        )}
+      {/* Bottom area — tilt instruction or fallback info */}
+      <div className="absolute bottom-3 left-4 right-4 flex items-center justify-center">
+        <p className="text-center text-[10px] text-muted-foreground/50">
+          {tiltActive ? "↕ Incline pour jouer" : "Incline le téléphone ou utilise les gestes"}
+        </p>
       </div>
 
       {/* Pause menu */}

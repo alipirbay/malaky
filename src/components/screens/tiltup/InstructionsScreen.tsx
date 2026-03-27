@@ -1,10 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { useHeadsUpStore } from "@/store/headsUpStore";
 import { GAME_LIMITS } from "@/data/constants";
 import { ArrowLeft } from "lucide-react";
 import { TiltUpIcon } from "@/components/TiltUpIcon";
 import { useSounds } from "@/hooks/useSounds";
+import { useDeviceTilt } from "@/hooks/useDeviceTilt";
 
 const InstructionsScreen = () => {
   const startRound = useHeadsUpStore((s) => s.startRound);
@@ -14,6 +15,25 @@ const InstructionsScreen = () => {
   const selectedCategory = useHeadsUpStore((s) => s.selectedCategory);
   const { playConfirm, vibrate } = useSounds();
   const currentPlayer = players[currentPlayerIndex];
+
+  // Check tilt support and permission state (not enabled yet — just checking)
+  const { tiltSupported, permissionGranted, requestPermission } = useDeviceTilt({
+    enabled: false,
+    onFound: () => {},
+    onPass: () => {},
+  });
+
+  const [permissionDenied, setPermissionDenied] = useState(false);
+
+  // iOS requires permission request from a user gesture
+  const needsPermissionPrompt = tiltSupported && !permissionGranted && !permissionDenied;
+
+  const handleRequestPermission = useCallback(async () => {
+    const granted = await requestPermission();
+    if (!granted) {
+      setPermissionDenied(true);
+    }
+  }, [requestPermission]);
 
   const handleStart = useCallback(() => {
     playConfirm();
@@ -76,6 +96,22 @@ const InstructionsScreen = () => {
         <p className="text-xs text-muted-foreground mb-6">
           ⏱ {GAME_LIMITS.HEADS_UP_ROUND_SECONDS} secondes par manche
         </p>
+
+        {/* iOS motion permission CTA — must be triggered from a user tap */}
+        {needsPermissionPrompt && (
+          <button
+            onClick={handleRequestPermission}
+            className="w-full rounded-2xl bg-card border border-primary/30 px-6 py-3 text-sm font-semibold text-primary mb-3 transition-transform active:scale-95"
+          >
+            📱 Activer le capteur de mouvement
+          </button>
+        )}
+
+        {permissionDenied && (
+          <p className="text-xs text-muted-foreground/70 mb-3">
+            Capteur refusé — tu pourras jouer avec les boutons à l'écran.
+          </p>
+        )}
 
         <button
           onClick={handleStart}

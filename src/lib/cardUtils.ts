@@ -11,7 +11,7 @@
  * Strips player placeholders, common prefixes, and normalizes.
  */
 export function getCardContentHash(text: string): string {
-  let normalized = text
+  const normalized = text
     // Remove player placeholders
     .replace(/\{player\d?\}/gi, "")
     .replace(/\{player\}/gi, "")

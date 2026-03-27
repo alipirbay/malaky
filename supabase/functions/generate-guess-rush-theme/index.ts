@@ -6,6 +6,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const MIN_WORDS = 20;
+const MAX_WORD_LENGTH = 40;
+
+// Blocklist for abusive/offensive theme requests
+const BLOCKED_THEMES = /\b(porn|sex|nude|xxx|nsfw|kill|murder|drug|cocaine|heroin)\b/i;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -29,6 +35,13 @@ serve(async (req) => {
       );
     }
 
+    if (BLOCKED_THEMES.test(trimmed)) {
+      return new Response(
+        JSON.stringify({ error: "Ce thème n'est pas autorisé." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
@@ -38,14 +51,16 @@ serve(async (req) => {
 
 RÈGLES STRICTES :
 - Génère exactement 30 mots/termes/noms liés au thème demandé
-- Chaque entrée doit être COURTE (1 à 5 mots max)
-- Chaque entrée doit être DEVINABLE par des indices verbaux ou mimes
-- PAS de doublons ni quasi-doublons
+- Chaque entrée doit être COURTE (1 à 4 mots max, jamais plus de ${MAX_WORD_LENGTH} caractères)
+- Chaque entrée doit être FACILEMENT DEVINABLE par des indices verbaux ou mimes
+- PAS de doublons ni quasi-doublons (singulier/pluriel, masculin/féminin = doublon)
 - PAS de termes obscènes, offensants, ou inappropriés
 - PAS de phrases longues — juste des mots ou noms courts
-- Les entrées doivent être variées et intéressantes
+- PAS de termes trop obscurs ou techniques que personne ne connaîtrait
+- Les entrées doivent être VARIÉES et couvrir différents aspects du thème
 - Si le thème est vague, interprète-le au mieux
-- Langue : français sauf si le thème implique une autre langue
+- Langue : français sauf si le thème implique explicitement une autre langue
+- Privilégie les termes connus du grand public
 
 IMPORTANT : Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans explication.
 Format : { "words": ["mot1", "mot2", ...] }`;
@@ -108,23 +123,25 @@ Format : { "words": ["mot1", "mot2", ...] }`;
       );
     }
 
-    // Clean and deduplicate
+    // Clean, filter and deduplicate
     const seen = new Set<string>();
     const cleanWords: string[] = [];
 
     for (const raw of parsed.words) {
       if (typeof raw !== "string") continue;
       const word = raw.trim();
-      if (word.length < 1 || word.length > 60) continue;
-      const key = word.toLowerCase();
+      // Filter: min 1 char, max MAX_WORD_LENGTH, no super-long entries
+      if (word.length < 1 || word.length > MAX_WORD_LENGTH) continue;
+      // Normalize for dedup (lowercase, strip accents for comparison)
+      const key = word.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       if (seen.has(key)) continue;
       seen.add(key);
       cleanWords.push(word);
     }
 
-    if (cleanWords.length < 10) {
+    if (cleanWords.length < MIN_WORDS) {
       return new Response(
-        JSON.stringify({ error: "Pas assez de mots générés. Essaie un thème plus précis." }),
+        JSON.stringify({ error: `Pas assez de mots générés (${cleanWords.length}/${MIN_WORDS}). Essaie un thème plus précis.` }),
         { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

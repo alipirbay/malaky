@@ -4,11 +4,14 @@ import { useQuizDuelStore } from "@/store/quizDuelStore";
 import { useGameStore } from "@/store/gameStore";
 import { useProfileStore } from "@/store/profileStore";
 import { DIFFICULTIES } from "@/data/config";
+import { GAME_LIMITS } from "@/data/constants";
 import { ArrowLeft, Zap, Lock as LockIcon, Users, Copy, Share2, Loader2, Clock, ChevronRight, X } from "lucide-react";
 import { getNetworkStatus } from "@/lib/networkStatus";
 import { formatTimeMs } from "@/lib/quizDuel";
 import { toast } from "sonner";
 import type { Difficulty } from "@/data/types";
+
+const DUEL_TIMER = GAME_LIMITS.DUEL_TIME_PER_QUESTION;
 
 const DuelHubScreen = () => {
   const setGameScreen = useGameStore((s) => s.setScreen);
@@ -22,9 +25,15 @@ const DuelHubScreen = () => {
   const recentDuels = useQuizDuelStore((s) => s.recentDuels);
   const isOnline = getNetworkStatus();
 
+  // Auto-set player name from profile or players
   useEffect(() => {
-    if (players.length > 0 && !playerName) {
-      setPlayerName(players[0].name);
+    if (!playerName) {
+      const profileName = useProfileStore.getState().username;
+      if (profileName) {
+        setPlayerName(profileName);
+      } else if (players.length > 0) {
+        setPlayerName(players[0].name);
+      }
     }
   }, [players, playerName, setPlayerName]);
 
@@ -150,8 +159,14 @@ const DifficultyPicker = () => {
   const createQuickMatch = useQuizDuelStore((s) => s.createQuickMatch);
   const createPrivateMatch = useQuizDuelStore((s) => s.createPrivateMatch);
   const error = useQuizDuelStore((s) => s.error);
+  const unlockedVibes = useGameStore((s) => s.unlockedVibes);
 
   const handleSelect = useCallback((diff: Difficulty) => {
+    // Check if difficulty is unlocked
+    if (!unlockedVibes[diff]) {
+      toast.error("Cette difficulté est verrouillée. Débloque-la dans les packs.");
+      return;
+    }
     setDifficulty(diff);
     setScreen("matchmaking");
     if (matchType === "quick") {
@@ -159,7 +174,7 @@ const DifficultyPicker = () => {
     } else {
       createPrivateMatch();
     }
-  }, [setDifficulty, setScreen, matchType, createQuickMatch, createPrivateMatch]);
+  }, [setDifficulty, setScreen, matchType, createQuickMatch, createPrivateMatch, unlockedVibes]);
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
@@ -180,24 +195,32 @@ const DifficultyPicker = () => {
       )}
 
       <div className="flex-1 space-y-3">
-        {DIFFICULTIES.map((d, i) => (
-          <motion.button
-            key={d.id}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            onClick={() => handleSelect(d.id)}
-            className="w-full rounded-2xl bg-card p-5 text-left transition-transform active:scale-[0.97]"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">{d.emoji}</span>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-foreground">{d.name}</h3>
-                <p className="text-sm text-muted-foreground">{d.description}</p>
+        {DIFFICULTIES.map((d, i) => {
+          const isLocked = !unlockedVibes[d.id];
+          return (
+            <motion.button
+              key={d.id}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              onClick={() => handleSelect(d.id)}
+              className={`w-full rounded-2xl bg-card p-5 text-left transition-transform active:scale-[0.97] ${isLocked ? "opacity-60" : ""}`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{d.emoji}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-foreground">{d.name}</h3>
+                    {isLocked && <LockIcon size={14} className="text-muted-foreground" />}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {isLocked ? `${d.priceLabel} — Débloquer dans les packs` : d.description}
+                  </p>
+                </div>
               </div>
-            </div>
-          </motion.button>
-        ))}
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );
@@ -309,7 +332,7 @@ const DuelQuizPlaying = () => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
-  const [questionTimer, setQuestionTimer] = useState(15);
+  const [questionTimer, setQuestionTimer] = useState(DUEL_TIMER);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -337,7 +360,7 @@ const DuelQuizPlaying = () => {
   // Timer per question
   useEffect(() => {
     if (showFeedback) return;
-    setQuestionTimer(15);
+    setQuestionTimer(DUEL_TIMER);
     timerRef.current = setInterval(() => {
       setQuestionTimer(prev => {
         if (prev <= 1) {
@@ -425,7 +448,7 @@ const DuelQuizPlaying = () => {
         <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
           <motion.div
             className={`h-2 rounded-full ${questionTimer <= 5 ? "bg-destructive" : "bg-primary"}`}
-            animate={{ width: `${(questionTimer / 15) * 100}%` }}
+            animate={{ width: `${(questionTimer / DUEL_TIMER) * 100}%` }}
             transition={{ duration: 0.3 }}
           />
         </div>

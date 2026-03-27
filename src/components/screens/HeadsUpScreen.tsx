@@ -12,12 +12,19 @@ const HeadsUpScreen = () => {
   const screen = useHeadsUpStore((s) => s.screen);
   const initGame = useHeadsUpStore((s) => s.initGame);
   const players = useGameStore((s) => s.players);
+  const setGameScreen = useGameStore((s) => s.setScreen);
 
+  // Route guard: need at least 2 players
   useEffect(() => {
-    if (players.length >= 2) {
-      initGame(players);
+    if (players.length < 2) {
+      setGameScreen("players");
+      return;
     }
+    initGame(players);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // If guard triggered, render nothing while redirecting
+  if (players.length < 2) return null;
 
   switch (screen) {
     case "categories": return <CategoryPicker />;
