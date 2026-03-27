@@ -78,6 +78,7 @@ export const useProfileStore = create<ProfileState>()(
     (set, get) => ({
       username: "",
       avatar: "😎",
+      avatarUrl: null,
       selectedTitle: "newbie",
       totalGamesPlayed: 0,
       totalCardsPlayed: 0,
@@ -92,7 +93,8 @@ export const useProfileStore = create<ProfileState>()(
       xp: 0,
 
       setUsername: (name) => set({ username: name.trim().slice(0, 20) }),
-      setAvatar: (emoji) => set({ avatar: emoji }),
+      setAvatar: (emoji) => set({ avatar: emoji, avatarUrl: null }),
+      setAvatarUrl: (url) => set({ avatarUrl: url }),
       setTitle: (titleId) => set({ selectedTitle: titleId }),
 
       addGameStats: (stats) => {
