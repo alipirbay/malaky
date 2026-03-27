@@ -35,13 +35,11 @@ const hasConfirmedAge = (vibe: Vibe) =>
 
 const VibeScreen = () => {
   const {
-    setScreen, unlockedVibes, selectedMode, quickChallengeDuration, setQuickChallengeDuration,
+    setScreen, unlockedVibes, selectedMode,
   } = useGameStore(useShallow((s) => ({
     setScreen: s.setScreen,
     unlockedVibes: s.unlockedVibes,
     selectedMode: s.selectedMode,
-    quickChallengeDuration: s.quickChallengeDuration,
-    setQuickChallengeDuration: s.setQuickChallengeDuration,
   })));
   const [pendingAdultVibe, setPendingAdultVibe] = useState<Vibe | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,12 +51,10 @@ const VibeScreen = () => {
     : VIBES;
 
   const launchGame = useCallback(async (vibe: Vibe) => {
-    // Prevent double launch
     if (launchingRef.current) return;
     launchingRef.current = true;
     setIsLoading(true);
 
-    // Safety timeout — if game doesn't navigate within LAUNCH_TIMEOUT_MS, reset
     const timeoutId = setTimeout(() => {
       if (launchingRef.current) {
         launchingRef.current = false;
@@ -70,7 +66,6 @@ const VibeScreen = () => {
     try {
       useGameStore.getState().setVibe(vibe);
       await useGameStore.getState().startGame(vibe);
-      // If we're still here (startGame redirected to packs or failed without navigating to game)
       const currentScreen = useGameStore.getState().currentScreen;
       if (currentScreen !== "game") {
         launchingRef.current = false;
@@ -129,29 +124,6 @@ const VibeScreen = () => {
           </p>
         </div>
       </div>
-
-      {selectedMode === "quick_challenge" && (
-        <div className="mb-4">
-          <p className="text-sm font-bold text-foreground mb-2">
-            ⏱️ Durée du chrono
-          </p>
-          <div className="flex gap-2">
-            {([10, 15, 20] as const).map((d) => (
-              <button
-                key={d}
-                onClick={() => setQuickChallengeDuration(d)}
-                className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-all ${
-                  quickChallengeDuration === d
-                    ? "gradient-primary text-primary-foreground"
-                    : "bg-card text-muted-foreground"
-                }`}
-              >
-                {d}s
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Loading overlay */}
       {isLoading && (

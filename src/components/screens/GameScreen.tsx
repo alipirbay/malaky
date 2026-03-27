@@ -99,13 +99,12 @@ interface TimerDisplayProps {
   timerDone: boolean;
   timerRunning: boolean;
   isTimerCard: boolean;
-  isAutoTimer: boolean;
   onStart: () => void;
   onReset: () => void;
 }
 
 const TimerDisplay = memo(function TimerDisplay({
-  timeLeft, totalDuration, timerDone, timerRunning, isTimerCard, isAutoTimer, onStart, onReset,
+  timeLeft, totalDuration, timerDone, timerRunning, isTimerCard, onStart, onReset,
 }: TimerDisplayProps) {
   const timerProgress = totalDuration > 0 ? timeLeft / totalDuration : 0;
   return (
@@ -137,7 +136,7 @@ const TimerDisplay = memo(function TimerDisplay({
         )}
         {timerRunning && (
           <span className="animate-pulse text-sm font-bold text-primary">
-            ⏱️ {isAutoTimer ? "Réponds vite !" : "Chrono en cours..."}
+            ⏱️ Chrono en cours...
           </span>
         )}
         {timerDone && (
@@ -217,7 +216,7 @@ const GameScreen = () => {
   const {
     players, currentPlayerIndex, currentCardIndex, deck,
     selectedMode, selectedVibe, nextCard, setScreen,
-    soundEnabled, toggleSound, passesRemaining, stats, quickChallengeDuration,
+    soundEnabled, toggleSound, passesRemaining, stats,
   } = useGameStore(useShallow((s) => ({
     players: s.players,
     currentPlayerIndex: s.currentPlayerIndex,
@@ -231,7 +230,6 @@ const GameScreen = () => {
     toggleSound: s.toggleSound,
     passesRemaining: s.passesRemaining,
     stats: s.stats,
-    quickChallengeDuration: s.quickChallengeDuration,
   })));
 
   const { playClick, playBuzzer, playWhoosh, startTickLoop, stopTickLoop, vibrate } = useSounds();
@@ -262,11 +260,8 @@ const GameScreen = () => {
 
   const isQuizCard = card?.card_type === "quiz";
   const isTimerCard = card?.card_type === "timer";
-  const isQuickChallengeMode = selectedMode === "quick_challenge";
-  const isAutoTimer = isQuickChallengeMode && !isTimerCard && card != null;
-  const AUTO_DURATION = isAutoTimer ? quickChallengeDuration : 15;
-  const totalDuration = isTimerCard ? extractDuration(cardText) : AUTO_DURATION;
-  const showTimer = isTimerCard || isAutoTimer;
+  const totalDuration = isTimerCard ? extractDuration(cardText) : 15;
+  const showTimer = isTimerCard;
   const cardMeta = card
     ? CARD_TYPE_LABELS[card.card_type] || { label: card.card_type, color: "210 40% 98%" }
     : { label: "", color: "210 40% 98%" };
@@ -281,7 +276,7 @@ const GameScreen = () => {
 
   const { timeLeft, timerRunning, timerDone, startTimer: rawStartTimer, resetTimer, clearTimer } = useGameTimer({
     totalDuration,
-    isAutoTimer,
+    isAutoTimer: false,
     currentCardIndex,
     onTimerDone,
   });
@@ -477,7 +472,6 @@ const GameScreen = () => {
                 timerDone={timerDone}
                 timerRunning={timerRunning}
                 isTimerCard={isTimerCard}
-                isAutoTimer={isAutoTimer}
                 onStart={startTimer}
                 onReset={resetTimer}
               />

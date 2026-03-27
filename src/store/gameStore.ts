@@ -15,7 +15,7 @@ interface GameState {
   selectedMode: GameMode | null;
   selectedVibe: Vibe | null;
   unlockedVibes: Record<Vibe, boolean>;
-  currentScreen: "home" | "players" | "mode" | "vibe" | "game" | "end" | "packs" | "settings" | "history" | "payment_return" | "duel_hub" | "heads_up";
+  currentScreen: "home" | "players" | "mode" | "vibe" | "game" | "end" | "packs" | "settings" | "history" | "payment_return" | "duel_hub" | "guess_rush";
   pendingTransactionId: string | null;
   currentPlayerIndex: number;
   currentCardIndex: number;
@@ -25,7 +25,6 @@ interface GameState {
   soundEnabled: boolean;
   soundVolume: number;
   vibrationEnabled: boolean;
-  quickChallengeDuration: 10 | 15 | 20;
   addPlayer: (name: string) => void;
   removePlayer: (index: number) => void;
   shufflePlayers: () => void;
@@ -41,7 +40,6 @@ interface GameState {
   setSoundVolume: (vol: number) => void;
   toggleVibration: () => void;
   setPendingTransaction: (id: string | null) => void;
-  setQuickChallengeDuration: (d: 10 | 15 | 20) => void;
 }
 
 const PLAYER_COLORS = [
@@ -73,7 +71,6 @@ export const useGameStore = create<GameState>()(
       soundVolume: 80,
       vibrationEnabled: true,
       pendingTransactionId: null,
-      quickChallengeDuration: 15,
 
       addPlayer: (name) => {
         const { players } = get();
@@ -90,7 +87,6 @@ export const useGameStore = create<GameState>()(
       },
 
       shufflePlayers: () => {
-        // Dynamic import to avoid pulling shuffleUtils into main chunk
         import("@/lib/shuffleUtils").then(({ fisherYatesShuffle }) => {
           set((state) => ({ players: fisherYatesShuffle(state.players) }));
         });
@@ -129,7 +125,6 @@ export const useGameStore = create<GameState>()(
           return;
         }
 
-        // Single barrel import
         const {
           loadDeckInstant, enrichDeckInBackground, getCachedServerCards,
           initPlayerData, deduplicateShuffle, fisherYatesShuffle,
@@ -141,10 +136,8 @@ export const useGameStore = create<GameState>()(
         const { passes, playerStats } = initPlayerData(players);
         const params = { mode: selectedMode, vibe: selectedVibe, players };
 
-        // STEP 1: Build full card pool from local data
         let pool = await loadDeckInstant(params);
 
-        // Merge with cached server cards from previous sessions
         const cachedCards = getCachedServerCards(selectedMode, selectedVibe);
         if (cachedCards.length > 0) {
           pool = deduplicateShuffle([...pool, ...cachedCards]);
@@ -156,12 +149,10 @@ export const useGameStore = create<GameState>()(
           return;
         }
 
-        // STEP 2: Filter out recently seen cards by content hash
         const seenHashes = getSeenCardHashes();
         let unseen = pool.filter(c => !seenHashes.has(getCardContentHash(c.text)));
 
         if (unseen.length < GAME_LIMITS.CARDS_PER_GAME) {
-          // Partial reset: keep 50% most recent hashes
           const existing = storageGet<string[]>("seen-cards", []);
           const halfPoint = Math.floor(existing.length / 2);
           storageSet("seen-cards", existing.slice(halfPoint));
@@ -178,7 +169,6 @@ export const useGameStore = create<GameState>()(
 
         markCardsSeen(deck.map(c => c.text));
 
-        // STEP 3: Show game IMMEDIATELY
         set({
           deck,
           currentPlayerIndex: 0,
@@ -188,7 +178,6 @@ export const useGameStore = create<GameState>()(
           currentScreen: "game",
         });
 
-        // STEP 4: Enrich in background for future sessions (NON-BLOCKING)
         enrichDeckInBackground(params);
       },
 
@@ -262,7 +251,6 @@ export const useGameStore = create<GameState>()(
       setSoundVolume: (vol) => set({ soundVolume: vol }),
       toggleVibration: () => set((s) => ({ vibrationEnabled: !s.vibrationEnabled })),
       setPendingTransaction: (id) => set({ pendingTransactionId: id }),
-      setQuickChallengeDuration: (d) => set({ quickChallengeDuration: d }),
     }),
     {
       name: "malaky-store",
@@ -272,7 +260,6 @@ export const useGameStore = create<GameState>()(
         soundVolume: state.soundVolume,
         vibrationEnabled: state.vibrationEnabled,
         pendingTransactionId: state.pendingTransactionId,
-        quickChallengeDuration: state.quickChallengeDuration,
         players: state.players,
       }),
     }

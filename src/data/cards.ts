@@ -1,8 +1,7 @@
 import type { GameCard, GameMode, Vibe, Difficulty } from "./types";
-import { GAME_MODES, VIBES, DIFFICULTIES } from "./config";
 import {
   truthPrompts, dareActions, neverBase, likelyBase,
-  ratherA, ratherB, challengeActions, madaCardsMg,
+  ratherA, ratherB, madaCardsMg,
 } from "./card_content";
 import { cultureQuestions } from "./culture_questions";
 
@@ -21,8 +20,6 @@ const createCard = (
   answer,
   requires_prop: requiresProp, player_min: 2, player_max: MAX_PLAYERS,
 });
-
-const hasExplicitDuration = (text: string) => /(\d+)\s*(?:s|sec|secondes?|minute|minutes)/i.test(text) || /une?\s+minute/i.test(text);
 
 /**
  * French elision: "de" + vowel → "d'", "que" + vowel → "qu'", etc.
@@ -115,49 +112,6 @@ const buildWouldYouRatherDeck = (vibe: Vibe): GameCard[] => {
   return cards;
 };
 
-const buildQuickChallengeDeck = (vibe: Vibe): GameCard[] => {
-  const cards: GameCard[] = [];
-  let idx = 1;
-
-  const truths = (truthPrompts[vibe] || []).slice(0, 15);
-  const dares = challengeActions[vibe] || [];
-  const nevers = (neverBase[vibe] || []).slice(0, 15);
-  const likelys = (likelyBase[vibe] || []).slice(0, 15);
-  const rathersA = (ratherA[vibe] || []).slice(0, 10);
-  const rathersB = (ratherB[vibe] || []).slice(0, 10);
-
-  for (const t of truths) {
-    cards.push(createCard("quick_challenge", vibe, idx++, "truth", `{player}, ${t}`));
-  }
-
-  for (const n of nevers) {
-    cards.push(createCard("quick_challenge", vibe, idx++, "vote", `Je n'ai jamais ${n}`));
-  }
-
-  for (const l of likelys) {
-    const prefix = "Qui est le plus susceptible de ";
-    cards.push(createCard("quick_challenge", vibe, idx++, "vote", `${elide(prefix, clean(l))} ?`));
-  }
-
-  const rLen = Math.min(rathersA.length, rathersB.length);
-  for (let i = 0; i < rLen; i++) {
-    cards.push(createCard("quick_challenge", vibe, idx++, "truth", `Tu préfères ${rathersA[i]} ou ${rathersB[i]} ?`));
-  }
-
-  for (const action of dares) {
-    const hasDuration = hasExplicitDuration(action);
-    if (hasDuration) {
-      cards.push(createCard("quick_challenge", vibe, idx++, "timer", `{player}, ${action}`));
-    } else {
-      const durations = [10, 15, 20];
-      const dur = durations[idx % durations.length];
-      cards.push(createCard("quick_challenge", vibe, idx++, "timer", `{player}, ${action.replace(/\.$/, "")} pendant ${dur} secondes.`));
-    }
-  }
-
-  return cards;
-};
-
 const buildCultureDeck = (difficulty: Difficulty): GameCard[] => {
   const questions = cultureQuestions[difficulty] || [];
   const cards: GameCard[] = [];
@@ -188,7 +142,6 @@ function getDeck(mode: GameMode, vibe: Vibe): GameCard[] {
       never_have_i_ever: buildNeverDeck,
       most_likely: buildMostLikelyDeck,
       would_you_rather: buildWouldYouRatherDeck,
-      quick_challenge: buildQuickChallengeDeck,
     };
     const builder = builderMap[mode];
     if (builder) cards = builder(vibe);
@@ -202,7 +155,7 @@ function getDeck(mode: GameMode, vibe: Vibe): GameCard[] {
 export function getAllCards(): GameCard[] {
   const ALL_VIBES: Vibe[] = ["soft", "fun", "hot", "chaos", "couple", "apero", "mada", "confessions", "vip", "afterdark"];
   const ALL_DIFFICULTIES: Difficulty[] = ["facile", "intermediaire", "difficile", "expert"];
-  const modes: GameMode[] = ["truth_dare", "never_have_i_ever", "most_likely", "would_you_rather", "quick_challenge"];
+  const modes: GameMode[] = ["truth_dare", "never_have_i_ever", "most_likely", "would_you_rather"];
 
   const all: GameCard[] = [];
   for (const vibe of ALL_VIBES) {
