@@ -912,7 +912,7 @@ export const dareActions: VibeContent = {
     'Fais un cocktail imaginaire et décris-le.',
     'Chante une chanson à boire.',
     'Bois à la santé de la personne qui a posé le défi.',
-    'Raconte une anecdote amusante liée à une soirée.',
+    'Imite un ami bourré en soirée et fais deviner le groupe.',
     'Fais une grimace après avoir bu une gorgée.',
     'Imite une publicité pour une boisson.',
     'Bois ton verre en le tenant d\'une main.',
