@@ -644,7 +644,7 @@ export const dareActions: VibeContent = {
     'fais un compliment sincère à chaque joueur.',
     'décris ton doudou imaginaire comme si tout le monde le connaissait déjà.',
     'garde la main sur le nez pendant 30 secondes.',
-    'raconte une blague pour enfant.',
+    'mime une blague pour enfant sans parler.',
     'écris ton prénom en l\'air avec ton coude.',
     'fais un clin d\'œil à chaque joueur un par un.',
     'Fais une grimace horrible et maintiens-la pendant 10 secondes.',
