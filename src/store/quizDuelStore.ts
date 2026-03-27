@@ -300,8 +300,7 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
 
       if (!fresh) return false;
 
-      const expiresAt = (fresh as Record<string, unknown>).expires_at as string | undefined;
-      if (expiresAt && new Date(expiresAt) < new Date()) {
+      if (fresh.expires_at && new Date(fresh.expires_at) < new Date()) {
         set({ error: "Ce duel a expiré.", screen: "hub" });
         return false;
       }
