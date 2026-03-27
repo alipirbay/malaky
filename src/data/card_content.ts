@@ -846,7 +846,7 @@ export const dareActions: VibeContent = {
     'fais un compliment original et profond.',
     'donne un bisou dans le cou de ton partenaire.',
     'imite l\'accent de ton partenaire.',
-    'raconte une blague romantique.',
+    'improvise une déclaration d\'amour ridicule à ton/ta partenaire.',
     'fais un câlin collectif à tous les joueurs.',
     'prends la main de ton partenaire pendant 1 min.',
     'écris un poème de 3 lignes pour ton partenaire.',
