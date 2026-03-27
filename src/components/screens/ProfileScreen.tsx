@@ -67,7 +67,7 @@ const ProfileScreen = () => {
     { label: "Quiz correct", value: store.totalQuizCorrect, emoji: "🧠" },
     { label: "Duels gagnés", value: `${store.totalDuelsWon}/${store.totalDuelsPlayed}`, emoji: "⚔️" },
     { label: "Joueurs rencontrés", value: store.uniquePlayersPlayed.length, emoji: "👥" },
-    { label: "Modes explorés", value: `${store.modesPlayed.length}/7`, emoji: "🌈" },
+    { label: "Modes explorés", value: `${store.modesPlayed.length}/${GAME_MODES.length}`, emoji: "🌈" },
     { label: "Parties sans refus", value: store.gamesWithZeroRefusals, emoji: "💪" },
     { label: "Membre depuis", value: new Date(store.joinedAt).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }), emoji: "📅" },
   ];
