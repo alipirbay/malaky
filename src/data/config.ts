@@ -16,7 +16,7 @@ export const GAME_MODES = [
     subtitle: "Qui l'a déjà fait ?",
     emoji: "🙈",
     badge: "Confessionnel",
-    color: "primary" as const,
+    color: "sky" as const,
     minPlayers: 2,
   },
   {
@@ -34,7 +34,7 @@ export const GAME_MODES = [
     subtitle: "Choix impossibles",
     emoji: "🤔",
     badge: "Intense",
-    color: "primary" as const,
+    color: "rose" as const,
     minPlayers: 2,
   },
   {
