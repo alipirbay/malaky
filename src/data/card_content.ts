@@ -979,7 +979,7 @@ export const dareActions: VibeContent = {
     'Mime un baobab qui pousse du sol avec les bras et les bruitages.',
     'Chuchote le nom d\'une ville malgache.',
     'Fais semblant de cultiver du riz à la main.',
-    'Dis \'Misaotra\' (merci) à la personne qui t\'a aidé récemment.',
+    'Fais une révérence à chaque joueur en disant \'Misaotra\' d\'une voix différente.',
     'Imite un cyclopousse manœuvrant dans la ville.',
     'Fais le bruit de l\'océan Indien.',
     'Imite un conteur malgache qui dramatise une histoire avec des gestes.',
