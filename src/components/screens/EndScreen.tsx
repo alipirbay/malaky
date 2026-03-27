@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { useProfileStore } from "@/store/profileStore";
 import { GAME_MODES } from "@/data/config";
 import { Trophy, RotateCcw, Share2, Zap } from "lucide-react";
 import { toast } from "sonner";
