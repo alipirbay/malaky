@@ -1,0 +1,117 @@
+export interface HeadsUpCategory {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+  words: string[];
+}
+
+export const HEADS_UP_CATEGORIES: HeadsUpCategory[] = [
+  {
+    id: "mada",
+    name: "Mada / Culture Gasy",
+    emoji: "🇲🇬",
+    description: "Personnalités, lieux et culture malgache",
+    words: [
+      "Baobab", "Lémurien", "Vanille", "Romazava", "Valiha", "Famadihana", "Tsingy",
+      "Ravitoto", "Zébu", "Ravinala", "Moraingy", "Lamba", "Kabary", "Vary amin'anana",
+      "Isalo", "Nosy Be", "Caméléon", "Salegy", "Fossa", "Hira gasy",
+      "Rova", "Tsapiky", "Sambosa", "Kapoaka", "Pousse-pousse",
+      "Mofo gasy", "Ranon'apango", "Fady", "Aye-aye", "Tuk-tuk",
+      "Taxi-brousse", "RN7", "Analakely", "Ambositra", "Antsirabe",
+      "Sakalava", "Merina", "Betsileo", "Antandroy", "Fihavanana",
+      "Koba ravina", "Betsabetsa", "Toaka gasy", "Savika", "Ankizy",
+      "Diego Suarez", "Ifaty", "Allée des baobabs", "Lac Tritriva", "Pangalanes",
+    ],
+  },
+  {
+    id: "celebrities",
+    name: "Personnages & Célébrités",
+    emoji: "⭐",
+    description: "Stars, personnalités, figures historiques",
+    words: [
+      "Michael Jackson", "Beyoncé", "Elon Musk", "Cristiano Ronaldo", "Messi",
+      "Obama", "Rihanna", "Drake", "Taylor Swift", "Mbappé",
+      "Napoléon", "Cléopâtre", "Einstein", "Da Vinci", "Mozart",
+      "Bob Marley", "Bruce Lee", "Mandela", "Gandhi", "Shakira",
+      "Neymar", "Lebron James", "Oprah", "The Rock", "Will Smith",
+      "Snoop Dogg", "Adele", "Ed Sheeran", "Ronaldinho", "Usain Bolt",
+      "Marie Curie", "Picasso", "Charlie Chaplin", "Marilyn Monroe", "Elvis",
+      "Spider-Man", "Batman", "Mickey Mouse", "Homer Simpson", "Pikachu",
+      "Goku", "Harry Potter", "Hermione", "Dark Vador", "Thanos",
+      "Mario", "Sonic", "Shrek", "Elsa", "Iron Man",
+    ],
+  },
+  {
+    id: "objects",
+    name: "Objets du quotidien",
+    emoji: "🏠",
+    description: "Choses qu'on utilise tous les jours",
+    words: [
+      "Smartphone", "Réfrigérateur", "Parapluie", "Brosse à dents", "Micro-ondes",
+      "Chaussette", "Ceinture", "Lunettes", "Miroir", "Oreiller",
+      "Casserole", "Télécommande", "Clé USB", "Sac à dos", "Chargeur",
+      "Fer à repasser", "Aspirateur", "Réveil", "Ciseaux", "Briquet",
+      "Tasse", "Fourchette", "Serviette", "Couverture", "Robinet",
+      "Ampoule", "Bougie", "Peigne", "Portefeuille", "Moustiquaire",
+      "Thermos", "Balai", "Éponge", "Cadenas", "Calculatrice",
+      "Post-it", "Trombone", "Scotch", "Marteau", "Tournevis",
+      "Allumettes", "Gourde", "Carafe", "Éventail", "Panier",
+      "Boîte à lunch", "Cintre", "Poubelle", "Tabouret", "Rideau",
+    ],
+  },
+  {
+    id: "animals",
+    name: "Animaux",
+    emoji: "🐾",
+    description: "Animaux du monde entier",
+    words: [
+      "Éléphant", "Girafe", "Lion", "Dauphin", "Pingouin",
+      "Caméléon", "Crocodile", "Tortue", "Papillon", "Aigle",
+      "Requin", "Baleine", "Koala", "Panda", "Kangourou",
+      "Flamant rose", "Hippopotame", "Gorille", "Guépard", "Zèbre",
+      "Paon", "Pieuvre", "Serpent", "Scorpion", "Autruche",
+      "Perroquet", "Ours polaire", "Loup", "Renard", "Hérisson",
+      "Fourmi", "Méduse", "Chauve-souris", "Lynx", "Castor",
+      "Phoque", "Tigre", "Léopard", "Bison", "Suricate",
+      "Colibri", "Caméléon panthère", "Fossa", "Indri", "Aye-aye",
+      "Sifaka", "Tenrec", "Raie manta", "Coelacanthe", "Gecko",
+    ],
+  },
+  {
+    id: "movies",
+    name: "Films & Séries",
+    emoji: "🎬",
+    description: "Pop culture, cinéma, séries TV",
+    words: [
+      "Titanic", "Avengers", "Game of Thrones", "La Casa de Papel", "Squid Game",
+      "Friends", "Breaking Bad", "Jurassic Park", "Matrix", "Avatar",
+      "Star Wars", "Le Roi Lion", "Stranger Things", "Naruto", "One Piece",
+      "Fast and Furious", "The Walking Dead", "Money Heist", "Frozen", "Toy Story",
+      "John Wick", "Interstellar", "Inception", "Joker", "Black Panther",
+      "Lupin", "Peaky Blinders", "The Witcher", "Wednesday", "Dahmer",
+      "Dragon Ball", "Attack on Titan", "Demon Slayer", "Jujutsu Kaisen", "Death Note",
+      "The Office", "Grey's Anatomy", "How I Met Your Mother", "Prison Break", "Vikings",
+      "Gladiator", "Le Parrain", "Forrest Gump", "Fight Club", "Parasite",
+      "Encanto", "Moana", "Coco", "Ratatouille", "Nemo",
+    ],
+  },
+  {
+    id: "actions",
+    name: "Métiers & Actions",
+    emoji: "💼",
+    description: "Professions, activités, expressions",
+    words: [
+      "Pompier", "Astronaute", "Chirurgien", "Pilote", "Boulanger",
+      "Danser", "Nager", "Courir", "Cuisiner", "Dormir",
+      "Photographe", "Avocat", "Électricien", "Plombier", "Architecte",
+      "Surfer", "Pêcher", "Méditer", "Jongler", "Escalader",
+      "Dentiste", "Vétérinaire", "Coiffeur", "Musicien", "Journaliste",
+      "Tousser", "Éternuer", "Ronfler", "Bâiller", "Siffler",
+      "Professeur", "Agriculteur", "Forgeron", "Douanier", "Marin",
+      "Rapper", "Arbitrer", "Sculpter", "Tricoter", "Souder",
+      "Facteur", "Garagiste", "Serveur", "Magicien", "Cascadeur",
+      "Boxeur", "DJ", "Influenceur", "YouTubeur", "Développeur",
+    ],
+  },
+];

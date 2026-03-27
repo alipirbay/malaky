@@ -8,6 +8,7 @@ export const GAME_MODES = [
     emoji: "🔥",
     badge: "Hilarant",
     color: "coral" as const,
+    minPlayers: 2,
   },
   {
     id: "never_have_i_ever" as GameMode,
@@ -16,6 +17,7 @@ export const GAME_MODES = [
     emoji: "🙈",
     badge: "Confessionnel",
     color: "primary" as const,
+    minPlayers: 2,
   },
   {
     id: "most_likely" as GameMode,
@@ -24,6 +26,7 @@ export const GAME_MODES = [
     emoji: "👆",
     badge: "Social",
     color: "mango" as const,
+    minPlayers: 2,
   },
   {
     id: "would_you_rather" as GameMode,
@@ -32,6 +35,7 @@ export const GAME_MODES = [
     emoji: "🤔",
     badge: "Intense",
     color: "primary" as const,
+    minPlayers: 2,
   },
   {
     id: "quick_challenge" as GameMode,
@@ -40,6 +44,7 @@ export const GAME_MODES = [
     emoji: "⚡",
     badge: "Rapide",
     color: "mango" as const,
+    minPlayers: 2,
   },
   {
     id: "culture_generale" as GameMode,
@@ -48,6 +53,25 @@ export const GAME_MODES = [
     emoji: "🧠",
     badge: "Quiz",
     color: "primary" as const,
+    minPlayers: 2,
+  },
+  {
+    id: "quiz_duel" as GameMode,
+    name: "Duel Culture G",
+    subtitle: "Défie un ami en asynchrone",
+    emoji: "⚔️",
+    badge: "Solo",
+    color: "primary" as const,
+    minPlayers: 1,
+  },
+  {
+    id: "heads_up" as GameMode,
+    name: "Téléphone au front",
+    subtitle: "Fais deviner le mot !",
+    emoji: "📱",
+    badge: "Party",
+    color: "coral" as const,
+    minPlayers: 2,
   },
 ];
 

@@ -1,0 +1,149 @@
+/**
+ * Quiz Duel utilities: deterministic QCM generation, seeded shuffle, scoring.
+ */
+import type { Difficulty } from "@/data/types";
+import { cultureQuestions, type QuizEntry } from "@/data/culture_questions";
+
+export interface DuelQuestion {
+  question: string;
+  correctAnswer: string;
+  options: string[]; // 4 options, shuffled deterministically
+}
+
+/**
+ * Seeded pseudo-random number generator (mulberry32).
+ */
+function mulberry32(seed: number): () => number {
+  return () => {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededShuffle<T>(arr: T[], rng: () => number): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+/**
+ * Hash a string to a numeric seed.
+ */
+function hashSeed(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return hash;
+}
+
+/**
+ * Generate plausible wrong answers for a quiz question.
+ * Uses other answers from the same difficulty pool.
+ */
+function generateDistractors(
+  correctAnswer: string,
+  allEntries: QuizEntry[],
+  rng: () => number,
+  count: number = 3
+): string[] {
+  const pool = allEntries
+    .map((e) => e.a)
+    .filter((a) => a !== correctAnswer);
+  const shuffled = seededShuffle(pool, rng);
+  // Deduplicate
+  const seen = new Set<string>([correctAnswer]);
+  const result: string[] = [];
+  for (const item of shuffled) {
+    if (!seen.has(item) && result.length < count) {
+      seen.add(item);
+      result.push(item);
+    }
+  }
+  return result;
+}
+
+/**
+ * Generate a set of duel questions deterministically from a seed.
+ */
+export function generateDuelQuestions(
+  difficulty: Difficulty,
+  seed: string,
+  count: number = 10
+): DuelQuestion[] {
+  const allEntries = cultureQuestions[difficulty] || cultureQuestions.facile;
+  const rng = mulberry32(hashSeed(seed));
+  const shuffledEntries = seededShuffle(allEntries, rng);
+  const selected = shuffledEntries.slice(0, Math.min(count, shuffledEntries.length));
+
+  return selected.map((entry) => {
+    const distractors = generateDistractors(entry.a, allEntries, rng);
+    const options = seededShuffle([entry.a, ...distractors], rng);
+    return {
+      question: entry.q,
+      correctAnswer: entry.a,
+      options,
+    };
+  });
+}
+
+/**
+ * Generate a short, readable invite code.
+ */
+export function generateInviteCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+/**
+ * Get or create a persistent device ID.
+ */
+export function getDeviceId(): string {
+  const KEY = "malaky-device-id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+/**
+ * Scoring: compare two attempts.
+ */
+export interface DuelAttempt {
+  score: number;
+  timeMs: number;
+  playerName: string;
+}
+
+export type DuelResult = "win" | "lose" | "draw";
+
+export function computeDuelResult(
+  myAttempt: DuelAttempt,
+  opponentAttempt: DuelAttempt
+): DuelResult {
+  if (myAttempt.score > opponentAttempt.score) return "win";
+  if (myAttempt.score < opponentAttempt.score) return "lose";
+  // Tie-break by time (lower is better)
+  if (myAttempt.timeMs < opponentAttempt.timeMs) return "win";
+  if (myAttempt.timeMs > opponentAttempt.timeMs) return "lose";
+  return "draw";
+}
+
+export function formatTimeMs(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+}

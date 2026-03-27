@@ -107,7 +107,7 @@ const PlayersScreen = () => {
 
         {players.length === 1 && (
           <p className="text-center text-sm text-muted-foreground/70 animate-pulse">
-            Encore 1 joueur pour commencer !
+            Encore 1 joueur pour les modes party, ou continue pour un duel solo !
           </p>
         )}
       </div>
@@ -125,7 +125,7 @@ const PlayersScreen = () => {
         )}
         <button
           onClick={() => { setScreen("mode"); vibrate(10); }}
-          disabled={players.length < GAME_LIMITS.MIN_PLAYERS}
+          disabled={players.length < 1}
           className="w-full rounded-2xl gradient-primary px-6 py-4 text-lg font-bold text-primary-foreground disabled:opacity-30 glow-primary transition-transform active:scale-95"
         >
           Continuer ({players.length}/{GAME_LIMITS.MAX_PLAYERS})
