@@ -1020,7 +1020,7 @@ export const dareActions: VibeContent = {
     'fais un geste symbolique de pardon vers quelqu\'un.',
     'Démontre une habitude étrange que tu as devant tout le monde.',
     'Mime une bêtise que tu as faite dans ton adolescence.',
-    'Dis la première chose que tu ferais si tu gagnais au loto en jouant la scène.',
+    'Joue la scène complète du moment où tu découvres que tu as gagné au loto.',
     'Montre un talent caché au groupe pendant 15 secondes.',
     'Fais un geste de générosité symbolique envers chaque joueur.',
     'Fais la danse de la bonne humeur devant tout le monde.',
