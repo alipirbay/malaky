@@ -1071,7 +1071,7 @@ export const dareActions: VibeContent = {
     'Imite la démarche d\'un top model.',
     'Envoie un bisou volé à ton public.',
     'Fais comme si tu signais un autographe sur la main de quelqu\'un.',
-    'Décris ta garde-robe de designer préférée.',
+    'Ouvre ta garde-robe imaginaire et présente 3 tenues en les mimant.',
     'Réponds à une question de journaliste imaginaire sur ta vie extravagante.',
     'Fais tourner un stylo entre tes doigts avec élégance.',
     'Regarde ta montre imaginaire et déclare une heure importante.',
