@@ -635,7 +635,7 @@ export const dareActions: VibeContent = {
     'fais une grimace la plus moche possible.',
     'chante l\'alphabet à l\'envers.',
     'imite un animal choisi par le groupe.',
-    'dis 5 mots sans montrer les dents.',
+    'prononce 5 mots sans montrer les dents.',
     'dessine un nez sur ton front avec le doigt.',
     'marche comme un robot pendant 30 secondes.',
     'fais la roue ou essaie de ton mieux.',
