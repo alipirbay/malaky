@@ -68,7 +68,7 @@ const CategoryPicker = () => {
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h2 className="text-xl font-bold text-foreground">📱 Tilt Up</h2>
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2"><TiltUpIcon size={22} /> Tilt Up</h2>
           <p className="text-sm text-muted-foreground">Choisis un thème</p>
         </div>
       </div>
