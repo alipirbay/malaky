@@ -1032,7 +1032,7 @@ export const dareActions: VibeContent = {
     'Mime un petit mensonge que tu as déjà raconté.',
     'Fais un dessin les yeux fermés de ton meilleur souvenir d\'enfance.',
     'Montre ta collection imaginaire au groupe avec passion.',
-    'Dis ce que tu aimes le plus chez toi en te regardant dans un miroir imaginaire.',
+    'Pose devant un miroir imaginaire et fais un défilé en célébrant tes qualités.',
     'Rejoue un moment de gêne récent devant le groupe.',
     'Mime le résumé d\'un livre que tu as lu.',
     'Imite ton émission TV préférée pendant 15 secondes.',
