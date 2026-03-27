@@ -675,7 +675,7 @@ export const dareActions: VibeContent = {
     'Imite un chat qui ronronne.',
     'Fais comme si tu pêchais quelque chose d\'énorme.',
     'Dessine un sourire imaginaire sur le visage de quelqu\'un.',
-    'Dis \'Salut\' dans cinq langues différentes.',
+    'Lève-toi et salue chaque joueur dans une langue différente avec le geste qui va avec.',
     'Fais un pouce en l\'air à trois personnes différentes.',
     'Imite un instrument de musique avec ta bouche.',
     'Fais un \'dab\' sans bouger de ta chaise.',
