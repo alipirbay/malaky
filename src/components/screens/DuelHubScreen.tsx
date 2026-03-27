@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuizDuelStore } from "@/store/quizDuelStore";
 import { useGameStore } from "@/store/gameStore";
