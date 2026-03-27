@@ -1086,7 +1086,7 @@ export const dareActions: VibeContent = {
     'Prends un air suffisant et déclare \'Évidemment !\'.',
     'Fais un toast élaboré à l\'incroyable soirée que tu as passée.',
     'Imite un photographe paparazzi te prenant en photo.',
-    'Parle de tes vacances sur une île privée imaginaire.',
+    'Joue un influenceur qui filme ses vacances sur une île privée imaginaire.',
     'Frise ta lèvre d\'un air dédaigneux.',
     'Fais comme si tu sirotais une boisson très coûteuse.',
     'Décris ton jet privé imaginaire.',
