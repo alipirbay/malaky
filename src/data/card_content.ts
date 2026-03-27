@@ -368,7 +368,7 @@ export const truthPrompts: VibeContent = {
     'Confesse la plus grande somme que tu aies dépensée en une nuit de fête.',
     'Raconte la fois où tu as mélangé trop de boissons différentes.',
     'Avoue si tu as déjà triché à un jeu à boire.',
-    'Montre ta meilleure imitation de quelqu\'un de complètement bourré.',
+    'Fais ta meilleure imitation de quelqu\'un de complètement bourré.',
     'Révèle le pire conseil de soirée que tu as reçu.',
     'Avoue si tu as déjà abandonné un ami en soirée pour rentrer chez toi.',
     'Décris l\'odeur la plus désagréable que tu associes à une soirée.',
