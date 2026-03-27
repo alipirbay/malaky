@@ -56,9 +56,13 @@ describe("hashToScreen", () => {
     expect(hashToScreen("end")).toBeNull();
   });
 
-  it("returns null for removed modes", () => {
-    expect(hashToScreen("heads_up")).toBeNull();
-    expect(hashToScreen("guess_rush")).toBeNull();
+  it("returns null for non-navigable screens", () => {
+    expect(hashToScreen("game")).toBeNull();
+    expect(hashToScreen("end")).toBeNull();
+  });
+
+  it("guess_rush is navigable", () => {
+    expect(hashToScreen("guess_rush")).toBe("guess_rush");
   });
 });
 
