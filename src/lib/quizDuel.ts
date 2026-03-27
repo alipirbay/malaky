@@ -3,6 +3,7 @@
  */
 import type { Difficulty } from "@/data/types";
 import { cultureQuestions } from "@/data/culture_questions";
+import { storageGet, storageSet } from "@/lib/storage";
 
 export interface DuelQuestion {
   question: string;
