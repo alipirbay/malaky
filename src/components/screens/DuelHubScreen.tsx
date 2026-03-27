@@ -332,7 +332,7 @@ const DuelQuizPlaying = () => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
-  const [questionTimer, setQuestionTimer] = useState(DUEL_TIMER);
+  const [questionTimer, setQuestionTimer] = useState<number>(DUEL_TIMER);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
