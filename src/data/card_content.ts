@@ -1077,7 +1077,7 @@ export const dareActions: VibeContent = {
     'Regarde ta montre imaginaire et déclare une heure importante.',
     'Demande à un faux majordome de t\'apporter une coupe de champagne.',
     'Fais un geste de la main de la reine ou du roi.',
-    'Décris une œuvre d\'art que tu as (imaginairement) achetée aux enchères.',
+    'Joue le commissaire-priseur et vends une œuvre d\'art imaginaire au groupe.',
     'Fais une démonstration de ta poignée de main de pouvoir.',
     'Parle de ta marque de voiture de luxe préférée.',
     'Jette un regard hautain à l\'assemblée.',
