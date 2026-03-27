@@ -107,7 +107,7 @@ const PlayersScreen = () => {
 
         {players.length === 1 && (
           <p className="text-center text-sm text-muted-foreground/70 animate-pulse">
-            Encore 1 joueur pour commencer !
+            Encore 1 joueur pour les modes party, ou continue pour un duel solo !
           </p>
         )}
       </div>
