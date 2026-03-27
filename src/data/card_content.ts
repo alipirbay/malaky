@@ -705,7 +705,7 @@ export const dareActions: VibeContent = {
     'Fais du playback sur une chanson imaginée.',
     'Imite une célébrité jusqu\'à ce que quelqu\'un devine qui c\'est.',
     'Prends un selfie avec une expression faciale exagérée.',
-    'Raconte une histoire complètement inventée sur ton week-end.',
+    'Invente et joue une histoire complètement fausse sur ton week-end avec des gestes.',
     'Danse le robot sans bouger de ton siège.',
     'Fais le moonwalk sur place.',
     'Chante l\'alphabet à l\'envers.',
