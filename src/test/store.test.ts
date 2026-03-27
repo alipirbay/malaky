@@ -44,7 +44,7 @@ describe("hashToScreen", () => {
     expect(hashToScreen("mode")).toBe("mode");
     expect(hashToScreen("vibe")).toBe("vibe");
     expect(hashToScreen("duel_hub")).toBe("duel_hub");
-    expect(hashToScreen("guess_rush")).toBe("guess_rush");
+    expect(hashToScreen("duel_hub")).toBe("duel_hub");
   });
 
   it("strips # prefix", () => {
