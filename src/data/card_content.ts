@@ -959,7 +959,7 @@ export const dareActions: VibeContent = {
     'fais le cri du fossa.',
     'imite quelqu\'un qui essaie de parler malgache sans le maîtriser.',
     'mime un kalanoro effrayant pendant 15 secondes.',
-    'Dis \'Salama\' avec votre meilleure prononciation malgache.',
+    'Lève-toi et salue chaque joueur en disant \'Salama\' avec un geste différent.',
     'Danse le Malagasy \'Afindrafindrao\' (même assis).',
     'Imite le klaxon d\'un Taxi-Be d\'Antananarivo.',
     'Chante un petit bout d\'une chanson folklorique malgache.',
