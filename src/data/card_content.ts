@@ -3360,7 +3360,7 @@ export const challengeActions: VibeContent = {
     'Pince légèrement ta lèvre inférieure avec tes dents.',
     'Respire profondément et pose ta main sur ton abdomen.',
     'Fais glisser ta main sur ton bras lentement.',
-    'Pose ta main sur la table et caressse-la doucement.',
+    'Pose ta main sur la table et caresse-la doucement.',
   ],
   chaos: [
     'imite un chat en chaleur pendant 30 secondes.',
