@@ -970,7 +970,7 @@ export const dareActions: VibeContent = {
     'Imite un \'mora mora\' (lentement, doucement) dans tes mouvements.',
     'Fais une sortie dramatique de star en lançant \'Veloma!\' et reviens t\'asseoir.',
     'Fais le son d\'un lémurien.',
-    'Explique l\'importance du \'fihavanana\' (lien social) en une phrase.',
+    'Fais un câlin collectif au groupe en criant \'Fihavanana!\'.',
     'Marche comme si tu portais un grand sac de riz sur la tête.',
     'Fais un \'Kabary\' (discours oratoire) court et drôle sur un objet.',
     'Utilise l\'expression \'Hay ve?\' (Ah bon?) avec surprise.',
