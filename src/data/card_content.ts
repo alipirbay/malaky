@@ -749,7 +749,7 @@ export const dareActions: VibeContent = {
     'touche la main de quelqu\'un à côté de toi.',
     'parle d\'une voix plus grave pendant ton prochain tour.',
     'échange un regard chargé de sous-entendus avec quelqu\'un.',
-    'décris ton premier contact physique idéal avec quelqu\'un.',
+    'joue au ralenti le premier contact physique idéal avec un partenaire imaginaire.',
     'chuchote ton nom à quelqu\'un d\'une manière séductrice.',
     'Lance un baiser à la personne de ton choix en la regardant dans les yeux.',
     'Fais un déhanché sensuel pendant 10 secondes.',
