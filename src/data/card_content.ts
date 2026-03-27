@@ -642,7 +642,7 @@ export const dareActions: VibeContent = {
     'invente une petite danse sur place.',
     'parle avec un accent étranger pendant 30 secondes.',
     'fais un compliment sincère à chaque joueur.',
-    'décris ton doudou imaginaire comme si tout le monde le connaissait déjà.',
+    'présente ton doudou imaginaire au groupe comme une vraie conférence de presse.',
     'garde la main sur le nez pendant 30 secondes.',
     'mime une blague pour enfant sans parler.',
     'écris ton prénom en l\'air avec ton coude.',
