@@ -693,7 +693,7 @@ export const dareActions: VibeContent = {
     'fais un freestyle rap de 15 secondes.',
     'change ton fond d\'écran par une photo ridicule.',
     'envoie un texto bizarre à un ami au hasard.',
-    'dis "je t\'aime" à la personne à ta droite.',
+    'mets un genou à terre et fais une déclaration d\'amour à la personne à ta droite.',
     'bois un verre d\'eau sans utiliser les mains.',
     'imite un influenceur célèbre pendant 20 secondes.',
     'fais un dab après chaque phrase pendant un tour.',
