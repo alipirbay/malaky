@@ -955,7 +955,7 @@ export const dareActions: VibeContent = {
     'prononce correctement "Antananarivo" 3 fois d\'affilée.',
     'imite une scène de kabary en 20 secondes.',
     'cite 5 prénoms malgaches royaux en 10 secondes.',
-    'décris le bus 185 à quelqu\'un qui ne l\'a jamais pris.',
+    'mime un trajet en bus 185 de A à Z avec les secousses et les arrêts.',
     'fais le cri du fossa.',
     'imite quelqu\'un qui essaie de parler malgache sans le maîtriser.',
     'mime un kalanoro effrayant pendant 15 secondes.',
