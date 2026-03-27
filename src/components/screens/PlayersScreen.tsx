@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { useProfileStore } from "@/store/profileStore";
 import { GAME_LIMITS } from "@/data/constants";
 import { ArrowLeft, Shuffle, Plus, X } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
@@ -13,6 +14,14 @@ const PlayersScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
   const [name, setName] = useState("");
   const { vibrate } = useSounds();
+  const profileUsername = useProfileStore((s) => s.username);
+
+  useEffect(() => {
+    if (profileUsername && players.length === 0) {
+      addPlayer(profileUsername);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAdd = () => {
     const trimmed = name.trim();

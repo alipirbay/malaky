@@ -1,28 +1,24 @@
-import { lazy, Suspense, useMemo, useState, useEffect } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { motion } from "framer-motion";
 import malakyLogo from "@/assets/malaky-logo.webp";
 import { useGameStore } from "@/store/gameStore";
+import { useProfileStore, getXpProgress } from "@/store/profileStore";
+import { getNetworkStatus, onNetworkChange } from "@/lib/networkStatus";
 import { ShoppingBag, Settings, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
 
-// Lazy-load DailyDilemme — not critical for first paint
 const DailyDilemme = lazy(() => import("@/components/DailyDilemme"));
 
 const LAUNCH_DATE_MS = new Date('2026-03-24').getTime();
 
 const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(getNetworkStatus());
+  const avatar = useProfileStore((s) => s.avatar);
+  const xp = useProfileStore((s) => s.xp);
+  const xpData = getXpProgress(xp);
 
-  useEffect(() => {
-    const on = () => setIsOnline(true);
-    const off = () => setIsOnline(false);
-    window.addEventListener("online", on);
-    window.addEventListener("offline", off);
-    return () => {
-      window.removeEventListener("online", on);
-      window.removeEventListener("offline", off);
-    };
-  }, []);
+  useEffect(() => onNetworkChange(setIsOnline), []);
 
   const isNew = useMemo(
     () => (Date.now() - LAUNCH_DATE_MS) < 30 * 24 * 60 * 60 * 1000,
@@ -53,7 +49,7 @@ const HomeScreen = () => {
         )}
       </motion.div>
 
-      {/* Daily Dilemme — lazy loaded */}
+      {/* Daily Dilemme */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -80,6 +76,20 @@ const HomeScreen = () => {
         className="mt-6 w-full max-w-sm space-y-3"
       >
         <div className="flex gap-3">
+          {/* Avatar / Profile button */}
+          <button
+            onClick={() => setScreen("profile")}
+            className="group relative flex-shrink-0 overflow-hidden rounded-2xl bg-card w-[68px] py-5 transition-transform active:scale-95"
+          >
+            <div className="relative z-10 flex flex-col items-center gap-1">
+              <span className="text-2xl">{avatar}</span>
+              <span className="text-[10px] font-bold text-muted-foreground">Profil</span>
+              <span className="absolute -top-1 -right-0 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-primary-foreground">
+                {xpData.level}
+              </span>
+            </div>
+          </button>
+
           <button
             onClick={() => setScreen("players")}
             className="group relative flex-[2] overflow-hidden rounded-2xl gradient-primary px-5 py-5 text-lg font-bold text-primary-foreground glow-primary transition-transform active:scale-95"

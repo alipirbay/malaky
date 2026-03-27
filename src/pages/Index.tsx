@@ -9,6 +9,7 @@ import VibeScreen from "@/components/screens/VibeScreen";
 import PacksScreen from "@/components/screens/PacksScreen";
 import SettingsScreen from "@/components/screens/SettingsScreen";
 import HistoryScreen from "@/components/screens/HistoryScreen";
+import ProfileScreen from "@/components/screens/ProfileScreen";
 import FirstLaunchModal from "@/components/FirstLaunchModal";
 import PrivacyModal from "@/components/PrivacyModal";
 
@@ -29,6 +30,7 @@ const SCREENS = {
   history: HistoryScreen,
   duel_hub: DuelHubScreen,
   guess_rush: HeadsUpScreen,
+  profile: ProfileScreen,
 } as const;
 
 const ScreenFallback = () => (

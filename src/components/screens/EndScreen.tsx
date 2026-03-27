@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
+import { useProfileStore } from "@/store/profileStore";
 import { GAME_MODES } from "@/data/config";
 import { Trophy, RotateCcw, Share2, Zap } from "lucide-react";
 import { toast } from "sonner";
@@ -58,7 +59,7 @@ const EndScreen = () => {
     };
   }, [stats, players]);
 
-  // Record game once via ref guard (stable across React 18 strict mode double-mount)
+  // Record game once via ref guard
   const hasRecorded = useRef(false);
   const sessionDataRef = useRef<ReturnType<typeof recordGame>>(undefined);
   if (!hasRecorded.current) {
@@ -72,6 +73,14 @@ const EndScreen = () => {
       score: sessionScore,
       bravest,
       quizScore: isCultureG ? stats.quizScore : undefined,
+    });
+    // Track in profile store
+    useProfileStore.getState().addGameStats({
+      cardsPlayed: stats.cardsPlayed,
+      refusals: stats.refusals,
+      quizCorrect: stats.quizScore ?? 0,
+      mode: selectedMode ?? "",
+      players: players.map((p) => p.name),
     });
   }
   const sessionData = sessionDataRef.current;

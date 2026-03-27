@@ -3,6 +3,7 @@
  */
 import type { Difficulty } from "@/data/types";
 import { cultureQuestions } from "@/data/culture_questions";
+import { storageGet, storageSet } from "@/lib/storage";
 
 export interface DuelQuestion {
   question: string;
@@ -80,13 +81,11 @@ export function generateInviteCode(): string {
  * Get or create a persistent device ID.
  */
 export function getDeviceId(): string {
-  const KEY = "malaky-device-id";
-  let id = localStorage.getItem(KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(KEY, id);
-  }
-  return id;
+  const id = storageGet<string>("device-id", "");
+  if (id) return id;
+  const newId = crypto.randomUUID();
+  storageSet("device-id", newId);
+  return newId;
 }
 
 /**

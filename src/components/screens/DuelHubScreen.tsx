@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuizDuelStore } from "@/store/quizDuelStore";
 import { useGameStore } from "@/store/gameStore";
@@ -626,6 +626,17 @@ const DuelResultView = () => {
   const store = useQuizDuelStore();
   const setGameScreen = useGameStore((s) => s.setScreen);
   const { myAttempt, opponentAttempt, duelResult, questions } = store;
+
+  // Track duel result in profile (once)
+  const hasTracked = useRef(false);
+  useMemo(() => {
+    if (!hasTracked.current && duelResult) {
+      hasTracked.current = true;
+      import("@/store/profileStore").then(({ useProfileStore }) => {
+        useProfileStore.getState().addDuelResult(duelResult === "win");
+      });
+    }
+  }, [duelResult]);
 
   if (!myAttempt || !opponentAttempt) return null;
 
