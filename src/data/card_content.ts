@@ -1089,7 +1089,7 @@ export const dareActions: VibeContent = {
     'Joue un influenceur qui filme ses vacances sur une île privée imaginaire.',
     'Frise ta lèvre d\'un air dédaigneux.',
     'Fais comme si tu sirotais une boisson très coûteuse.',
-    'Décris ton jet privé imaginaire.',
+    'Mime l\'embarquement dans ton jet privé imaginaire avec le champagne.',
     'Fais un \'air kiss\' à quelqu\'un en l\'air.',
     'Ajuste tes vêtements avec précision et dédain.',
     'Dis ton nom complet avec un accent chic et un petit coup de tête.',
