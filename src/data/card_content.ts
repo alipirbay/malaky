@@ -650,7 +650,7 @@ export const dareActions: VibeContent = {
     'Fais une grimace horrible et maintiens-la pendant 10 secondes.',
     'Imite un animal de ton choix jusqu\'à ce que quelqu\'un devine lequel c\'est.',
     'Chante une chanson enfantine avec une voix de robot.',
-    'Dis trois mots gentils à la personne à ta droite.',
+    'Fais un compliment en chanson à la personne à ta droite.',
     'Fais une danse du ventre imaginaire.',
     'Fais un stand-up de 15 secondes sur un sujet choisi par le groupe.',
     'Écris ton nom avec ton coude droit.',
