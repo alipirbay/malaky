@@ -48,6 +48,25 @@ export const GAME_MODES = [
     emoji: "🧠",
     badge: "Quiz",
     color: "primary" as const,
+    minPlayers: 2,
+  },
+  {
+    id: "quiz_duel" as GameMode,
+    name: "Duel Culture G",
+    subtitle: "Défie un ami en asynchrone",
+    emoji: "⚔️",
+    badge: "Solo",
+    color: "primary" as const,
+    minPlayers: 1,
+  },
+  {
+    id: "heads_up" as GameMode,
+    name: "Téléphone au front",
+    subtitle: "Fais deviner le mot !",
+    emoji: "📱",
+    badge: "Party",
+    color: "coral" as const,
+    minPlayers: 2,
   },
 ];
 
