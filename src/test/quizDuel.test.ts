@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeDuelResult, generateInviteCode, generateDuelQuestions } from "@/lib/quizDuel";
+import { GAME_LIMITS } from "@/data/constants";
 
 describe("Quiz Duel utilities", () => {
   it("computeDuelResult returns win when score higher", () => {
@@ -25,6 +26,8 @@ describe("Quiz Duel utilities", () => {
     const q1 = generateDuelQuestions("facile", "test-seed-123");
     const q2 = generateDuelQuestions("facile", "test-seed-123");
     expect(q1.map(q => q.question)).toEqual(q2.map(q => q.question));
+    // Options order must also match (same seed)
+    expect(q1.map(q => q.options)).toEqual(q2.map(q => q.options));
   });
 
   it("generateDuelQuestions produces 4 options per question", () => {
@@ -33,5 +36,13 @@ describe("Quiz Duel utilities", () => {
       expect(q.options).toHaveLength(4);
       expect(q.options).toContain(q.correctAnswer);
     }
+  });
+
+  it("DUEL_TIME_PER_QUESTION is 15 seconds", () => {
+    expect(GAME_LIMITS.DUEL_TIME_PER_QUESTION).toBe(15);
+  });
+
+  it("HEADS_UP_ROUND_SECONDS is 30 seconds", () => {
+    expect(GAME_LIMITS.HEADS_UP_ROUND_SECONDS).toBe(30);
   });
 });

@@ -79,6 +79,21 @@ function mapRowToMatch(row: QuizDuelRow): DuelMatch {
   };
 }
 
+/**
+ * Extract questions from a DB row's stored questions JSON.
+ * This is the SOURCE OF TRUTH — both players use DB-stored questions.
+ */
+function questionsFromRow(row: QuizDuelRow): DuelQuestion[] {
+  const raw = row.questions as unknown;
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+  // Validate shape
+  const first = raw[0] as Record<string, unknown>;
+  if (first && typeof first.question === "string" && Array.isArray(first.options)) {
+    return raw as DuelQuestion[];
+  }
+  return [];
+}
+
 export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
   screen: "hub",
   currentMatch: null,
@@ -103,11 +118,14 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
 
   createQuickMatch: async () => {
     const { selectedDifficulty, playerName } = get();
+    if (!playerName.trim()) {
+      set({ error: "Choisis un pseudo avant de lancer un duel.", screen: "hub" });
+      return;
+    }
     const deviceId = getDeviceId();
     set({ isLoading: true, error: null });
 
     try {
-      // Expire old duels first
       await supabase.rpc("expire_old_duels");
 
       const { data: openMatch } = await supabase
@@ -122,7 +140,7 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
         .single();
 
       if (openMatch) {
-        await joinExistingMatch(openMatch, playerName, deviceId, set, get);
+        await joinExistingMatch(openMatch, playerName, deviceId, set);
       } else {
         await createNewMatch(true, selectedDifficulty, playerName, deviceId, set);
       }
@@ -137,6 +155,10 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
 
   createPrivateMatch: async () => {
     const { selectedDifficulty, playerName } = get();
+    if (!playerName.trim()) {
+      set({ error: "Choisis un pseudo avant de lancer un duel.", screen: "hub" });
+      return;
+    }
     const deviceId = getDeviceId();
     set({ isLoading: true, error: null });
     try {
@@ -148,6 +170,10 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
 
   joinWithCode: async (code: string) => {
     const { playerName } = get();
+    if (!playerName.trim()) {
+      set({ error: "Choisis un pseudo avant de rejoindre.", isLoading: false });
+      return;
+    }
     const deviceId = getDeviceId();
     set({ isLoading: true, error: null });
 
@@ -167,13 +193,12 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
         set({ error: "Tu ne peux pas rejoindre ton propre duel.", isLoading: false });
         return;
       }
-      // Check expiration
       const expiresAt = (match as Record<string, unknown>).expires_at as string | undefined;
       if (expiresAt && new Date(expiresAt) < new Date()) {
         set({ error: "Ce duel a expiré.", isLoading: false });
         return;
       }
-      await joinExistingMatch(match, playerName, deviceId, set, get);
+      await joinExistingMatch(match, playerName, deviceId, set);
     } catch {
       set({ error: "Erreur réseau. Réessaie.", isLoading: false });
     }
@@ -191,8 +216,11 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
   },
 
   finishDuel: async () => {
-    const { currentMatch, score, startTimeMs, playerName } = get();
+    const { currentMatch, score, startTimeMs, playerName, myAttempt: existingAttempt } = get();
     if (!currentMatch) return;
+    // Prevent double submit
+    if (existingAttempt) return;
+
     const deviceId = getDeviceId();
     const timeMs = Date.now() - startTimeMs;
     const attempt: DuelAttempt = { score, timeMs, playerName };
@@ -203,13 +231,23 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
     const updateField = isPlayer1 ? "player1_attempt" : "player2_attempt";
 
     try {
-      await supabase
+      // Only update if this player's attempt is still null (prevent overwrite)
+      const conditionField = isPlayer1 ? "player1_attempt" : "player2_attempt";
+      const { data: updateResult } = await supabase
         .from("quiz_duel_matches")
         .update({
           [updateField]: attempt as unknown as Json,
           status: "playing",
         })
-        .eq("id", currentMatch.id);
+        .eq("id", currentMatch.id)
+        .is(conditionField, null)
+        .select()
+        .single();
+
+      if (!updateResult) {
+        set({ error: "Résultat déjà soumis.", isLoading: false, screen: "hub" });
+        return;
+      }
 
       const { data: fresh } = await supabase
         .from("quiz_duel_matches")
@@ -263,7 +301,6 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
 
       if (!fresh) return false;
 
-      // Check if expired
       const expiresAt = (fresh as Record<string, unknown>).expires_at as string | undefined;
       if (expiresAt && new Date(expiresAt) < new Date()) {
         set({ error: "Ce duel a expiré.", screen: "hub" });
@@ -296,7 +333,6 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
   loadRecentDuels: async () => {
     const deviceId = getDeviceId();
     try {
-      // Expire old duels
       await supabase.rpc("expire_old_duels");
 
       const { data } = await supabase
@@ -389,12 +425,9 @@ async function joinExistingMatch(
   matchRow: QuizDuelRow,
   playerName: string,
   deviceId: string,
-  set: (partial: Partial<QuizDuelState>) => void,
-  get: () => QuizDuelState
+  set: (partial: Partial<QuizDuelState>) => void
 ) {
   const matchId = matchRow.id;
-  const seed = matchRow.seed;
-  const difficulty = (matchRow.difficulty as Difficulty) || get().selectedDifficulty;
 
   // Check for double join
   if (matchRow.player2_device_id) {
@@ -402,7 +435,8 @@ async function joinExistingMatch(
     return;
   }
 
-  await supabase
+  // Atomic join: only succeeds if status is still "open"
+  const { data: updatedRow, error: updateError } = await supabase
     .from("quiz_duel_matches")
     .update({
       player2_name: playerName,
@@ -410,18 +444,38 @@ async function joinExistingMatch(
       status: "playing",
     })
     .eq("id", matchId)
-    .eq("status", "open"); // Only update if still open — prevents race condition
+    .eq("status", "open")
+    .is("player2_device_id", null)
+    .select()
+    .single();
 
-  const questions = generateDuelQuestions(difficulty, seed);
-  const match = mapRowToMatch({
-    ...matchRow,
-    player2_name: playerName,
-    player2_device_id: deviceId,
-    status: "playing",
-  } as QuizDuelRow);
+  if (updateError || !updatedRow) {
+    set({ error: "Ce duel n'est plus disponible.", isLoading: false, screen: "hub" });
+    return;
+  }
+
+  // SOURCE OF TRUTH: use questions from DB, not regenerated from seed
+  const questions = questionsFromRow(updatedRow);
+  if (questions.length === 0) {
+    // Fallback: regenerate from seed (shouldn't happen normally)
+    const fallbackQuestions = generateDuelQuestions(
+      updatedRow.difficulty as Difficulty,
+      updatedRow.seed,
+    );
+    set({
+      currentMatch: mapRowToMatch(updatedRow),
+      questions: fallbackQuestions,
+      currentQuestionIndex: 0,
+      score: 0,
+      startTimeMs: Date.now(),
+      screen: "playing",
+      isLoading: false,
+    });
+    return;
+  }
 
   set({
-    currentMatch: match,
+    currentMatch: mapRowToMatch(updatedRow),
     questions,
     currentQuestionIndex: 0,
     score: 0,

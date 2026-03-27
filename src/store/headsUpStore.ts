@@ -167,17 +167,34 @@ export const useHeadsUpStore = create<HeadsUpState>()((set, get) => ({
   },
 
   endRound: () => {
-    const { players, currentPlayerIndex, found, passed, scores } = get();
+    const { players, currentPlayerIndex, found, passed, scores, roundResults } = get();
     const player = players[currentPlayerIndex];
     if (!player) return;
     const roundScore = found.length;
-    const newScores = { ...scores, [player.name]: (scores[player.name] || 0) + roundScore };
-    const result: RoundResult = { playerName: player.name, found: [...found], passed: [...passed], score: roundScore };
-    set((s) => ({
+
+    // Check if this player already has a round result (replay scenario)
+    // If so, REPLACE the previous result instead of stacking
+    const previousResultIdx = roundResults.findIndex(r => r.playerName === player.name);
+    let newResults: RoundResult[];
+    let newScores: Record<string, number>;
+
+    if (previousResultIdx >= 0) {
+      // Replace: subtract old score, add new score
+      const oldScore = roundResults[previousResultIdx].score;
+      newScores = { ...scores, [player.name]: (scores[player.name] || 0) - oldScore + roundScore };
+      newResults = [...roundResults];
+      newResults[previousResultIdx] = { playerName: player.name, found: [...found], passed: [...passed], score: roundScore };
+    } else {
+      // First time: add normally
+      newScores = { ...scores, [player.name]: (scores[player.name] || 0) + roundScore };
+      newResults = [...roundResults, { playerName: player.name, found: [...found], passed: [...passed], score: roundScore }];
+    }
+
+    set({
       scores: newScores,
-      roundResults: [...s.roundResults, result],
+      roundResults: newResults,
       screen: "round_result",
-    }));
+    });
   },
 
   nextPlayer: () => {
