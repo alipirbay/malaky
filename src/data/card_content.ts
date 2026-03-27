@@ -1003,7 +1003,7 @@ export const dareActions: VibeContent = {
     'mime un souvenir d\'enfance précieux sans parler et fais deviner le groupe.',
     'fais une promesse à toi-même à voix haute.',
     'écris une lettre ouverte anonyme à un groupe de personnes.',
-    'décris un paysage qui t\'apporte la paix.',
+    'peins un paysage imaginaire avec tes mains et tes bruitages.',
     'murmure ton plus grand secret à la personne de ton choix.',
     'dessine un cœur sur ta main et laisse-le là.',
     'dis une gratitude pour quelque chose de la soirée.',
