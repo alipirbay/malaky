@@ -985,7 +985,7 @@ export const dareActions: VibeContent = {
     'Imite un conteur malgache qui dramatise une histoire avec des gestes.',
     'Essaie de prononcer \'Andriamandravola\' trois fois plus vite.',
     'Fais un geste de respect traditionnel malgache.',
-    'Décris le parfum d\'une épice de Madagascar.',
+    'Joue un marchand d\'épices au marché et vends ta vanille au groupe.',
     'Imite un groupe de musiciens traditionnels malgaches.',
     'Dis \'Azafady\' (s\'il vous plaît/excusez-moi) d\'une manière polie.',
     'Fais comme si tu négociais le prix d\'un objet au marché.',
