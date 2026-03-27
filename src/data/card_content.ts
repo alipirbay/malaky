@@ -919,7 +919,7 @@ export const dareActions: VibeContent = {
     'Invente un verbe pour l\'action de boire.',
     'Fais un \'Cheers\' sonore avec tous les présents.',
     'Bois avec un drôle de son (slurp, ahhh).',
-    'Décris le goût de ta boisson avec 5 adjectifs.',
+    'Joue le sommelier et fais goûter ta boisson au groupe avec les gestes.',
     'Fais semblant d\'être ivre pendant 15 secondes.',
     'Tiens ton verre en équilibre sur ta tête (vide si nécessaire).',
     'Chuchote ce que tu voudrais boire si tu étais un roi/une reine.',
