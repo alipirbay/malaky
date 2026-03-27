@@ -857,7 +857,7 @@ export const dareActions: VibeContent = {
     'chuchote un secret à son oreille.',
     'Fais un compliment sincère à ton partenaire en le/la regardant dans les yeux.',
     'Tiens la main de ton partenaire pendant le reste du tour.',
-    'Raconte un souvenir heureux que vous avez partagé ensemble.',
+    'Mime un souvenir heureux que vous avez partagé et fais deviner l\'autre.',
     'Fais un câlin chaleureux à ton partenaire.',
     'Chuchote quelque chose de doux à l\'oreille de ton partenaire.',
     'Masse doucement l\'épaule de ton partenaire pendant 15 secondes.',
