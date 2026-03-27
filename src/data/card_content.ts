@@ -968,7 +968,7 @@ export const dareActions: VibeContent = {
     'Fais semblant de pêcher comme au bord de mer à Madagascar.',
     'Mime un guide touristique qui fait visiter Madagascar de façon hilarante.',
     'Imite un \'mora mora\' (lentement, doucement) dans tes mouvements.',
-    'Dis \'Veloma\' (au revoir) d\'une manière théâtrale.',
+    'Fais une sortie dramatique de star en lançant \'Veloma!\' et reviens t\'asseoir.',
     'Fais le son d\'un lémurien.',
     'Explique l\'importance du \'fihavanana\' (lien social) en une phrase.',
     'Marche comme si tu portais un grand sac de riz sur la tête.',
