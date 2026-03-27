@@ -982,7 +982,7 @@ export const dareActions: VibeContent = {
     'Dis \'Misaotra\' (merci) à la personne qui t\'a aidé récemment.',
     'Imite un cyclopousse manœuvrant dans la ville.',
     'Fais le bruit de l\'océan Indien.',
-    'Raconte une légende malgache inventée très courte.',
+    'Imite un conteur malgache qui dramatise une histoire avec des gestes.',
     'Essaie de prononcer \'Andriamandravola\' trois fois plus vite.',
     'Fais un geste de respect traditionnel malgache.',
     'Décris le parfum d\'une épice de Madagascar.',
