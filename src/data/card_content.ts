@@ -1036,7 +1036,7 @@ export const dareActions: VibeContent = {
     'Rejoue un moment de gêne récent devant le groupe.',
     'Mime le résumé d\'un livre que tu as lu.',
     'Imite ton émission TV préférée pendant 15 secondes.',
-    'Dis ce qui te donne le plus d\'énergie en faisant les gestes correspondants.',
+    'Fais une chorégraphie qui représente ce qui te donne le plus d\'énergie.',
     'Mime ta réaction la plus exagérée face à une surprise.',
     'Fais un air guitar sur ta chanson coupable préférée.',
     'Reproduis un cauchemar que tu as fait en le mimant.',
