@@ -669,7 +669,7 @@ export const dareActions: VibeContent = {
     'Fais un clin d\'œil à la personne de ton choix.',
     'Tends tes bras et fais comme si tu volais pendant quelques secondes.',
     'Fais un signe de la paix à tout le monde.',
-    'Raconte une anecdote amusante sur ton enfance.',
+    'Mime un souvenir d\'enfance et fais deviner le groupe.',
     'Fais un petit mouvement de danse disco.',
     'Souffle un baiser à la cantonade.',
     'Imite un chat qui ronronne.',
