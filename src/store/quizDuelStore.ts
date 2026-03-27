@@ -1,7 +1,11 @@
 import { create } from "zustand";
 import type { Difficulty } from "@/data/types";
 import { supabase } from "@/integrations/supabase/client";
-import { generateDuelQuestions, generateInviteCode, getDeviceId, type DuelQuestion, type DuelAttempt, computeDuelResult, type DuelResult } from "@/lib/quizDuel";
+import {
+  generateDuelQuestions, generateInviteCode, getDeviceId,
+  type DuelQuestion, type DuelAttempt, computeDuelResult, type DuelResult,
+} from "@/lib/quizDuel";
+import type { Json } from "@/integrations/supabase/types";
 
 type DuelScreen = "hub" | "difficulty" | "playing" | "waiting" | "result" | "join";
 
@@ -28,7 +32,6 @@ interface QuizDuelState {
   currentQuestionIndex: number;
   score: number;
   startTimeMs: number;
-  questionStartMs: number;
   playerName: string;
   selectedDifficulty: Difficulty;
   isLoading: boolean;
@@ -37,10 +40,12 @@ interface QuizDuelState {
   opponentAttempt: DuelAttempt | null;
   duelResult: DuelResult | null;
   recentDuels: DuelMatch[];
+  matchType: "quick" | "private";
 
   setScreen: (s: DuelScreen) => void;
   setDifficulty: (d: Difficulty) => void;
   setPlayerName: (n: string) => void;
+  setMatchType: (t: "quick" | "private") => void;
   createQuickMatch: () => Promise<void>;
   createPrivateMatch: () => Promise<void>;
   joinWithCode: (code: string) => Promise<void>;
@@ -51,6 +56,25 @@ interface QuizDuelState {
   reset: () => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase row mapping
+function mapRowToMatch(row: Record<string, any>): DuelMatch {
+  return {
+    id: row.id,
+    inviteCode: row.invite_code ?? null,
+    difficulty: row.difficulty as Difficulty,
+    seed: row.seed,
+    isPublic: row.is_public,
+    player1Name: row.player1_name,
+    player1DeviceId: row.player1_device_id,
+    player1Attempt: row.player1_attempt as DuelAttempt | null,
+    player2Name: row.player2_name ?? null,
+    player2DeviceId: row.player2_device_id ?? null,
+    player2Attempt: row.player2_attempt as DuelAttempt | null,
+    createdAt: row.created_at,
+    status: row.status as DuelMatch["status"],
+  };
+}
+
 export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
   screen: "hub",
   currentMatch: null,
@@ -58,7 +82,6 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
   currentQuestionIndex: 0,
   score: 0,
   startTimeMs: 0,
-  questionStartMs: 0,
   playerName: "",
   selectedDifficulty: "facile",
   isLoading: false,
@@ -67,10 +90,12 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
   opponentAttempt: null,
   duelResult: null,
   recentDuels: [],
+  matchType: "quick",
 
   setScreen: (s) => set({ screen: s, error: null }),
   setDifficulty: (d) => set({ selectedDifficulty: d }),
   setPlayerName: (n) => set({ playerName: n }),
+  setMatchType: (t) => set({ matchType: t }),
 
   createQuickMatch: async () => {
     const { selectedDifficulty, playerName } = get();
@@ -78,7 +103,6 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // Look for an open public match with same difficulty
       const { data: openMatch } = await supabase
         .from("quiz_duel_matches")
         .select("*")
@@ -91,15 +115,17 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
         .single();
 
       if (openMatch) {
-        // Join existing match
         await joinExistingMatch(openMatch, playerName, deviceId, set, get);
       } else {
-        // Create new public match
         await createNewMatch(true, selectedDifficulty, playerName, deviceId, set);
       }
-    } catch (e) {
-      set({ error: "Erreur réseau. Réessaie.", isLoading: false });
-      console.error("Quick match error:", e);
+    } catch {
+      // No open match found → create one
+      try {
+        await createNewMatch(true, selectedDifficulty, playerName, deviceId, set);
+      } catch {
+        set({ error: "Erreur réseau. Réessaie.", isLoading: false });
+      }
     }
   },
 
@@ -109,9 +135,8 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await createNewMatch(false, selectedDifficulty, playerName, deviceId, set);
-    } catch (e) {
+    } catch {
       set({ error: "Erreur réseau. Réessaie.", isLoading: false });
-      console.error("Private match error:", e);
     }
   },
 
@@ -169,12 +194,11 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
       await supabase
         .from("quiz_duel_matches")
         .update({
-          [updateField]: attempt as unknown as Record<string, unknown>,
+          [updateField]: attempt as unknown as Json,
           status: "playing",
         })
         .eq("id", currentMatch.id);
 
-      // Check if opponent already played
       const { data: fresh } = await supabase
         .from("quiz_duel_matches")
         .select("*")
@@ -187,7 +211,6 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
           : (fresh.player1_attempt as unknown as DuelAttempt | null);
 
         if (opponentAttempt) {
-          // Both played — mark completed
           await supabase
             .from("quiz_duel_matches")
             .update({ status: "completed" })
@@ -262,9 +285,7 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
         .limit(10);
 
       if (data) {
-        set({
-          recentDuels: data.map(mapDbToMatch),
-        });
+        set({ recentDuels: data.map(mapRowToMatch) });
       }
     } catch {
       // Silent
@@ -289,24 +310,6 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
 
 // --- Helpers ---
 
-function mapDbToMatch(row: Record<string, unknown>): DuelMatch {
-  return {
-    id: row.id as string,
-    inviteCode: row.invite_code as string | null,
-    difficulty: row.difficulty as Difficulty,
-    seed: row.seed as string,
-    isPublic: row.is_public as boolean,
-    player1Name: row.player1_name as string,
-    player1DeviceId: row.player1_device_id as string,
-    player1Attempt: row.player1_attempt as DuelAttempt | null,
-    player2Name: row.player2_name as string | null,
-    player2DeviceId: row.player2_device_id as string | null,
-    player2Attempt: row.player2_attempt as DuelAttempt | null,
-    createdAt: row.created_at as string,
-    status: row.status as DuelMatch["status"],
-  };
-}
-
 async function createNewMatch(
   isPublic: boolean,
   difficulty: Difficulty,
@@ -328,7 +331,7 @@ async function createNewMatch(
       player1_name: playerName,
       player1_device_id: deviceId,
       status: "open",
-      questions: questions as unknown as Record<string, unknown>[],
+      questions: questions as unknown as Json,
     })
     .select()
     .single();
@@ -338,10 +341,9 @@ async function createNewMatch(
     return;
   }
 
-  const match = mapDbToMatch(data);
+  const match = mapRowToMatch(data);
 
   if (isPublic) {
-    // Player created a public match, start playing immediately
     set({
       currentMatch: match,
       questions,
@@ -352,7 +354,6 @@ async function createNewMatch(
       isLoading: false,
     });
   } else {
-    // Private match — show invite code, wait for opponent
     set({
       currentMatch: match,
       questions,
@@ -362,8 +363,9 @@ async function createNewMatch(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- flexible row type from Supabase
 async function joinExistingMatch(
-  matchRow: Record<string, unknown>,
+  matchRow: Record<string, any>,
   playerName: string,
   deviceId: string,
   set: (partial: Partial<QuizDuelState>) => void,
@@ -383,7 +385,12 @@ async function joinExistingMatch(
     .eq("id", matchId);
 
   const questions = generateDuelQuestions(difficulty, seed);
-  const match = mapDbToMatch({ ...matchRow, player2_name: playerName, player2_device_id: deviceId, status: "playing" });
+  const match = mapRowToMatch({
+    ...matchRow,
+    player2_name: playerName,
+    player2_device_id: deviceId,
+    status: "playing",
+  });
 
   set({
     currentMatch: match,
