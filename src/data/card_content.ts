@@ -722,7 +722,7 @@ export const dareActions: VibeContent = {
     'Imite la démarche d\'un mannequin sur un podium.',
     'Chante la première ligne de 5 chansons différentes.',
     'Fais une imitation d\'une personne présente.',
-    'Dis le premier mot qui te vient à l\'esprit pendant une minute non-stop.',
+    'Mime les mots qui te viennent à l\'esprit pendant 30 secondes non-stop.',
     'Porte un verre d\'eau sur ta tête sans le renverser (vide si nécessaire).',
     'Fais une déclaration d\'amour passionnée à ton boisson.',
     'Prends une pose de bodybuilder.',
