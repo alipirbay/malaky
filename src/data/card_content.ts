@@ -359,7 +359,7 @@ export const truthPrompts: VibeContent = {
     'Confesse si tu as déjà fini la soirée dans un endroit étrange.',
     'Raconte la fois où tu as failli être viré d\'une boîte.',
     'Avoue si tu as déjà regretté une décision prise sous l\'emprise de l\'alcool.',
-    'Montre une photo de ton sac après une soirée épique.',
+    'Raconte l\'état de tes affaires après ta pire soirée.',
     'Révèle la chose la plus bizarre que tu aies mangée après une soirée arrosée.',
     'Avoue si tu as déjà fait une fausse excuse pour ne pas aller travailler après une soirée.',
     'Décris la pire musique que tu as entendu en soirée et sur laquelle tu as dansé.',
