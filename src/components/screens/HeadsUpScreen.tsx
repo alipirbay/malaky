@@ -674,7 +674,7 @@ const RoundResultScreen = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center max-w-sm w-full"
         >
-          <div className="text-5xl mb-4">📱</div>
+          <TiltUpIcon size={48} className="mx-auto mb-4 text-primary" />
           <h2 className="text-2xl font-bold text-foreground mb-2">{lastResult.playerName}</h2>
           <p className="text-4xl font-black text-primary mb-6">{lastResult.score} mots trouvés !</p>
 
