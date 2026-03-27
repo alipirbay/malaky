@@ -117,7 +117,7 @@ export const useGameStore = create<GameState>()(
         if (vibeOverride) set({ selectedVibe: vibeOverride });
         if (!selectedMode || !selectedVibe || players.length < 1) return;
         // For party modes, enforce min 2 players
-        if (selectedMode !== "quiz_duel" && players.length < GAME_LIMITS.MIN_PLAYERS) return;
+        if (selectedMode !== "quiz_duel" && selectedMode !== "guess_rush" && players.length < GAME_LIMITS.MIN_PLAYERS) return;
 
         const merged = { ...defaultUnlockedVibes, ...unlockedVibes };
         if (!merged[selectedVibe]) {
