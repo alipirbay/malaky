@@ -852,7 +852,7 @@ export const dareActions: VibeContent = {
     'écris un poème de 3 lignes pour ton partenaire.',
     'fais un regard langoureux à ton partenaire.',
     'dessine un cœur sur ton front.',
-    'dis 3 raisons d\'aimer ton partenaire.',
+    'mime 3 raisons d\'aimer ton partenaire sans parler et fais-le deviner.',
     'fais une danse lente avec ton partenaire.',
     'chuchote un secret à son oreille.',
     'Fais un compliment sincère à ton partenaire en le/la regardant dans les yeux.',
