@@ -1000,7 +1000,7 @@ export const dareActions: VibeContent = {
     'regarde-toi dans un miroir et dis \'je suis assez\' 5 fois.',
     'écris 3 qualités que tu aimes chez toi.',
     'chante une chanson triste sans aucune musique.',
-    'raconte en 30 secondes un souvenir d\'enfance précieux.',
+    'mime un souvenir d\'enfance précieux sans parler et fais deviner le groupe.',
     'fais une promesse à toi-même à voix haute.',
     'écris une lettre ouverte anonyme à un groupe de personnes.',
     'décris un paysage qui t\'apporte la paix.',
