@@ -1028,7 +1028,7 @@ export const dareActions: VibeContent = {
     'Mime un moment de fierté personnelle de façon théâtrale.',
     'Rejoue la scène d\'une erreur passée de façon comique.',
     'Écris sur ta main une chose que tu changerais en toi et montre-la.',
-    'Dis un regret à voix haute en te levant solennellement.',
+    'Lève-toi et joue un monologue dramatique de 15 secondes sur un regret inventé.',
     'Mime un petit mensonge que tu as déjà raconté.',
     'Fais un dessin les yeux fermés de ton meilleur souvenir d\'enfance.',
     'Montre ta collection imaginaire au groupe avec passion.',
