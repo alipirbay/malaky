@@ -58,6 +58,7 @@ describe("hashToScreen", () => {
 
   it("returns null for removed modes", () => {
     expect(hashToScreen("heads_up")).toBeNull();
+    expect(hashToScreen("guess_rush")).toBeNull();
   });
 });
 
