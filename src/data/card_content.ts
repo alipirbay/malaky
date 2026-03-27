@@ -652,7 +652,7 @@ export const dareActions: VibeContent = {
     'Chante une chanson enfantine avec une voix de robot.',
     'Dis trois mots gentils à la personne à ta droite.',
     'Fais une danse du ventre imaginaire.',
-    'Raconte une blague très courte et drôle.',
+    'Fais un stand-up de 15 secondes sur un sujet choisi par le groupe.',
     'Écris ton nom avec ton coude droit.',
     'Fais un câlin à toi-même pendant 5 secondes.',
     'Imite le rire d\'une personne célèbre.',
