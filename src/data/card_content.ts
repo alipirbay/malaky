@@ -1008,7 +1008,7 @@ export const dareActions: VibeContent = {
     'dessine un cœur sur ta main et laisse-le là.',
     'dis une gratitude pour quelque chose de la soirée.',
     'fais un câlin à toi-même pendant 10 secondes.',
-    'partage une citation inspirante qui te parle.',
+    'écris une citation inspirante inventée sur-le-champ et lis-la avec conviction.',
     'écris un mot de soutien à un(e) inconnu(e) pour plus tard.',
     'ferme les yeux et décris ton état émotionnel actuel.',
     'écris un mot d\'encouragement pour toi-même sur ta main.',
