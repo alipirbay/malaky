@@ -966,7 +966,7 @@ export const dareActions: VibeContent = {
     'Invente une salutation traditionnelle malgache.',
     'Décris un plat malgache typique avec passion.',
     'Fais semblant de pêcher comme au bord de mer à Madagascar.',
-    'Raconte une anecdote inventée sur un voyage à Madagascar.',
+    'Mime un guide touristique qui fait visiter Madagascar de façon hilarante.',
     'Imite un \'mora mora\' (lentement, doucement) dans tes mouvements.',
     'Dis \'Veloma\' (au revoir) d\'une manière théâtrale.',
     'Fais le son d\'un lémurien.',
