@@ -7,7 +7,7 @@ import {
 } from "@/lib/quizDuel";
 import type { Json } from "@/integrations/supabase/types";
 
-type DuelScreen = "hub" | "difficulty" | "playing" | "waiting" | "result" | "join";
+type DuelScreen = "hub" | "difficulty" | "matchmaking" | "playing" | "waiting" | "result" | "join";
 
 interface DuelMatch {
   id: string;
@@ -120,11 +120,10 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
         await createNewMatch(true, selectedDifficulty, playerName, deviceId, set);
       }
     } catch {
-      // No open match found → create one
       try {
         await createNewMatch(true, selectedDifficulty, playerName, deviceId, set);
       } catch {
-        set({ error: "Erreur réseau. Réessaie.", isLoading: false });
+        set({ error: "Erreur réseau. Réessaie.", isLoading: false, screen: "hub" });
       }
     }
   },
@@ -136,7 +135,7 @@ export const useQuizDuelStore = create<QuizDuelState>()((set, get) => ({
     try {
       await createNewMatch(false, selectedDifficulty, playerName, deviceId, set);
     } catch {
-      set({ error: "Erreur réseau. Réessaie.", isLoading: false });
+      set({ error: "Erreur réseau. Réessaie.", isLoading: false, screen: "hub" });
     }
   },
 
@@ -337,7 +336,7 @@ async function createNewMatch(
     .single();
 
   if (error || !data) {
-    set({ error: "Impossible de créer le duel.", isLoading: false });
+    set({ error: "Impossible de créer le duel.", isLoading: false, screen: "hub" });
     return;
   }
 

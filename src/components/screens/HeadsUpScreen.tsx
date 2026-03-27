@@ -4,7 +4,7 @@ import { useHeadsUpStore } from "@/store/headsUpStore";
 import { useGameStore } from "@/store/gameStore";
 import { useDeviceTilt } from "@/hooks/useDeviceTilt";
 import { HEADS_UP_CATEGORIES } from "@/data/heads_up_categories";
-import { ArrowLeft, Check, X, SkipForward, Trophy, RotateCcw, ChevronRight, Smartphone } from "lucide-react";
+import { ArrowLeft, Check, X, Trophy, RotateCcw, ChevronRight, Smartphone, Zap } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 
 const HeadsUpScreen = () => {
@@ -21,7 +21,7 @@ const HeadsUpScreen = () => {
 
   if (store.screen === "categories") return <CategoryPicker />;
   if (store.screen === "instructions") return <Instructions />;
-  if (store.screen === "playing") return <HeadsUpPlaying />;
+  if (store.screen === "playing") return <GuessRushPlaying />;
   if (store.screen === "round_result") return <RoundResultScreen />;
   if (store.screen === "final_result") return <FinalResultScreen />;
 
@@ -40,7 +40,7 @@ const CategoryPicker = () => {
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h2 className="text-xl font-bold text-foreground">📱 Téléphone au front</h2>
+          <h2 className="text-xl font-bold text-foreground">⚡ Guess Rush</h2>
           <p className="text-sm text-muted-foreground">Choisis une catégorie</p>
         </div>
       </div>
@@ -76,9 +76,9 @@ const CategoryPicker = () => {
 // --- Instructions ---
 const Instructions = () => {
   const store = useHeadsUpStore();
+  const setGameScreen = useGameStore((s) => s.setScreen);
   const { playConfirm, vibrate } = useSounds();
   const currentPlayer = store.players[store.currentPlayerIndex];
-  const [permissionAsked, setPermissionAsked] = useState(false);
 
   const handleStart = useCallback(() => {
     playConfirm();
@@ -86,14 +86,25 @@ const Instructions = () => {
     store.startRound();
   }, [store, playConfirm, vibrate]);
 
+  const handleBack = useCallback(() => {
+    store.setScreen("categories");
+  }, [store]);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 gradient-surface safe-top safe-bottom">
+      {/* Back button */}
+      <div className="absolute top-6 left-6 safe-top">
+        <button onClick={handleBack} className="rounded-xl bg-card p-2.5 text-foreground" aria-label="Retour">
+          <ArrowLeft size={20} />
+        </button>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="text-center max-w-sm w-full"
       >
-        <div className="text-6xl mb-6">📱</div>
+        <div className="text-6xl mb-6">⚡</div>
 
         <div
           className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2"
@@ -141,8 +152,9 @@ const Instructions = () => {
 };
 
 // --- Playing ---
-const HeadsUpPlaying = () => {
+const GuessRushPlaying = () => {
   const store = useHeadsUpStore();
+  const setGameScreen = useGameStore((s) => s.setScreen);
   const { playClick, playBuzzer, vibrate } = useSounds();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [flash, setFlash] = useState<"found" | "pass" | null>(null);
@@ -304,7 +316,6 @@ const HeadsUpPlaying = () => {
 const RoundResultScreen = () => {
   const store = useHeadsUpStore();
   const lastResult = store.roundResults[store.roundResults.length - 1];
-  const currentPlayer = store.players[store.currentPlayerIndex];
   const isLastPlayer = store.currentPlayerIndex >= store.players.length - 1;
 
   if (!lastResult) return null;
@@ -317,7 +328,7 @@ const RoundResultScreen = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center max-w-sm w-full"
         >
-          <div className="text-5xl mb-4">🎉</div>
+          <div className="text-5xl mb-4">⚡</div>
           <h2 className="text-2xl font-bold text-foreground mb-2">{lastResult.playerName}</h2>
           <p className="text-4xl font-black text-primary mb-6">{lastResult.score} mots trouvés !</p>
 
@@ -360,7 +371,6 @@ const FinalResultScreen = () => {
   const store = useHeadsUpStore();
   const setGameScreen = useGameStore((s) => s.setScreen);
 
-  // Sort players by score
   const sortedPlayers = [...store.players].sort(
     (a, b) => (store.scores[b.name] || 0) - (store.scores[a.name] || 0)
   );
