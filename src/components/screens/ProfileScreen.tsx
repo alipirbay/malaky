@@ -1,15 +1,19 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { useProfileStore, AVATAR_OPTIONS, TITLE_UNLOCKS, getXpProgress } from "@/store/profileStore";
 import { ACHIEVEMENTS, getUnlockedAchievements } from "@/lib/achievements";
-import { ArrowLeft, Pencil, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, Pencil, Check, Camera, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const ProfileScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
   const store = useProfileStore();
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(store.username);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const xpData = getXpProgress(store.xp);
   const unlockedTitles = useMemo(() => store.getUnlockedTitles(), [store]);
@@ -21,6 +25,42 @@ const ProfileScreen = () => {
     setEditingName(false);
   };
 
+  const handlePhotoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Fichier non supporté. Choisis une image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image trop lourde (max 5 Mo).");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const fileName = `avatar-${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(fileName);
+      store.setAvatarUrl(urlData.publicUrl);
+      toast.success("Photo de profil mise à jour !");
+    } catch (err) {
+      console.error("Upload failed:", err);
+      toast.error("Échec de l'upload. Réessaie.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [store]);
+
   const stats = [
     { label: "Parties jouées", value: store.totalGamesPlayed, emoji: "🎮" },
     { label: "Cartes jouées", value: store.totalCardsPlayed, emoji: "🃏" },
@@ -31,6 +71,8 @@ const ProfileScreen = () => {
     { label: "Parties sans refus", value: store.gamesWithZeroRefusals, emoji: "💪" },
     { label: "Membre depuis", value: new Date(store.joinedAt).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }), emoji: "📅" },
   ];
+
+  const hasPhoto = !!store.avatarUrl;
 
   return (
     <div className="flex min-h-screen flex-col px-6 py-8 gradient-surface safe-top safe-bottom">
@@ -50,9 +92,29 @@ const ProfileScreen = () => {
           className="flex flex-col items-center text-center"
         >
           <div className="relative mb-3">
-            <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center text-4xl ring-4 ring-primary/30">
-              {store.avatar}
+            <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center text-4xl ring-4 ring-primary/30 overflow-hidden">
+              {hasPhoto ? (
+                <img src={store.avatarUrl!} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                store.avatar
+              )}
             </div>
+            {/* Camera button overlay */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="absolute -bottom-1 -left-1 rounded-full bg-card border-2 border-background p-1.5 text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Changer la photo de profil"
+            >
+              {uploading ? <Loader2 size={12} className="animate-spin" /> : <Camera size={12} />}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              className="hidden"
+            />
             <div className="absolute -bottom-1 -right-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
               Niv.{xpData.level}
             </div>
@@ -101,13 +163,21 @@ const ProfileScreen = () => {
         {/* Avatar picker */}
         <div>
           <h3 className="text-sm font-bold text-muted-foreground mb-3">Avatar</h3>
+          {hasPhoto && (
+            <button
+              onClick={() => store.setAvatarUrl(null)}
+              className="text-xs text-muted-foreground underline underline-offset-2 mb-2 block"
+            >
+              Retirer la photo et utiliser un emoji
+            </button>
+          )}
           <div className="grid grid-cols-6 gap-2">
             {AVATAR_OPTIONS.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => store.setAvatar(emoji)}
                 className={`h-12 w-12 rounded-xl flex items-center justify-center text-2xl transition-all active:scale-90 ${
-                  store.avatar === emoji ? "ring-2 ring-primary bg-primary/20 scale-110" : "bg-card hover:bg-secondary"
+                  !hasPhoto && store.avatar === emoji ? "ring-2 ring-primary bg-primary/20 scale-110" : "bg-card hover:bg-secondary"
                 }`}
               >
                 {emoji}

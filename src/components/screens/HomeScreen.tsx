@@ -15,6 +15,7 @@ const HomeScreen = () => {
   const setScreen = useGameStore((s) => s.setScreen);
   const [isOnline, setIsOnline] = useState(getNetworkStatus());
   const avatar = useProfileStore((s) => s.avatar);
+  const avatarUrl = useProfileStore((s) => s.avatarUrl);
   const xp = useProfileStore((s) => s.xp);
   const xpData = getXpProgress(xp);
 
@@ -82,7 +83,13 @@ const HomeScreen = () => {
             className="group relative flex-shrink-0 overflow-hidden rounded-2xl bg-card w-[68px] py-5 transition-transform active:scale-95"
           >
             <div className="relative z-10 flex flex-col items-center gap-1">
-              <span className="text-2xl">{avatar}</span>
+              {avatarUrl ? (
+                <div className="w-8 h-8 rounded-full overflow-hidden">
+                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <span className="text-2xl">{avatar}</span>
+              )}
               <span className="text-[10px] font-bold text-muted-foreground">Profil</span>
               <span className="absolute -top-1 -right-0 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-primary-foreground">
                 {xpData.level}

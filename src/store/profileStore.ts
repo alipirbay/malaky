@@ -25,6 +25,7 @@ export const TITLE_UNLOCKS = [
 interface ProfileState {
   username: string;
   avatar: string;
+  avatarUrl: string | null; // URL of uploaded photo
   selectedTitle: string;
   totalGamesPlayed: number;
   totalCardsPlayed: number;
@@ -39,6 +40,7 @@ interface ProfileState {
   xp: number;
   setUsername: (name: string) => void;
   setAvatar: (emoji: string) => void;
+  setAvatarUrl: (url: string | null) => void;
   setTitle: (titleId: string) => void;
   addGameStats: (stats: {
     cardsPlayed: number;
@@ -76,6 +78,7 @@ export const useProfileStore = create<ProfileState>()(
     (set, get) => ({
       username: "",
       avatar: "😎",
+      avatarUrl: null,
       selectedTitle: "newbie",
       totalGamesPlayed: 0,
       totalCardsPlayed: 0,
@@ -90,7 +93,8 @@ export const useProfileStore = create<ProfileState>()(
       xp: 0,
 
       setUsername: (name) => set({ username: name.trim().slice(0, 20) }),
-      setAvatar: (emoji) => set({ avatar: emoji }),
+      setAvatar: (emoji) => set({ avatar: emoji, avatarUrl: null }),
+      setAvatarUrl: (url) => set({ avatarUrl: url }),
       setTitle: (titleId) => set({ selectedTitle: titleId }),
 
       addGameStats: (stats) => {
