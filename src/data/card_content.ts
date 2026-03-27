@@ -1063,7 +1063,7 @@ export const dareActions: VibeContent = {
     'joue le/la milliardaire blasé(e) pendant 20 secondes.',
     'Lève ton verre avec panache et déclare: \'À ma réussite !\'.',
     'Fais une entrée de star en saluant le public imaginaire.',
-    'Décris ta yacht imaginaire de rêve.',
+    'Fais visiter ton yacht imaginaire au groupe en mimant chaque pièce.',
     'Prends une pose de tapis rouge pendant 15 secondes.',
     'Chante l\'opéra imaginaire de ton choix pour les masses.',
     'Exprime ton opinion sur l\'art contemporain avec beaucoup d\'assurance.',
